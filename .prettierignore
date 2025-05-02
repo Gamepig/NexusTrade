@@ -1,0 +1,20 @@
+# Ignore artifacts:
+node_modules
+package-lock.json
+dist
+coverage
+
+# Ignore vendor libraries (if any):
+# public/vendor
+
+# Ignore generated files:
+# *.generated.js
+
+# Ignore configuration files (optional, if you don't want them formatted):
+# .eslintrc.js
+# .prettierrc.js
+
+# Ignore markdown task files:
+tasks/
+memory-bank/
+NexusTrading規劃書.md 
