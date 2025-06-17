@@ -1,0 +1,83 @@
+# NexusTrade 生產環境 Docker Compose 配置
+# 針對生產環境最佳化的設定
+
+version: '3.8'
+
+services:
+  nexustrade-app:
+    environment:
+      - NODE_ENV=production
+      - LOG_LEVEL=info
+      - RATE_LIMIT_MAX=1000
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mongo:
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+    volumes:
+      - mongo-prod-data:/data/db
+      - mongo-prod-config:/data/configdb
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  nginx:
+    profiles:
+      - production
+
+volumes:
+  mongo-prod-data:
+    driver: local
+    name: nexustrade-mongo-prod-data
+  mongo-prod-config:
+    driver: local
+    name: nexustrade-mongo-prod-config

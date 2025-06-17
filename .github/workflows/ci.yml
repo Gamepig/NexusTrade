@@ -1,0 +1,277 @@
+# NexusTrade 持續整合 (CI) 工作流程
+# 自動化程式碼品質檢查、測試和建置
+
+name: Continuous Integration
+
+on:
+  push:
+    branches: [master, main, develop]
+  pull_request:
+    branches: [master, main]
+
+# 環境變數
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+# 工作權限
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  # ========================
+  # 程式碼品質檢查
+  # ========================
+  code-quality:
+    name: 程式碼品質檢查
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout 程式碼
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ 設定 Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 安裝依賴
+        run: npm ci
+        
+      - name: 🔍 ESLint 程式碼檢查
+        run: npm run lint
+        
+      - name: 🎨 Prettier 格式檢查
+        run: npx prettier --check "**/*.{js,json,md}"
+        
+      - name: 📊 上傳 ESLint 結果
+        if: always()
+        uses: github/super-linter@v4
+        env:
+          DEFAULT_BRANCH: master
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_JSON: true
+
+  # ========================
+  # 單元測試和整合測試
+  # ========================
+  test:
+    name: 測試套件
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+        
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: 📥 Checkout 程式碼
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ 設定 Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          
+      - name: 📦 安裝依賴
+        run: npm ci
+        
+      - name: 🧪 運行測試
+        run: npm test
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/nexustrade_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret
+          
+      - name: 📊 上傳測試覆蓋率
+        if: matrix.node-version == 20
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+  # ========================
+  # 安全性掃描
+  # ========================
+  security:
+    name: 安全性掃描
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    steps:
+      - name: 📥 Checkout 程式碼
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ 設定 Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 安裝依賴
+        run: npm ci
+        
+      - name: 🔒 npm audit 安全掃描
+        run: npm audit --audit-level=high
+        
+      - name: 🛡️ Snyk 安全掃描
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  # ========================
+  # Docker 映像建置
+  # ========================
+  build:
+    name: Docker 映像建置
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      - name: 📥 Checkout 程式碼
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ 設定 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: 🔐 登入 Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 📝 提取 metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+            
+      - name: 🔨 建置並推送 Docker 映像
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+      - name: 🔍 掃描 Docker 映像安全性
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          
+      - name: 📊 上傳 Trivy 掃描結果
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # ========================
+  # 效能測試
+  # ========================
+  performance:
+    name: 效能測試
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    
+    steps:
+      - name: 📥 Checkout 程式碼
+        uses: actions/checkout@v4
+        
+      - name: 🏗️ 設定 Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: 📦 安裝依賴
+        run: npm ci
+        
+      - name: 🚀 啟動應用程式
+        run: |
+          npm start &
+          sleep 30
+        env:
+          NODE_ENV: production
+          SKIP_MONGODB: true
+          
+      - name: 📈 運行效能測試
+        run: |
+          npx lighthouse-ci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+  # ========================
+  # 通知和報告
+  # ========================
+  notify:
+    name: 通知結果
+    runs-on: ubuntu-latest
+    needs: [test, security, build, performance]
+    if: always()
+    
+    steps:
+      - name: 📨 成功通知
+        if: needs.test.result == 'success' && needs.build.result == 'success'
+        run: |
+          echo "✅ CI 流程成功完成"
+          echo "- 程式碼品質: ✅"
+          echo "- 測試套件: ✅"
+          echo "- 安全掃描: ✅"
+          echo "- Docker 建置: ✅"
+          
+      - name: ❌ 失敗通知
+        if: needs.test.result == 'failure' || needs.build.result == 'failure'
+        run: |
+          echo "❌ CI 流程失敗"
+          echo "- 測試結果: ${{ needs.test.result }}"
+          echo "- 建置結果: ${{ needs.build.result }}"
+          echo "請檢查日誌並修復問題"

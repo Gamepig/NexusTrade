@@ -1,0 +1,109 @@
+# NexusTrade Docker 忽略檔案
+# 最佳化 Docker 建置效能和安全性
+
+# Git 和版本控制
+.git
+.gitignore
+.gitattributes
+
+# Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn
+.pnpm-debug.log*
+
+# 環境檔案
+.env
+.env.*
+!.env.example
+
+# 開發工具
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# 作業系統檔案
+.DS_Store
+Thumbs.db
+
+# 日誌檔案
+logs/*.log
+*.log
+server.log
+
+# 運行時檔案
+*.pid
+.pid
+
+# 測試檔案
+test_*.html
+test_*.sh
+coverage/
+.coverage
+.nyc_output
+
+# 備份和暫存檔案
+backup/
+backups/
+tmp/
+temp/
+*.tmp
+*.bak
+*.backup
+
+# PM2 相關檔案
+ecosystem.config.js
+.pm2
+
+# 文件和規劃檔案
+docs/
+memory-bank/
+reference/
+tasks/
+README.md
+CLAUDE.md
+
+# Docker 相關檔案
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# CI/CD 檔案
+.github/
+
+# 開發依賴
+.eslintrc.js
+.prettierrc
+.prettierignore
+
+# 快取目錄
+.cache/
+.parcel-cache/
+
+# 編輯器暫存檔
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS 系統檔案
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows 系統檔案
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux 系統檔案
+*~
+.fuse_hidden*
+.nfs*

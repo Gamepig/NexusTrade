@@ -1,0 +1,41 @@
+# NexusTrade 開發環境 Dockerfile
+# 針對開發環境最佳化，支援熱重載和除錯
+
+FROM node:20-alpine AS development
+
+# 設定環境變數
+ENV NODE_ENV=development
+ENV PORT=3000
+
+# 安裝系統依賴
+RUN apk add --no-cache \
+    curl \
+    bash \
+    git
+
+# 設定工作目錄
+WORKDIR /app
+
+# 建立開發使用者
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nexus -u 1001
+
+# 複製 package 檔案
+COPY package*.json ./
+
+# 安裝所有依賴 (包含 devDependencies)
+RUN npm ci && \
+    npm cache clean --force
+
+# 建立日誌目錄
+RUN mkdir -p logs && \
+    chown -R nexus:nodejs logs
+
+# 切換到開發使用者
+USER nexus
+
+# 暴露應用程式端口和除錯端口
+EXPOSE 3000 9229
+
+# 開發環境啟動指令 (支援除錯和熱重載)
+CMD ["npm", "run", "dev"]

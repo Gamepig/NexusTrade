@@ -1,12 +1,22 @@
 {
   "name": "nexustrade",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix",
-    "format": "prettier --write \"**/*.{js,json,md}\""
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{js,json,md}\"",
+    "health": "curl -f http://localhost:3000/health || exit 1",
+    "test:system": "./scripts/test-system.sh",
+    "docs:generate": "node scripts/generate-api-docs.js",
+    "docker:build": "docker build -t nexustrade:latest .",
+    "docker:run": "docker run --rm -p 3000:3000 nexustrade:latest",
+    "docker:compose": "docker-compose up -d",
+    "docker:compose:dev": "docker-compose -f docker-compose.dev.yml up -d",
+    "docker:compose:down": "docker-compose down"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +26,27 @@
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
-    "prettier": "^3.5.3"
+    "nodemon": "^3.1.10",
+    "prettier": "^3.5.3",
+    "supertest": "^7.1.1"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.8.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.2",
+    "morgan": "^1.10.0",
+    "node-cron": "^4.1.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-line": "^0.0.4",
+    "winston": "^3.17.0",
+    "ws": "^8.18.2"
   }
 }

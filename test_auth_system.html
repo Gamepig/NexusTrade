@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusTrade 認證系統測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .test-button {
+            margin: 5px;
+            padding: 10px 20px;
+            background: #f7931a;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background: #e8830f;
+        }
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .form-section {
+            margin: 15px 0;
+            padding: 15px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .form-group {
+            margin: 10px 0;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #ccc;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #555;
+            background: #444;
+            color: #fff;
+            border-radius: 4px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #0f0f0f;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left: 4px solid #10b981;
+        }
+        .error {
+            border-left: 4px solid #ef4444;
+        }
+        .info {
+            border-left: 4px solid #3b82f6;
+        }
+        .token-display {
+            background: #111;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 NexusTrade 認證系統測試</h1>
+    
+    <!-- 註冊測試 -->
+    <div class="test-section">
+        <h2>1. 使用者註冊測試</h2>
+        <div class="form-section">
+            <div class="form-group">
+                <label>電子郵件:</label>
+                <input type="email" id="register-email" placeholder="test@example.com">
+            </div>
+            <div class="form-group">
+                <label>密碼:</label>
+                <input type="password" id="register-password" placeholder="Test123456">
+            </div>
+            <div class="form-group">
+                <label>使用者名稱:</label>
+                <input type="text" id="register-username" placeholder="testuser">
+            </div>
+            <div class="form-group">
+                <label>姓名:</label>
+                <input type="text" id="register-firstname" placeholder="測試">
+                <input type="text" id="register-lastname" placeholder="使用者" style="margin-top: 5px;">
+            </div>
+            <button class="test-button" onclick="testRegister()">註冊測試帳戶</button>
+        </div>
+        <div id="register-result" class="result"></div>
+    </div>
+
+    <!-- 登入測試 -->
+    <div class="test-section">
+        <h2>2. 使用者登入測試</h2>
+        <div class="form-section">
+            <div class="form-group">
+                <label>電子郵件:</label>
+                <input type="email" id="login-email" placeholder="test@example.com">
+            </div>
+            <div class="form-group">
+                <label>密碼:</label>
+                <input type="password" id="login-password" placeholder="Test123456">
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="login-remember"> 記住我 (30天)
+                </label>
+            </div>
+            <button class="test-button" onclick="testLogin()">登入測試</button>
+            <button class="test-button" onclick="testInvalidLogin()">測試錯誤登入</button>
+        </div>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <!-- Token 驗證測試 -->
+    <div class="test-section">
+        <h2>3. Token 驗證測試</h2>
+        <div class="form-section">
+            <p>當前 Token:</p>
+            <div id="current-token" class="token-display">尚未登入</div>
+            <button class="test-button" onclick="testVerifyToken()" id="verify-btn" disabled>驗證 Token</button>
+            <button class="test-button" onclick="testGetMe()" id="getme-btn" disabled>取得使用者資訊</button>
+        </div>
+        <div id="verify-result" class="result"></div>
+    </div>
+
+    <!-- Token 刷新測試 -->
+    <div class="test-section">
+        <h2>4. Token 刷新測試</h2>
+        <div class="form-section">
+            <p>當前 Refresh Token:</p>
+            <div id="current-refresh-token" class="token-display">尚未登入</div>
+            <button class="test-button" onclick="testRefreshToken()" id="refresh-btn" disabled>刷新 Token</button>
+        </div>
+        <div id="refresh-result" class="result"></div>
+    </div>
+
+    <!-- 更改密碼測試 -->
+    <div class="test-section">
+        <h2>5. 更改密碼測試</h2>
+        <div class="form-section">
+            <div class="form-group">
+                <label>當前密碼:</label>
+                <input type="password" id="current-password" placeholder="Test123456">
+            </div>
+            <div class="form-group">
+                <label>新密碼:</label>
+                <input type="password" id="new-password" placeholder="NewTest123456">
+            </div>
+            <button class="test-button" onclick="testChangePassword()" id="change-password-btn" disabled>更改密碼</button>
+        </div>
+        <div id="change-password-result" class="result"></div>
+    </div>
+
+    <!-- 登出測試 -->
+    <div class="test-section">
+        <h2>6. 登出測試</h2>
+        <div class="form-section">
+            <button class="test-button" onclick="testLogout()" id="logout-btn" disabled>登出</button>
+            <button class="test-button" onclick="clearAllTokens()">清除所有 Token</button>
+        </div>
+        <div id="logout-result" class="result"></div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentToken = null;
+        let currentRefreshToken = null;
+
+        // API 基礎 URL
+        const API_BASE = window.location.origin;
+
+        // 更新結果顯示
+        function updateResult(elementId, text, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = new Date().toLocaleTimeString() + ' - ' + text;
+            element.className = `result ${type}`;
+        }
+
+        // 更新 Token 顯示和按鈕狀態
+        function updateTokenDisplay() {
+            document.getElementById('current-token').textContent = currentToken || '尚未登入';
+            document.getElementById('current-refresh-token').textContent = currentRefreshToken || '尚未登入';
+            
+            const hasToken = !!currentToken;
+            document.getElementById('verify-btn').disabled = !hasToken;
+            document.getElementById('getme-btn').disabled = !hasToken;
+            document.getElementById('refresh-btn').disabled = !currentRefreshToken;
+            document.getElementById('change-password-btn').disabled = !hasToken;
+            document.getElementById('logout-btn').disabled = !hasToken;
+        }
+
+        // 通用 API 請求函數
+        async function apiRequest(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                },
+                ...options
+            };
+
+            if (currentToken && !options.skipAuth) {
+                config.headers['Authorization'] = `Bearer ${currentToken}`;
+            }
+
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                return {
+                    ok: response.ok,
+                    status: response.status,
+                    data
+                };
+            } catch (error) {
+                return {
+                    ok: false,
+                    status: 0,
+                    data: { message: error.message }
+                };
+            }
+        }
+
+        // 註冊測試
+        async function testRegister() {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const username = document.getElementById('register-username').value;
+            const firstName = document.getElementById('register-firstname').value;
+            const lastName = document.getElementById('register-lastname').value;
+
+            if (!email || !password) {
+                updateResult('register-result', '請填寫電子郵件和密碼', 'error');
+                return;
+            }
+
+            updateResult('register-result', '註冊中...', 'info');
+
+            const result = await apiRequest('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email,
+                    password,
+                    username,
+                    firstName,
+                    lastName
+                }),
+                skipAuth: true
+            });
+
+            if (result.ok) {
+                currentToken = result.data.data.token;
+                currentRefreshToken = result.data.data.refreshToken;
+                updateTokenDisplay();
+                updateResult('register-result', `註冊成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('register-result', `註冊失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // 登入測試
+        async function testLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('login-remember').checked;
+
+            if (!email || !password) {
+                updateResult('login-result', '請填寫電子郵件和密碼', 'error');
+                return;
+            }
+
+            updateResult('login-result', '登入中...', 'info');
+
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email,
+                    password,
+                    remember
+                }),
+                skipAuth: true
+            });
+
+            if (result.ok) {
+                currentToken = result.data.data.token;
+                currentRefreshToken = result.data.data.refreshToken;
+                updateTokenDisplay();
+                updateResult('login-result', `登入成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('login-result', `登入失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // 錯誤登入測試
+        async function testInvalidLogin() {
+            updateResult('login-result', '測試錯誤登入...', 'info');
+
+            const result = await apiRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: 'wrong@example.com',
+                    password: 'wrongpassword'
+                }),
+                skipAuth: true
+            });
+
+            updateResult('login-result', `錯誤登入測試結果: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, result.ok ? 'error' : 'success');
+        }
+
+        // Token 驗證測試
+        async function testVerifyToken() {
+            updateResult('verify-result', '驗證 Token...', 'info');
+
+            const result = await apiRequest('/auth/verify', {
+                method: 'GET'
+            });
+
+            if (result.ok) {
+                updateResult('verify-result', `Token 驗證成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('verify-result', `Token 驗證失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // 取得使用者資訊測試
+        async function testGetMe() {
+            updateResult('verify-result', '取得使用者資訊...', 'info');
+
+            const result = await apiRequest('/auth/me', {
+                method: 'GET'
+            });
+
+            if (result.ok) {
+                updateResult('verify-result', `取得使用者資訊成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('verify-result', `取得使用者資訊失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // Token 刷新測試
+        async function testRefreshToken() {
+            updateResult('refresh-result', '刷新 Token...', 'info');
+
+            const result = await apiRequest('/auth/refresh', {
+                method: 'POST',
+                body: JSON.stringify({
+                    refreshToken: currentRefreshToken
+                }),
+                skipAuth: true
+            });
+
+            if (result.ok) {
+                currentToken = result.data.data.token;
+                currentRefreshToken = result.data.data.refreshToken;
+                updateTokenDisplay();
+                updateResult('refresh-result', `Token 刷新成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('refresh-result', `Token 刷新失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // 更改密碼測試
+        async function testChangePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+
+            if (!currentPassword || !newPassword) {
+                updateResult('change-password-result', '請填寫當前密碼和新密碼', 'error');
+                return;
+            }
+
+            updateResult('change-password-result', '更改密碼...', 'info');
+
+            const result = await apiRequest('/auth/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword
+                })
+            });
+
+            if (result.ok) {
+                updateResult('change-password-result', `更改密碼成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('change-password-result', `更改密碼失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // 登出測試
+        async function testLogout() {
+            updateResult('logout-result', '登出中...', 'info');
+
+            const result = await apiRequest('/auth/logout', {
+                method: 'POST'
+            });
+
+            if (result.ok) {
+                currentToken = null;
+                currentRefreshToken = null;
+                updateTokenDisplay();
+                updateResult('logout-result', `登出成功！\n${JSON.stringify(result.data, null, 2)}`, 'success');
+            } else {
+                updateResult('logout-result', `登出失敗: ${result.data.message}\n${JSON.stringify(result.data, null, 2)}`, 'error');
+            }
+        }
+
+        // 清除所有 Token
+        function clearAllTokens() {
+            currentToken = null;
+            currentRefreshToken = null;
+            updateTokenDisplay();
+            updateResult('logout-result', '所有 Token 已清除', 'info');
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTokenDisplay();
+            updateResult('register-result', '準備測試註冊功能');
+            updateResult('login-result', '準備測試登入功能');
+            updateResult('verify-result', '準備測試 Token 驗證');
+            updateResult('refresh-result', '準備測試 Token 刷新');
+            updateResult('change-password-result', '準備測試密碼更改');
+            updateResult('logout-result', '準備測試登出功能');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,185 @@
+# NexusTrade Docker Compose 配置
+# 提供完整的開發和生產環境部署
+
+version: '3.8'
+
+services:
+  # ========================
+  # NexusTrade 主應用程式
+  # ========================
+  nexustrade-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: nexustrade-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/nexustrade}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET:-your-super-secret-refresh-key}
+      
+      # OAuth 設定
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - LINE_CLIENT_ID=${LINE_CLIENT_ID}
+      - LINE_CLIENT_SECRET=${LINE_CLIENT_SECRET}
+      
+      # LINE Messaging API (取代停用的 LINE Notify)
+      - LINE_MESSAGING_CHANNEL_ACCESS_TOKEN=${LINE_MESSAGING_CHANNEL_ACCESS_TOKEN}
+      - LINE_MESSAGING_CHANNEL_SECRET=${LINE_MESSAGING_CHANNEL_SECRET}
+      
+      # 通知服務設定
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_WEBHOOK_URL=${TELEGRAM_WEBHOOK_URL}
+      - DEFAULT_WEBHOOK_URL=${DEFAULT_WEBHOOK_URL}
+      
+      # API Keys
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_API_SECRET=${BINANCE_API_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      
+      # 應用程式設定
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - RATE_LIMIT_MAX=${RATE_LIMIT_MAX:-100}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - SKIP_MONGODB=${SKIP_MONGODB:-false}
+    volumes:
+      - app-logs:/app/logs
+      - app-uploads:/app/uploads
+    networks:
+      - nexustrade-network
+    depends_on:
+      - mongo
+      - redis
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nexustrade.rule=Host(`localhost`)"
+      - "traefik.http.services.nexustrade.loadbalancer.server.port=3000"
+
+  # ========================
+  # MongoDB 資料庫
+  # ========================
+  mongo:
+    image: mongo:7.0-jammy
+    container_name: nexustrade-mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-admin123}
+      - MONGO_INITDB_DATABASE=nexustrade
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - nexustrade-network
+    command: mongod --auth --bind_ip_all
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ========================
+  # Redis 快取服務
+  # ========================
+  redis:
+    image: redis:7.2-alpine
+    container_name: nexustrade-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis-data:/data
+      - ./scripts/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - nexustrade-network
+    command: redis-server /usr/local/etc/redis/redis.conf --requirepass ${REDIS_PASSWORD:-redis123}
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ========================
+  # Nginx 反向代理 (生產環境)
+  # ========================
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: nexustrade-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./docker/ssl:/etc/nginx/ssl:ro
+      - nginx-logs:/var/log/nginx
+    networks:
+      - nexustrade-network
+    depends_on:
+      - nexustrade-app
+    profiles:
+      - production
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# ========================
+# 持久化儲存磁碟區
+# ========================
+volumes:
+  mongo-data:
+    driver: local
+    name: nexustrade-mongo-data
+  mongo-config:
+    driver: local
+    name: nexustrade-mongo-config
+  redis-data:
+    driver: local
+    name: nexustrade-redis-data
+  app-logs:
+    driver: local
+    name: nexustrade-app-logs
+  app-uploads:
+    driver: local
+    name: nexustrade-app-uploads
+  nginx-logs:
+    driver: local
+    name: nexustrade-nginx-logs
+
+# ========================
+# 網路配置
+# ========================
+networks:
+  nexustrade-network:
+    driver: bridge
+    name: nexustrade-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

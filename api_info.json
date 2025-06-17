@@ -1,0 +1,116 @@
+{
+  "name": "NexusTrade API",
+  "version": "1.0.0",
+  "description": "加密貨幣交易分析平台 API",
+  "baseUrl": "http://localhost:3000",
+  "lastUpdated": "2025-06-17T12:41:29.643Z",
+  "endpoints": {
+    "health": {
+      "path": "/health",
+      "method": "GET",
+      "description": "系統健康檢查",
+      "response": {
+        "status": "string",
+        "timestamp": "string",
+        "service": "string",
+        "version": "string",
+        "environment": "string",
+        "uptime": "number"
+      }
+    },
+    "notifications": {
+      "status": {
+        "path": "/api/notifications/status",
+        "method": "GET",
+        "description": "取得通知系統狀態",
+        "response": {
+          "lineMessaging": "object",
+          "email": "object",
+          "telegram": "object",
+          "webhook": "object"
+        }
+      },
+      "testNotification": {
+        "path": "/api/notifications/test",
+        "method": "POST",
+        "description": "發送測試通知",
+        "body": {
+          "method": "string",
+          "recipient": "string",
+          "message": "string"
+        }
+      },
+      "createAlert": {
+        "path": "/api/notifications/alerts",
+        "method": "POST",
+        "description": "建立價格警報",
+        "body": {
+          "symbol": "string",
+          "alertType": "string",
+          "targetPrice": "number",
+          "priority": "string"
+        }
+      },
+      "getAlerts": {
+        "path": "/api/notifications/alerts",
+        "method": "GET",
+        "description": "取得使用者警報列表",
+        "query": {
+          "status": "string",
+          "symbol": "string",
+          "page": "number",
+          "limit": "number"
+        }
+      }
+    },
+    "auth": {
+      "login": {
+        "path": "/api/auth/login",
+        "method": "POST",
+        "description": "使用者登入",
+        "body": {
+          "email": "string",
+          "password": "string"
+        }
+      },
+      "register": {
+        "path": "/api/auth/register",
+        "method": "POST",
+        "description": "使用者註冊",
+        "body": {
+          "email": "string",
+          "password": "string",
+          "username": "string"
+        }
+      },
+      "logout": {
+        "path": "/api/auth/logout",
+        "method": "POST",
+        "description": "使用者登出"
+      }
+    },
+    "oauth": {
+      "googleAuth": {
+        "path": "/api/oauth/google",
+        "method": "GET",
+        "description": "Google OAuth 認證"
+      },
+      "lineAuth": {
+        "path": "/api/oauth/line",
+        "method": "GET",
+        "description": "LINE OAuth 認證"
+      }
+    }
+  },
+  "websocket": {
+    "endpoint": "ws://localhost:3000/ws",
+    "description": "即時市場數據推送",
+    "events": {
+      "connection": "建立連接",
+      "disconnect": "斷開連接",
+      "subscribe": "訂閱市場數據",
+      "unsubscribe": "取消訂閱",
+      "priceUpdate": "價格更新推送"
+    }
+  }
+}

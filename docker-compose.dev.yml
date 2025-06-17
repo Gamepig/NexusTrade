@@ -1,0 +1,107 @@
+# NexusTrade 開發環境 Docker Compose 配置
+# 針對開發環境最佳化，包含熱重載和除錯功能
+
+version: '3.8'
+
+services:
+  # ========================
+  # NexusTrade 開發應用程式
+  # ========================
+  nexustrade-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: nexustrade-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js 除錯端口
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo-dev:27017/nexustrade_dev
+      - JWT_SECRET=dev-jwt-secret-key-not-for-production
+      - LOG_LEVEL=debug
+      - SKIP_MONGODB=false
+    volumes:
+      - .:/app                    # 掛載程式碼目錄 (熱重載)
+      - /app/node_modules         # 排除 node_modules
+      - dev-logs:/app/logs
+    networks:
+      - nexustrade-dev-network
+    depends_on:
+      - mongo-dev
+    command: npm run dev
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  # ========================
+  # MongoDB 開發資料庫
+  # ========================
+  mongo-dev:
+    image: mongo:7.0-jammy
+    container_name: nexustrade-mongo-dev
+    restart: unless-stopped
+    ports:
+      - "27018:27017"  # 避免與本地 MongoDB 衝突
+    environment:
+      - MONGO_INITDB_DATABASE=nexustrade_dev
+    volumes:
+      - mongo-dev-data:/data/db
+    networks:
+      - nexustrade-dev-network
+    command: mongod --bind_ip_all
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ========================
+  # Redis 開發快取
+  # ========================
+  redis-dev:
+    image: redis:7.2-alpine
+    container_name: nexustrade-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6380:6379"  # 避免與本地 Redis 衝突
+    volumes:
+      - redis-dev-data:/data
+    networks:
+      - nexustrade-dev-network
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# ========================
+# 開發環境持久化儲存
+# ========================
+volumes:
+  mongo-dev-data:
+    driver: local
+    name: nexustrade-mongo-dev-data
+  redis-dev-data:
+    driver: local
+    name: nexustrade-redis-dev-data
+  dev-logs:
+    driver: local
+    name: nexustrade-dev-logs
+
+# ========================
+# 開發網路配置
+# ========================
+networks:
+  nexustrade-dev-network:
+    driver: bridge
+    name: nexustrade-dev-network

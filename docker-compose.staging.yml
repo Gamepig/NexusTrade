@@ -1,0 +1,55 @@
+# NexusTrade Staging 環境 Docker Compose 配置
+# 針對測試環境的設定
+
+version: '3.8'
+
+services:
+  nexustrade-app:
+    environment:
+      - NODE_ENV=staging
+      - LOG_LEVEL=debug
+      - RATE_LIMIT_MAX=500
+    ports:
+      - "3000:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  mongo:
+    environment:
+      - MONGO_INITDB_DATABASE=nexustrade_staging
+    volumes:
+      - mongo-staging-data:/data/db
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+volumes:
+  mongo-staging-data:
+    driver: local
+    name: nexustrade-mongo-staging-data
