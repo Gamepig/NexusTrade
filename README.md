@@ -62,7 +62,9 @@ NexusTrade/
 │   ├── js/lib/              # 📚 核心庫 (API, DOM, Router, Store)
 │   ├── js/components/       # 🧩 UI 組件
 │   └── css/                 # 🎨 樣式表
-├── test_*.html              # 🧪 功能測試頁面
+├── tests/                   # 🧪 測試檔案
+│   ├── test_*.html         # 功能測試頁面
+│   └── test_*.sh           # 測試腳本
 ├── docker-compose*.yml      # 🐳 容器編排
 ├── Dockerfile              # 🏗️ 容器建置
 └── ecosystem.config.js     # 🚀 PM2 配置
@@ -140,10 +142,10 @@ npm run test:system
 ```
 
 ### 功能測試頁面
-- 📊 **市場數據測試**: `http://localhost:3000/test_market_data.html`
-- 🔐 **認證系統測試**: `http://localhost:3000/test_auth_system.html`
-- 🔔 **通知系統測試**: `http://localhost:3000/test_notifications.html`
-- 🌐 **前端模組測試**: `http://localhost:3000/test_frontend_modules.html`
+- 📊 **市場數據測試**: `http://localhost:3000/tests/test_market_data.html`
+- 🔐 **認證系統測試**: `http://localhost:3000/tests/test_auth_system.html`
+- 🔔 **通知系統測試**: `http://localhost:3000/tests/test_notifications.html`
+- 🌐 **前端模組測試**: `http://localhost:3000/tests/test_frontend_modules.html`
 
 ### 程式碼品質
 ```bash

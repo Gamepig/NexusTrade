@@ -41,8 +41,7 @@ server.log
 .pid
 
 # 測試檔案
-test_*.html
-test_*.sh
+tests/
 coverage/
 .coverage
 .nyc_output
