@@ -127,7 +127,7 @@ module.exports = {
       name: 'nexustrade-static',
       namespace: 'NexusTrade',
       script: 'serve',
-      args: 'public -s -l 3001',
+      args: 'public -s -p 3001',
       env: {
         NODE_ENV: 'development',
         PM2_SERVE_PATH: './public',

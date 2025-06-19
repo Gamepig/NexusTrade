@@ -14,24 +14,47 @@ const logger = require('../utils/logger');
  */
 const getTrendingPairs = async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
+    const { limit = 200 } = req.query;
     const binanceService = getBinanceService();
     
-    const trendingPairs = await binanceService.getTopGainers(parseInt(limit));
+    // 獲取24小時統計數據 (包含所有 USDT 交易對)
+    const allTickers = await binanceService.get24hrTicker();
+    
+    // 過濾 USDT 交易對並按交易量排序
+    const usdtPairs = allTickers
+      .filter(ticker => ticker.symbol.endsWith('USDT'))
+      .sort((a, b) => parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume))
+      .slice(0, parseInt(limit));
+    
+    // 格式化數據
+    const formattedPairs = usdtPairs.map((ticker, index) => ({
+      rank: index + 1,
+      symbol: ticker.symbol,
+      name: ticker.symbol.replace('USDT', ''),
+      price: parseFloat(ticker.lastPrice),
+      priceChange: parseFloat(ticker.priceChange),
+      priceChangePercent: parseFloat(ticker.priceChangePercent),
+      volume: parseFloat(ticker.volume),
+      quoteVolume: parseFloat(ticker.quoteVolume),
+      high: parseFloat(ticker.highPrice),
+      low: parseFloat(ticker.lowPrice),
+      lastUpdate: new Date().toISOString()
+    }));
     
     res.status(200).json({
-      status: 'success',
-      message: '取得熱門交易對成功',
-      data: {
-        pairs: trendingPairs,
-        count: trendingPairs.length,
-        lastUpdate: new Date().toISOString()
-      },
+      success: true,
+      message: `取得熱門 ${formattedPairs.length} 個交易對成功`,
+      data: formattedPairs,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     logger.error('取得熱門交易對失敗:', error.message);
-    throw error;
+    res.status(500).json({
+      success: false,
+      message: '取得熱門交易對失敗',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 };
 
@@ -104,6 +127,60 @@ const getMultiplePrices = async (req, res) => {
     });
   } catch (error) {
     logger.error('取得多個價格失敗:', error.message);
+    throw error;
+  }
+};
+
+/**
+ * 取得多個交易對價格 (查詢參數版本)
+ * GET /api/market/prices?symbols=BTCUSDT,ETHUSDT
+ */
+const getMultiplePricesQuery = async (req, res) => {
+  try {
+    const { symbols } = req.query;
+    
+    if (!symbols) {
+      throw ApiErrorFactory.badRequest('symbols 查詢參數是必需的', 'MISSING_SYMBOLS_QUERY');
+    }
+    
+    // 將逗號分隔的字符串轉換為陣列
+    const symbolsArray = symbols.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    
+    if (symbolsArray.length === 0) {
+      throw ApiErrorFactory.badRequest('至少需要一個有效的交易對符號', 'EMPTY_SYMBOLS_LIST');
+    }
+    
+    if (symbolsArray.length > 100) {
+      throw ApiErrorFactory.badRequest('一次最多查詢100個交易對', 'TOO_MANY_SYMBOLS');
+    }
+    
+    const binanceService = getBinanceService();
+    const pricePromises = symbolsArray.map(symbol => 
+      binanceService.getCurrentPrice(symbol).catch(error => ({
+        symbol,
+        error: error.message,
+        success: false
+      }))
+    );
+    
+    const results = await Promise.all(pricePromises);
+    const prices = results.filter(result => result.success !== false);
+    const errors = results.filter(result => result.success === false);
+    
+    res.status(200).json({
+      status: 'success',
+      message: '取得多個價格成功',
+      data: prices,
+      errors: errors.length > 0 ? errors : undefined,
+      meta: {
+        requested: symbolsArray.length,
+        successful: prices.length,
+        failed: errors.length
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('取得多個價格查詢失敗:', error.message);
     throw error;
   }
 };
@@ -323,10 +400,126 @@ const getMarketOverview = async (req, res) => {
   }
 };
 
+/**
+ * 批量獲取價格數據 (GET 方式)
+ * GET /api/market/prices?symbols=BTCUSDT,ETHUSDT,BNBUSDT
+ */
+const getBatchPrices = async (req, res) => {
+  try {
+    const { symbols } = req.query;
+    
+    if (!symbols) {
+      return res.status(400).json({
+        success: false,
+        message: 'symbols 參數必須提供',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    const symbolsArray = symbols.split(',').map(s => s.trim().toUpperCase()).slice(0, 100);
+    const binanceService = getBinanceService();
+    
+    // 獲取24小時統計數據
+    const allTickers = await binanceService.get24hrTicker();
+    
+    // 過濾請求的交易對
+    const requestedTickers = allTickers.filter(ticker => 
+      symbolsArray.includes(ticker.symbol)
+    );
+    
+    // 格式化數據
+    const formattedData = requestedTickers.map(ticker => ({
+      symbol: ticker.symbol,
+      price: ticker.lastPrice,
+      priceChange: ticker.priceChange,
+      priceChangePercent: ticker.priceChangePercent,
+      volume: ticker.volume,
+      quoteVolume: ticker.quoteVolume,
+      high: ticker.highPrice,
+      low: ticker.lowPrice,
+      lastUpdate: new Date().toISOString()
+    }));
+    
+    res.status(200).json({
+      success: true,
+      message: `獲取 ${formattedData.length} 個價格數據成功`,
+      data: formattedData,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    logger.error('批量獲取價格失敗:', error.message);
+    res.status(500).json({
+      success: false,
+      message: '批量獲取價格失敗',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
+/**
+ * 獲取24小時市場統計
+ * GET /api/market/stats24h
+ */
+const get24hStats = async (req, res) => {
+  try {
+    const binanceService = getBinanceService();
+    
+    // 獲取24小時統計數據
+    const allTickers = await binanceService.get24hrTicker();
+    
+    // 過濾 USDT 交易對
+    const usdtPairs = allTickers.filter(ticker => ticker.symbol.endsWith('USDT'));
+    
+    // 計算統計數據
+    const totalCoins = usdtPairs.length;
+    const gainersCount = usdtPairs.filter(ticker => parseFloat(ticker.priceChangePercent) > 0).length;
+    const losersCount = usdtPairs.filter(ticker => parseFloat(ticker.priceChangePercent) < 0).length;
+    
+    // 計算平均變化
+    const totalChange = usdtPairs.reduce((sum, ticker) => 
+      sum + parseFloat(ticker.priceChangePercent), 0
+    );
+    const avgChange = totalCoins > 0 ? totalChange / totalCoins : 0;
+    
+    // 計算總交易量
+    const totalVolume = usdtPairs.reduce((sum, ticker) => 
+      sum + parseFloat(ticker.quoteVolume), 0
+    );
+    
+    res.status(200).json({
+      success: true,
+      message: '獲取24小時市場統計成功',
+      data: {
+        totalCoins,
+        gainersCount,
+        losersCount,
+        avgChange,
+        totalVolume,
+        lastUpdate: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    logger.error('獲取24小時市場統計失敗:', error.message);
+    res.status(500).json({
+      success: false,
+      message: '獲取24小時市場統計失敗',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 module.exports = {
   getTrendingPairs,
   getSymbolPrice,
   getMultiplePrices,
+  getMultiplePricesQuery,
+  getBatchPrices,
+  get24hStats,
   get24hrTicker,
   getKlines,
   getOrderBookDepth,

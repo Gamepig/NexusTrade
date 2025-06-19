@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoCurrencyList 組件測試</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        body {
+            padding: 20px;
+            background: var(--background-primary);
+            color: var(--text-primary);
+        }
+        
+        .test-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: var(--background-secondary);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+        }
+        
+        .test-title {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .test-description {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .test-container {
+            background: var(--background-primary);
+            padding: 15px;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+        }
+        
+        .status-info {
+            background: var(--background-tertiary);
+            padding: 10px;
+            border-radius: var(--border-radius-small);
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .api-test {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--background-tertiary);
+            border-radius: var(--border-radius-small);
+        }
+        
+        .api-result {
+            background: var(--background-primary);
+            padding: 10px;
+            border-radius: var(--border-radius-small);
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 CryptoCurrencyList 組件測試</h1>
+    <p>測試可重複使用的加密貨幣列表組件功能</p>
+    
+    <!-- API 端點測試 -->
+    <div class="test-section">
+        <div class="test-title">🔌 API 端點測試</div>
+        <div class="test-description">測試新增的 Binance API 端點是否正常工作</div>
+        
+        <div class="api-test">
+            <h4>24小時市場統計</h4>
+            <button onclick="testMarketStats()">測試 /api/market/stats24h</button>
+            <div id="stats-result" class="api-result"></div>
+        </div>
+        
+        <div class="api-test">
+            <h4>批量價格數據</h4>
+            <button onclick="testBatchPrices()">測試 /api/market/batch-prices</button>
+            <div id="batch-result" class="api-result"></div>
+        </div>
+        
+        <div class="api-test">
+            <h4>熱門交易對</h4>
+            <button onclick="testTrendingPairs()">測試 /api/market/trending</button>
+            <div id="trending-result" class="api-result"></div>
+        </div>
+    </div>
+    
+    <!-- 首頁模式測試 -->
+    <div class="test-section">
+        <div class="test-title">🏠 首頁模式測試 (固定10個貨幣)</div>
+        <div class="test-description">模擬首頁的 HomeCryptoList 組件</div>
+        <div class="status-info" id="home-status">初始化中...</div>
+        
+        <div class="test-container">
+            <div id="home-crypto-container" class="crypto-list-container">
+                <!-- HomeCryptoList 將在這裡渲染 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 市場頁面模式測試 -->
+    <div class="test-section">
+        <div class="test-title">📊 市場頁面模式測試 (無限滾動200個貨幣)</div>
+        <div class="test-description">模擬市場頁面的 CryptoCurrencyList 組件</div>
+        <div class="status-info" id="market-status">初始化中...</div>
+        
+        <div class="test-container">
+            <div id="market-crypto-container" class="crypto-list-container">
+                <!-- CryptoCurrencyList 將在這裡渲染 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 圖標測試 -->
+    <div class="test-section">
+        <div class="test-title">🖼️ 圖標測試</div>
+        <div class="test-description">測試新的 cryptocurrencyliveprices.com 圖標來源</div>
+        
+        <div class="test-container">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                <div id="icon-test-container">
+                    <!-- 圖標測試將在這裡顯示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 模組 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/components/CryptoCurrencyList.js"></script>
+    <script src="/js/components/HomeCryptoList.js"></script>
+    
+    <script>
+        let homeCryptoList = null;
+        let marketCryptoList = null;
+        
+        // API 測試函數
+        async function testMarketStats() {
+            const resultDiv = document.getElementById('stats-result');
+            try {
+                resultDiv.textContent = '載入中...';
+                const response = await fetch('/api/market/stats24h');
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `錯誤: ${error.message}`;
+            }
+        }
+        
+        async function testBatchPrices() {
+            const resultDiv = document.getElementById('batch-result');
+            try {
+                resultDiv.textContent = '載入中...';
+                const response = await fetch('/api/market/batch-prices?symbols=BTCUSDT,ETHUSDT,BNBUSDT');
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `錯誤: ${error.message}`;
+            }
+        }
+        
+        async function testTrendingPairs() {
+            const resultDiv = document.getElementById('trending-result');
+            try {
+                resultDiv.textContent = '載入中...';
+                const response = await fetch('/api/market/trending?limit=5');
+                const data = await response.json();
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultDiv.textContent = `錯誤: ${error.message}`;
+            }
+        }
+        
+        // 初始化測試
+        function initializeTests() {
+            console.log('🧪 開始初始化 CryptoCurrencyList 組件測試...');
+            
+            // 初始化首頁模式
+            const homeContainer = document.getElementById('home-crypto-container');
+            const homeStatus = document.getElementById('home-status');
+            
+            if (typeof CryptoCurrencyList !== 'undefined') {
+                try {
+                    homeCryptoList = new CryptoCurrencyList({
+                        container: homeContainer,
+                        mode: 'fixed',
+                        maxCoins: 10,
+                        coinsPerPage: 10,
+                        updateInterval: 15000,
+                        onCoinClick: (symbol) => {
+                            alert(`首頁模式 - 點擊貨幣: ${symbol}`);
+                        }
+                    });
+                    homeStatus.textContent = '✅ 首頁模式初始化成功';
+                    homeStatus.style.color = 'var(--secondary-color)';
+                } catch (error) {
+                    homeStatus.textContent = `❌ 首頁模式初始化失敗: ${error.message}`;
+                    homeStatus.style.color = 'var(--danger-color)';
+                }
+            } else {
+                homeStatus.textContent = '❌ CryptoCurrencyList 組件未載入';
+                homeStatus.style.color = 'var(--danger-color)';
+            }
+            
+            // 初始化市場頁面模式
+            const marketContainer = document.getElementById('market-crypto-container');
+            const marketStatus = document.getElementById('market-status');
+            
+            if (typeof CryptoCurrencyList !== 'undefined') {
+                try {
+                    marketCryptoList = new CryptoCurrencyList({
+                        container: marketContainer,
+                        mode: 'infinite',
+                        maxCoins: 50, // 為了測試，先限制到50個
+                        coinsPerPage: 25,
+                        updateInterval: 15000,
+                        onCoinClick: (symbol) => {
+                            alert(`市場頁面模式 - 點擊貨幣: ${symbol}`);
+                        }
+                    });
+                    marketStatus.textContent = '✅ 市場頁面模式初始化成功';
+                    marketStatus.style.color = 'var(--secondary-color)';
+                } catch (error) {
+                    marketStatus.textContent = `❌ 市場頁面模式初始化失敗: ${error.message}`;
+                    marketStatus.style.color = 'var(--danger-color)';
+                }
+            } else {
+                marketStatus.textContent = '❌ CryptoCurrencyList 組件未載入';
+                marketStatus.style.color = 'var(--danger-color)';
+            }
+            
+            // 測試圖標
+            testCryptoIcons();
+        }
+        
+        // 測試圖標
+        function testCryptoIcons() {
+            const container = document.getElementById('icon-test-container');
+            const testCoins = [
+                { symbol: 'BTCUSDT', name: 'Bitcoin' },
+                { symbol: 'ETHUSDT', name: 'Ethereum' },
+                { symbol: 'BNBUSDT', name: 'BNB' },
+                { symbol: 'ADAUSDT', name: 'Cardano' },
+                { symbol: 'SOLUSDT', name: 'Solana' }
+            ];
+            
+            testCoins.forEach(coin => {
+                const baseSymbol = coin.symbol.replace('USDT', '').toLowerCase();
+                const baseName = coin.name.toLowerCase().replace(/\s+/g, '-');
+                const iconUrl = `https://cryptocurrencyliveprices.com/img/${baseSymbol}-${baseName}.png`;
+                
+                const iconDiv = document.createElement('div');
+                iconDiv.style.textAlign = 'center';
+                iconDiv.style.padding = '10px';
+                iconDiv.innerHTML = `
+                    <img src="${iconUrl}" alt="${coin.name}" style="width: 32px; height: 32px; border-radius: 50%;" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <div style="display: none; width: 32px; height: 32px; background: var(--background-tertiary); 
+                         border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                         font-size: 10px; margin: 0 auto;">${baseSymbol.toUpperCase()}</div>
+                    <div style="margin-top: 5px; font-size: 0.8rem;">${coin.name}</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary);">${coin.symbol}</div>
+                `;
+                container.appendChild(iconDiv);
+            });
+        }
+        
+        // 頁面載入後初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initializeTests, 500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新聞頁面除錯 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .test-title {
+            color: #f7931a;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background: #f7931a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #e8830f; }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: rgba(0, 212, 170, 0.2); border: 1px solid #00d4aa; }
+        .status.error { background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; }
+        .status.info { background: rgba(247, 147, 26, 0.2); border: 1px solid #f7931a; }
+        .news-item {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 3px solid #f7931a;
+        }
+        .news-title {
+            color: #00d4aa;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .news-source {
+            color: #b3b3b3;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+        .news-description {
+            color: #ffffff;
+            font-size: 0.95em;
+        }
+        #console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 新聞頁面除錯工具</h1>
+        
+        <div id="status" class="status info">
+            <strong>狀態:</strong> 準備中...
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📡 直接API測試</div>
+            <button class="btn" onclick="testDirectAPI()">測試新聞API</button>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🧩 組件測試</div>
+            <button class="btn" onclick="testNewsPageComponent()">測試新聞頁面組件</button>
+            <div id="component-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 控制台輸出</div>
+            <div id="console-output"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📰 新聞顯示</div>
+            <div id="news-display"></div>
+        </div>
+    </div>
+
+    <script>
+        // 重寫console.log來顯示在頁面上
+        const originalConsoleLog = console.log;
+        const consoleOutput = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            consoleOutput.innerHTML += `${new Date().toLocaleTimeString()}: ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.innerHTML = `<strong>狀態:</strong> ${message}`;
+        }
+
+        async function testDirectAPI() {
+            updateStatus('測試新聞API...', 'info');
+            const resultsEl = document.getElementById('api-results');
+            
+            try {
+                console.log('🔄 開始測試新聞API...');
+                
+                const response = await fetch('/api/news?limit=5&page=1');
+                console.log('📡 API回應狀態:', response.status);
+                
+                const data = await response.json();
+                console.log('📡 API回應數據:', data);
+                
+                if (data.success) {
+                    resultsEl.innerHTML = `
+                        <div class="status success">
+                            <strong>✅ API測試成功</strong><br>
+                            回傳 ${data.data.length} 則新聞<br>
+                            分頁資訊: 第${data.pagination.currentPage}頁，共${data.pagination.totalPages}頁
+                        </div>
+                    `;
+                    
+                    // 顯示新聞
+                    displayNews(data.data);
+                    
+                    updateStatus('API測試成功', 'success');
+                } else {
+                    throw new Error(data.message || '未知錯誤');
+                }
+                
+            } catch (error) {
+                console.error('❌ API測試失敗:', error);
+                resultsEl.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ API測試失敗</strong><br>
+                        錯誤: ${error.message}
+                    </div>
+                `;
+                updateStatus('API測試失敗', 'error');
+            }
+        }
+
+        function displayNews(newsArray) {
+            const displayEl = document.getElementById('news-display');
+            
+            if (!newsArray || newsArray.length === 0) {
+                displayEl.innerHTML = '<div class="status error">沒有新聞資料</div>';
+                return;
+            }
+            
+            const newsHTML = newsArray.map(news => `
+                <div class="news-item">
+                    <div class="news-title">${news.title}</div>
+                    <div class="news-source">來源: ${news.source} | 發布時間: ${new Date(news.publishedAt).toLocaleString()}</div>
+                    <div class="news-description">${news.description || '無描述'}</div>
+                </div>
+            `).join('');
+            
+            displayEl.innerHTML = newsHTML;
+        }
+
+        function testNewsPageComponent() {
+            updateStatus('測試新聞頁面組件...', 'info');
+            const resultsEl = document.getElementById('component-results');
+            
+            try {
+                console.log('🧩 檢查組件依賴...');
+                
+                // 檢查必要的元件是否存在
+                const checks = {
+                    'NewsPage類別': typeof NewsPage !== 'undefined',
+                    'news-grid元素': !!document.getElementById('news-grid'),
+                    'news-pagination元素': !!document.getElementById('news-pagination'), 
+                    'load-more元素': !!document.getElementById('load-more')
+                };
+                
+                console.log('組件檢查結果:', checks);
+                
+                let checkResults = '<h4>組件檢查結果:</h4><ul>';
+                for (const [check, result] of Object.entries(checks)) {
+                    checkResults += `<li>${result ? '✅' : '❌'} ${check}</li>`;
+                }
+                checkResults += '</ul>';
+                
+                // 檢查路由是否正確
+                const currentHash = window.location.hash;
+                checkResults += `<p><strong>當前路由:</strong> ${currentHash || '(無)'}</p>`;
+                
+                // 檢查是否在新聞頁面
+                const isNewsPage = currentHash === '#/news';
+                checkResults += `<p><strong>是否在新聞頁面:</strong> ${isNewsPage ? '✅ 是' : '❌ 否'}</p>`;
+                
+                resultsEl.innerHTML = checkResults;
+                
+                // 如果不在新聞頁面，提供連結
+                if (!isNewsPage) {
+                    resultsEl.innerHTML += `
+                        <div class="status info">
+                            <p>當前不在新聞頁面。</p>
+                            <button class="btn" onclick="window.location.hash = '#/news'">前往新聞頁面</button>
+                        </div>
+                    `;
+                }
+                
+                updateStatus('組件測試完成', 'success');
+                
+            } catch (error) {
+                console.error('❌ 組件測試失敗:', error);
+                resultsEl.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ 組件測試失敗</strong><br>
+                        錯誤: ${error.message}
+                    </div>
+                `;
+                updateStatus('組件測試失敗', 'error');
+            }
+        }
+
+        // 監聽路由變化
+        window.addEventListener('hashchange', () => {
+            console.log('🧭 路由變化:', window.location.hash);
+        });
+
+        // 頁面載入完成後的初始檢查
+        window.addEventListener('load', () => {
+            console.log('📄 頁面載入完成');
+            updateStatus('新聞除錯工具準備就緒', 'info');
+        });
+    </script>
+</body>
+</html>

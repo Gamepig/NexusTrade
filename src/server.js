@@ -47,9 +47,10 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      scriptSrc: ["'self'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://s3.tradingview.com", "https://www.tradingview.com"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "wss:", "https:"],
+      frameSrc: ["'self'", "https://www.tradingview.com", "https://www.tradingview-widget.com", "https://s.tradingview.com"],
     },
   },
   crossOriginEmbedderPolicy: false
@@ -93,6 +94,11 @@ app.use(compression());
 
 // 靜態檔案服務
 app.use(express.static(path.join(__dirname, '../public')));
+
+// 測試檔案服務 (僅開發環境)
+if (NODE_ENV === 'development') {
+  app.use('/tests', express.static(path.join(__dirname, '../tests')));
+}
 
 // Passport 初始化 (OAuth 認證)
 const passport = require('passport');

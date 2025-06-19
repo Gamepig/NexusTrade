@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新聞頁面除錯測試</title>
+    <link rel="stylesheet" href="/css/main.css">
+</head>
+<body style="padding: 20px;">
+    <h1>新聞頁面除錯測試</h1>
+    
+    <!-- 新聞頁面容器 -->
+    <div id="news-page-test">
+        <div class="news-controls">
+            <div class="search-box">
+                <input type="text" id="news-search" placeholder="搜尋新聞..." class="search-input">
+                <button id="search-btn" class="search-btn">🔍</button>
+            </div>
+            <div class="filter-controls">
+                <select id="news-category" class="category-select">
+                    <option value="all">所有分類</option>
+                    <option value="crypto">加密貨幣</option>
+                    <option value="bitcoin">比特幣</option>
+                </select>
+                <button id="refresh-news" class="btn btn-outline">重新整理</button>
+            </div>
+        </div>
+        
+        <div id="news-grid" class="news-grid">
+            <div class="news-loading">
+                <div class="loading-spinner"></div>
+                <p>載入新聞中...</p>
+            </div>
+        </div>
+        
+        <div id="news-pagination" class="pagination" style="display: none;">
+            <button id="prev-page" class="btn btn-outline">上一頁</button>
+            <span id="page-info" class="page-info">第 1 頁</span>
+            <button id="next-page" class="btn btn-outline">下一頁</button>
+        </div>
+        
+        <div id="load-more" class="load-more">
+            <button id="load-more-btn" class="btn btn-primary">載入更多新聞</button>
+        </div>
+    </div>
+
+    <!-- JavaScript 模組 -->
+    <script src="/js/components/NewsPage.js"></script>
+    
+    <script>
+        console.log('開始測試新聞頁面...');
+        
+        // 檢查 NewsPage 類別是否存在
+        console.log('NewsPage 類別:', typeof NewsPage);
+        
+        // 測試 API 連接
+        fetch('/api/news/latest?limit=3')
+            .then(response => response.json())
+            .then(data => {
+                console.log('API 測試成功:', data);
+                
+                if (typeof NewsPage !== 'undefined') {
+                    // 初始化新聞頁面
+                    console.log('初始化 NewsPage...');
+                    const newsPage = new NewsPage();
+                    console.log('NewsPage 初始化完成:', newsPage);
+                } else {
+                    console.error('NewsPage 類別未定義');
+                }
+            })
+            .catch(error => {
+                console.error('API 測試失敗:', error);
+            });
+    </script>
+</body>
+</html>

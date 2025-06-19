@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單載入測試</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f0f0f; color: white; padding: 20px; }
+        .section { background: #1a1a1a; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        button { background: #f7931a; color: white; border: none; padding: 10px 20px; border-radius: 4px; margin: 5px; }
+        pre { background: #000; padding: 10px; border-radius: 4px; white-space: pre-wrap; }
+        .crypto-icon-text { display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🧪 簡單載入測試</h1>
+    
+    <div class="section">
+        <h2>1. 直接測試 API</h2>
+        <button onclick="testAPI()">測試API</button>
+        <pre id="api-result"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>2. 測試組件載入</h2>
+        <button onclick="testComponents()">檢查組件</button>
+        <pre id="component-result"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>3. 手動載入熱門貨幣</h2>
+        <button onclick="manualLoadCoins()">手動載入</button>
+        <div id="manual-coins" style="background: #2a2a2a; padding: 10px; margin-top: 10px; border-radius: 4px;"></div>
+    </div>
+
+    <!-- 載入所有必要的腳本 -->
+    <script src="/js/crypto-icons.js"></script>
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/dom.js"></script>
+    <script src="/js/lib/router.js"></script>
+    <script src="/js/state/store.js"></script>
+    <script src="/js/components/Notification.js"></script>
+    <script src="/js/components/CryptoCurrencyList.js"></script>
+    <script src="/js/components/HomeCryptoList.js"></script>
+
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('api-result');
+            result.textContent = '測試中...\n';
+            
+            try {
+                const response = await fetch('/api/market/trending?limit=5');
+                const data = await response.json();
+                
+                result.textContent = `狀態: ${data.success ? '成功' : '失敗'}\n`;
+                result.textContent += `資料數量: ${data.data?.length || 0}\n`;
+                
+                if (data.data && data.data.length > 0) {
+                    result.textContent += `第一筆資料: ${JSON.stringify(data.data[0], null, 2)}\n`;
+                }
+            } catch (error) {
+                result.textContent = `錯誤: ${error.message}\n`;
+            }
+        }
+
+        function testComponents() {
+            const result = document.getElementById('component-result');
+            
+            result.textContent = `CryptoCurrencyList: ${typeof CryptoCurrencyList}\n`;
+            result.textContent += `HomeCryptoList: ${typeof HomeCryptoList}\n`;
+            result.textContent += `getCryptoIcon: ${typeof window.getCryptoIcon}\n`;
+            result.textContent += `CryptoIcons: ${typeof window.CryptoIcons}\n`;
+            result.textContent += `CryptoColors: ${typeof window.CryptoColors}\n`;
+        }
+
+        async function manualLoadCoins() {
+            const container = document.getElementById('manual-coins');
+            container.innerHTML = '載入中...';
+            
+            try {
+                // 獲取API數據
+                const response = await fetch('/api/market/trending?limit=10');
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message);
+                }
+                
+                // 手動渲染
+                const coins = data.data;
+                let html = `
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 12px; background: #333; padding: 10px; font-weight: bold;">
+                        <div>貨幣</div>
+                        <div style="text-align: center;">價格</div>
+                        <div style="text-align: center;">24h 變化</div>
+                        <div style="text-align: center;">漲跌點數</div>
+                        <div style="text-align: center;">24h 交易量</div>
+                        <div style="text-align: center;">市值</div>
+                    </div>
+                `;
+                
+                coins.forEach((coin, index) => {
+                    const changePercent = parseFloat(coin.priceChangePercent || 0);
+                    const changeAmount = parseFloat(coin.priceChange || 0);
+                    const isPositive = changePercent >= 0;
+                    const baseCoin = coin.symbol.replace('USDT', '');
+                    
+                    // 計算模擬市值
+                    const simulatedSupply = {
+                        'BTC': 19700000,
+                        'ETH': 120000000,
+                        'USDC': 35000000000,
+                        'SOL': 470000000,
+                        'FDUSD': 10000000000,
+                        'XRP': 55000000000,
+                        'PEPE': 420690000000000,
+                        'SUI': 10000000000,
+                        'DOGE': 146000000000,
+                        'UNI': 1000000000
+                    };
+                    
+                    const supply = simulatedSupply[baseCoin] || 1000000000;
+                    const marketCap = coin.price * supply;
+                    
+                    function formatMarketCap(value) {
+                        if (value >= 1e12) return `$${(value/1e12).toFixed(2)}T`;
+                        if (value >= 1e9) return `$${(value/1e9).toFixed(2)}B`;
+                        if (value >= 1e6) return `$${(value/1e6).toFixed(2)}M`;
+                        return `$${value.toFixed(2)}`;
+                    }
+                    
+                    function formatVolume(value) {
+                        if (value >= 1e9) return `$${(value/1e9).toFixed(2)}B`;
+                        if (value >= 1e6) return `$${(value/1e6).toFixed(2)}M`;
+                        if (value >= 1e3) return `$${(value/1e3).toFixed(2)}K`;
+                        return `$${value.toFixed(2)}`;
+                    }
+                    
+                    // 使用 getCryptoIcon 函數
+                    let iconHtml = '';
+                    if (typeof window.getCryptoIcon === 'function') {
+                        iconHtml = window.getCryptoIcon(coin.symbol, 32);
+                    } else {
+                        // 後備方案
+                        const colors = {
+                            'btc': '#f7931a', 'eth': '#627eea', 'usdc': '#2775ca', 'sol': '#9945ff',
+                            'fdusd': '#f0b90b', 'xrp': '#00aae4', 'pepe': '#4caf50', 'sui': '#6d6d6d',
+                            'doge': '#c2a633', 'uni': '#ff007a'
+                        };
+                        const color = colors[baseCoin.toLowerCase()] || '#666666';
+                        iconHtml = `<div class="crypto-icon-text" style="width: 32px; height: 32px; background: ${color}; color: white; font-size: 12px;">${baseCoin.substring(0, 3)}</div>`;
+                    }
+                    
+                    html += `
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 12px; padding: 10px; border-bottom: 1px solid #444; align-items: center; text-align: center;">
+                            <div style="display: flex; align-items: center; gap: 10px; text-align: left;">
+                                ${iconHtml}
+                                <div>
+                                    <div style="font-weight: bold;">${baseCoin}</div>
+                                    <div style="font-size: 0.8em; color: #aaa;">${coin.name}</div>
+                                </div>
+                            </div>
+                            <div>$${parseFloat(coin.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 6})}</div>
+                            <div style="color: ${isPositive ? '#00d4aa' : '#ff4757'};">${changePercent.toFixed(2)}%</div>
+                            <div style="color: ${isPositive ? '#00d4aa' : '#ff4757'};">${isPositive ? '+' : ''}$${Math.abs(changeAmount).toFixed(4)}</div>
+                            <div>${formatVolume(coin.quoteVolume)}</div>
+                            <div>${formatMarketCap(marketCap)}</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                container.innerHTML = `錯誤: ${error.message}`;
+            }
+        }
+
+        // 自動執行測試
+        window.addEventListener('load', () => {
+            console.log('頁面載入完成');
+            setTimeout(() => {
+                testComponents();
+                testAPI();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

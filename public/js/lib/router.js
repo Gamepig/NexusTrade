@@ -418,6 +418,14 @@ class RouteBuilder {
   }
 
   /**
+   * 添加新聞路由
+   */
+  news(handler) {
+    this.router.route('/news', handler, { name: 'news' });
+    return this;
+  }
+
+  /**
    * 添加關注清單路由
    */
   watchlist(handler) {

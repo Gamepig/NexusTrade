@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首頁載入測試 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .test-title {
+            color: #f7931a;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background: #f7931a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #e8830f; }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: rgba(0, 212, 170, 0.2); border: 1px solid #00d4aa; }
+        .status.error { background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; }
+        .status.info { background: rgba(247, 147, 26, 0.2); border: 1px solid #f7931a; }
+        #console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+        .iframe-container {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 首頁載入測試工具</h1>
+        
+        <div id="status" class="status info">
+            <strong>狀態:</strong> 準備中...
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📡 API 測試</div>
+            <button class="btn" onclick="testAPIs()">測試所有 API</button>
+            <div id="api-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🏠 首頁載入測試</div>
+            <button class="btn" onclick="testDashboardLoad()">重新載入首頁</button>
+            <div class="iframe-container">
+                <iframe id="dashboard-frame" src="http://localhost:3000"></iframe>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 控制台輸出</div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // 重寫console.log來顯示在頁面上
+        const originalConsoleLog = console.log;
+        const consoleOutput = document.getElementById('console-output');
+        
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            consoleOutput.innerHTML += `${new Date().toLocaleTimeString()}: ${message}\\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        };
+
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.innerHTML = `<strong>狀態:</strong> ${message}`;
+        }
+
+        async function testAPIs() {
+            updateStatus('測試 API 中...', 'info');
+            const resultsEl = document.getElementById('api-results');
+            
+            try {
+                console.log('🔄 開始測試 API...');
+                
+                // 測試健康檢查
+                const healthResponse = await fetch('/api/health');
+                const healthData = await healthResponse.json();
+                console.log('💚 健康檢查:', healthData);
+                
+                // 測試新聞 API
+                const newsResponse = await fetch('/api/news/latest?limit=5');
+                const newsData = await newsResponse.json();
+                console.log('📰 新聞 API:', newsData.success ? '成功' : '失敗');
+                
+                // 測試市場數據 API
+                const marketResponse = await fetch('/api/market/trending?limit=5');
+                const marketData = await marketResponse.json();
+                console.log('📊 市場數據 API:', marketData.success ? '成功' : '失敗');
+                
+                resultsEl.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ API 測試結果</strong><br>
+                        健康檢查: ${healthData.status}<br>
+                        新聞 API: ${newsData.success ? '✅ 成功' : '❌ 失敗'} (${newsData.data?.length || 0} 則新聞)<br>
+                        市場 API: ${marketData.success ? '✅ 成功' : '❌ 失敗'} (${marketData.data?.length || 0} 個貨幣)
+                    </div>
+                `;
+                
+                updateStatus('API 測試完成', 'success');
+                
+            } catch (error) {
+                console.error('❌ API 測試失敗:', error);
+                resultsEl.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ API 測試失敗</strong><br>
+                        錯誤: ${error.message}
+                    </div>
+                `;
+                updateStatus('API 測試失敗', 'error');
+            }
+        }
+
+        function testDashboardLoad() {
+            updateStatus('重新載入首頁...', 'info');
+            console.log('🔄 重新載入首頁...');
+            
+            const iframe = document.getElementById('dashboard-frame');
+            iframe.src = 'http://localhost:3000?' + Date.now(); // 強制重新載入
+            
+            iframe.onload = function() {
+                console.log('✅ 首頁載入完成');
+                updateStatus('首頁載入完成', 'success');
+            };
+            
+            iframe.onerror = function() {
+                console.error('❌ 首頁載入失敗');
+                updateStatus('首頁載入失敗', 'error');
+            };
+        }
+
+        // 監聽 iframe 內的訊息
+        window.addEventListener('message', (event) => {
+            if (event.origin === 'http://localhost:3000') {
+                console.log('📱 來自首頁的訊息:', event.data);
+            }
+        });
+
+        // 頁面載入完成後的初始檢查
+        window.addEventListener('load', () => {
+            console.log('📄 測試頁面載入完成');
+            updateStatus('首頁載入測試工具準備就緒', 'info');
+            
+            // 自動執行 API 測試
+            setTimeout(testAPIs, 1000);
+        });
+    </script>
+</body>
+</html>

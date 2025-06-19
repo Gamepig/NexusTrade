@@ -41,8 +41,9 @@
                     
                     <nav class="nav">
                         <ul class="nav-list">
-                            <li><a href="#dashboard" class="nav-link active">儀表板</a></li>
+                            <li><a href="#dashboard" class="nav-link active">首頁</a></li>
                             <li><a href="#market" class="nav-link">市場</a></li>
+                            <li><a href="#news" class="nav-link">新聞</a></li>
                             <li><a href="#watchlist" class="nav-link">關注</a></li>
                             <li><a href="#notifications" class="nav-link">通知</a></li>
                             <li><a href="#ai-insights" class="nav-link">AI 分析</a></li>
@@ -57,77 +58,309 @@
             </div>
         </header>
 
+        <!-- 新聞跑馬燈 -->
+        <div class="news-ticker-section">
+            <div class="container">
+                <div id="news-ticker"></div>
+            </div>
+        </div>
+
         <!-- 主要內容區域 -->
         <main class="main">
             <div class="container">
-                <!-- 儀表板頁面 -->
+                <!-- 首頁 -->
                 <section id="dashboard-page" class="page active">
-                    <div class="page-header">
-                        <h1>市場儀表板</h1>
-                        <p>即時加密貨幣市場數據與分析</p>
-                    </div>
-                    
-                    <div class="dashboard-grid">
-                        <!-- 市場概覽 -->
-                        <div class="card market-overview">
-                            <div class="card-header">
-                                <h2>市場概覽</h2>
-                                <span class="status-indicator online">即時</span>
+                    <div class="homepage-container">
+                        <!-- 第一排 - 三個主要虛擬貨幣 K 線圖 -->
+                        <section class="section-main-charts">
+                            <div class="section-header">
+                                <h2>主要加密貨幣</h2>
                             </div>
-                            <div class="card-content">
-                                <div class="market-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-label">BTC/USDT</span>
-                                        <span class="stat-value">--</span>
-                                        <span class="stat-change">--</span>
+                            <div class="main-charts-grid">
+                                <div class="chart-card">
+                                    <div class="chart-container">
+                                        <!-- TradingView Widget BEGIN -->
+                                        <div class="tradingview-widget-container">
+                                            <div class="tradingview-widget-container__widget"></div>
+                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+                                            {
+                                              "symbol": "BINANCE:BTCUSDT",
+                                              "width": "100%",
+                                              "height": "300",
+                                              "locale": "en",
+                                              "dateRange": "12M",
+                                              "colorTheme": "dark",
+                                              "isTransparent": false,
+                                              "autosize": false,
+                                              "largeChartUrl": ""
+                                            }
+                                            </script>
+                                        </div>
+                                        <!-- TradingView Widget END -->
                                     </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">ETH/USDT</span>
-                                        <span class="stat-value">--</span>
-                                        <span class="stat-change">--</span>
+                                </div>
+                                
+                                <div class="chart-card">
+                                    <div class="chart-container">
+                                        <!-- TradingView Widget BEGIN -->
+                                        <div class="tradingview-widget-container">
+                                            <div class="tradingview-widget-container__widget"></div>
+                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+                                            {
+                                              "symbol": "BINANCE:ETHUSDT",
+                                              "width": "100%",
+                                              "height": "300",
+                                              "locale": "en",
+                                              "dateRange": "12M",
+                                              "colorTheme": "dark",
+                                              "isTransparent": false,
+                                              "autosize": false,
+                                              "largeChartUrl": ""
+                                            }
+                                            </script>
+                                        </div>
+                                        <!-- TradingView Widget END -->
                                     </div>
-                                    <div class="stat-item">
-                                        <span class="stat-label">BNB/USDT</span>
-                                        <span class="stat-value">--</span>
-                                        <span class="stat-change">--</span>
+                                </div>
+                                
+                                <div class="chart-card">
+                                    <div class="chart-container">
+                                        <!-- TradingView Widget BEGIN -->
+                                        <div class="tradingview-widget-container">
+                                            <div class="tradingview-widget-container__widget"></div>
+                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+                                            {
+                                              "symbol": "BINANCE:BNBUSDT",
+                                              "width": "100%",
+                                              "height": "300",
+                                              "locale": "en",
+                                              "dateRange": "12M",
+                                              "colorTheme": "dark",
+                                              "isTransparent": false,
+                                              "autosize": false,
+                                              "largeChartUrl": ""
+                                            }
+                                            </script>
+                                        </div>
+                                        <!-- TradingView Widget END -->
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- 通知狀態 -->
-                        <div class="card notification-status">
-                            <div class="card-header">
-                                <h2>通知狀態</h2>
+                        </section>
+
+                        <!-- 第0.5排 - AI 大勢分析空間 -->
+                        <section class="section-ai-insights">
+                            <div class="section-header">
+                                <h2>AI 市場趨勢分析</h2>
+                                <span class="status-badge">即將推出</span>
                             </div>
-                            <div class="card-content">
-                                <div class="notification-info">
-                                    <p>通知功能將在使用者認證系統完成後啟用</p>
-                                    <button class="btn btn-outline" disabled>設定通知</button>
+                            <div class="ai-insights-placeholder">
+                                <div class="placeholder-content">
+                                    <div class="placeholder-icon">🤖</div>
+                                    <h3>智慧市場分析</h3>
+                                    <p>AI 驅動的市場趨勢分析、技術指標解讀和投資建議將在此處顯示</p>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <!-- AI 洞察 -->
-                        <div class="card ai-insights">
-                            <div class="card-header">
-                                <h2>AI 市場洞察</h2>
+                        </section>
+
+                        <!-- 第0排 - 主要新聞五則 -->
+                        <section class="section-news-highlights">
+                            <div class="section-header">
+                                <h2>市場焦點</h2>
+                                <a href="#/news" class="more-link">查看更多 →</a>
                             </div>
-                            <div class="card-content">
-                                <div class="ai-info">
-                                    <p>AI 分析功能將在後續版本中推出</p>
-                                    <button class="btn btn-outline" disabled>獲取分析</button>
+                            <div class="news-highlights-grid">
+                                <div class="featured-news">
+                                    <!-- 第一則頭條新聞 -->
+                                    <div class="main-story" data-index="0">
+                                        <div class="story-image">
+                                            <img src="/images/news-placeholder.svg" alt="Loading..." />
+                                        </div>
+                                        <div class="story-content">
+                                            <div class="story-meta">
+                                                <span class="story-category">📈 市場動態</span>
+                                                <span class="story-time">載入中...</span>
+                                            </div>
+                                            <h3 class="story-title">載入中...</h3>
+                                            <p class="story-summary">載入最新市場新聞中...</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- 第二則頭條新聞 -->
+                                    <div class="main-story" data-index="1">
+                                        <div class="story-image">
+                                            <img src="/images/news-placeholder.svg" alt="Loading..." />
+                                        </div>
+                                        <div class="story-content">
+                                            <div class="story-meta">
+                                                <span class="story-category">💰 交易資訊</span>
+                                                <span class="story-time">載入中...</span>
+                                            </div>
+                                            <h3 class="story-title">載入中...</h3>
+                                            <p class="story-summary">載入最新市場新聞中...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="secondary-news">
+                                    <!-- 其他三則新聞 -->
+                                    <div class="story-item" data-index="2">
+                                        <div class="story-header">
+                                            <span class="story-index">03</span>
+                                            <span class="story-source">載入中...</span>
+                                        </div>
+                                        <span class="story-title">載入中...</span>
+                                    </div>
+                                    <div class="story-item" data-index="3">
+                                        <div class="story-header">
+                                            <span class="story-index">04</span>
+                                            <span class="story-source">載入中...</span>
+                                        </div>
+                                        <span class="story-title">載入中...</span>
+                                    </div>
+                                    <div class="story-item" data-index="4">
+                                        <div class="story-header">
+                                            <span class="story-index">05</span>
+                                            <span class="story-source">載入中...</span>
+                                        </div>
+                                        <span class="story-title">載入中...</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </section>
+
+                        <!-- 第二排 - 熱門貨幣列表 -->
+                        <section class="section-trending-coins">
+                            <div class="section-header">
+                                <h2>熱門貨幣</h2>
+                                <span class="subtitle">精選 10 種主流加密貨幣，每 10 秒更新</span>
+                            </div>
+                            <div class="trending-coins-container">
+                                <div class="coins-table">
+                                    <div class="table-header">
+                                        <div class="col-coin">貨幣</div>
+                                        <div class="col-price">價格</div>
+                                        <div class="col-change">24h 變化</div>
+                                        <div class="col-change-amount">漲跌點數</div>
+                                        <div class="col-volume">24h 交易量</div>
+                                        <div class="col-market-cap">市值</div>
+                                    </div>
+                                    <div class="table-body" id="trending-coins-list">
+                                        <!-- 動態載入熱門貨幣 -->
+                                        <div class="loading-row">
+                                            <div class="loading-spinner"></div>
+                                            <span>載入熱門貨幣中...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
                     </div>
                 </section>
                 
-                <!-- 其他頁面暫時隱藏 -->
+                <!-- 市場頁面 -->
                 <section id="market-page" class="page">
                     <div class="page-header">
-                        <h1>市場數據</h1>
-                        <p>即將推出</p>
+                        <h1>加密貨幣市場</h1>
+                        <p>即時市場數據與熱門貨幣分析</p>
+                    </div>
+                    
+                    <!-- 市場統計資訊 -->
+                    <div id="market-stats" class="market-stats">
+                        <div class="market-stat">
+                            <div class="stat-label">載入中...</div>
+                            <div class="stat-value">-</div>
+                        </div>
+                    </div>
+                    
+                    <!-- TradingView 主要貨幣 Widget -->
+                    <div class="trading-widgets-section">
+                        <h2>主要加密貨幣</h2>
+                        <div class="trading-widgets-grid">
+                            <div class="trading-widget-container">
+                                <div id="tradingview-widget-0" class="tradingview-widget"></div>
+                            </div>
+                            <div class="trading-widget-container">
+                                <div id="tradingview-widget-1" class="tradingview-widget"></div>
+                            </div>
+                            <div class="trading-widget-container">
+                                <div id="tradingview-widget-2" class="tradingview-widget"></div>
+                            </div>
+                            <div class="trading-widget-container">
+                                <div id="tradingview-widget-3" class="tradingview-widget"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 熱門貨幣列表 -->
+                    <div class="market-coins-section">
+                        <div class="section-header">
+                            <h2>熱門200種加密貨幣</h2>
+                            <p>每10秒自動更新 • 點擊查看技術分析</p>
+                        </div>
+                        
+                        <!-- 表格標題 -->
+                        <div class="coins-table-header">
+                            <div class="header-coin">貨幣</div>
+                            <div class="header-price">價格</div>
+                            <div class="header-change">即時變化</div>
+                            <div class="header-volume">24h 累積交易量</div>
+                        </div>
+                        
+                        <!-- 載入狀態 -->
+                        <div id="market-loading" class="market-loading">
+                            <div class="loading-spinner"></div>
+                            <p>載入市場數據中...</p>
+                        </div>
+                        
+                        <!-- 貨幣列表容器 -->
+                        <div id="market-coins-grid" class="market-coins-grid">
+                            <!-- 動態載入貨幣卡片 -->
+                        </div>
+                        
+                        <!-- 載入更多按鈕已移除 -->
+                    </div>
+                </section>
+                
+                <!-- 新聞頁面 -->
+                <section id="news-page" class="page">
+                    <div class="page-header">
+                        <h1>加密貨幣新聞</h1>
+                        <p>最新的加密貨幣市場新聞與分析</p>
+                    </div>
+                    
+                    <div class="news-controls">
+                        <div class="search-box">
+                            <input type="text" id="news-search" placeholder="搜尋新聞..." class="search-input">
+                            <button id="search-btn" class="search-btn">🔍</button>
+                        </div>
+                        <div class="filter-controls">
+                            <select id="news-category" class="category-select">
+                                <option value="all">所有分類</option>
+                                <option value="crypto">加密貨幣</option>
+                                <option value="bitcoin">比特幣</option>
+                                <option value="ethereum">以太坊</option>
+                                <option value="defi">DeFi</option>
+                                <option value="regulation">監管</option>
+                            </select>
+                            <button id="refresh-news" class="btn btn-outline">重新整理</button>
+                        </div>
+                    </div>
+                    
+                    <div id="news-grid" class="news-grid">
+                        <div class="news-loading">
+                            <div class="loading-spinner"></div>
+                            <p>載入新聞中...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="news-pagination" class="pagination" style="display: none;">
+                        <button id="prev-page" class="btn btn-outline">上一頁</button>
+                        <span id="page-info" class="page-info">第 1 頁</span>
+                        <button id="next-page" class="btn btn-outline">下一頁</button>
+                    </div>
+                    
+                    <div id="load-more" class="load-more" style="display: none;">
+                        <button id="load-more-btn" class="btn btn-primary">載入更多新聞</button>
                     </div>
                 </section>
                 
@@ -175,11 +408,18 @@
     </div>
 
     <!-- JavaScript 模組 -->
+    <script src="/js/crypto-icons-map.js"></script>
     <script src="/js/lib/api.js"></script>
     <script src="/js/lib/dom.js"></script>
     <script src="/js/lib/router.js"></script>
     <script src="/js/state/store.js"></script>
     <script src="/js/components/Notification.js"></script>
-    <script src="/js/app.js"></script>
+    <script src="/js/components/CryptoCurrencyList.js"></script>
+    <script src="/js/components/HomeCryptoList.js"></script>
+    <script src="/js/components/MarketPage.js"></script>
+    <script src="/js/components/TradingViewWidgets.js"></script>
+    <script src="/js/components/NewsTicker.js"></script>
+    <script src="/js/components/NewsPage.js"></script>
+    <script src="/js/nexus-app-fixed.js"></script>
 </body>
 </html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貨幣列表直接測試</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        body { margin: 0; padding: 20px; background: #0f0f0f; color: white; }
+        .test-container { max-width: 1200px; margin: 0 auto; }
+        .section { background: #1a1a1a; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 貨幣列表直接測試</h1>
+        
+        <div class="section">
+            <h3>正確版本的貨幣列表 (使用本地圖標)</h3>
+            <div class="coins-table">
+                <div class="table-header">
+                    <div class="col-coin">貨幣</div>
+                    <div class="col-price">價格</div>
+                    <div class="col-change">24h 變化</div>
+                    <div class="col-change-amount">漲跌點數</div>
+                    <div class="col-volume">24h 交易量</div>
+                    <div class="col-market-cap">市值</div>
+                </div>
+                <div class="table-body" id="coin-list-test">
+                    <!-- 將在這裡顯示測試數據 -->
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>圖標測試</h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;" id="icon-test">
+                <!-- 圖標測試 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/crypto-icons-map.js"></script>
+    <script>
+        // 模擬貨幣數據 (避免API限速問題)
+        const mockCoinData = [
+            {
+                symbol: 'BTCUSDT',
+                name: 'Bitcoin',
+                price: 105021.21,
+                priceChange: 521.15,
+                priceChangePercent: 0.498,
+                volume: 13500.45,
+                quoteVolume: 1400000000
+            },
+            {
+                symbol: 'ETHUSDT', 
+                name: 'Ethereum',
+                price: 2539.87,
+                priceChange: 14.87,
+                priceChangePercent: 0.589,
+                volume: 480000.25,
+                quoteVolume: 1200000000
+            },
+            {
+                symbol: 'BNBUSDT',
+                name: 'Binance Coin', 
+                price: 644.67,
+                priceChange: -0.13,
+                priceChangePercent: -0.020,
+                volume: 95000.12,
+                quoteVolume: 61000000
+            },
+            {
+                symbol: 'SOLUSDT',
+                name: 'Solana',
+                price: 145.84,
+                priceChange: -1.51,
+                priceChangePercent: -1.025,
+                volume: 3000000.5,
+                quoteVolume: 440000000
+            },
+            {
+                symbol: 'USDCUSDT',
+                name: 'USD Coin',
+                price: 0.9997,
+                priceChange: 0,
+                priceChangePercent: 0,
+                volume: 981000000,
+                quoteVolume: 980000000
+            }
+        ];
+
+        function renderCoinList(coinData) {
+            const container = document.getElementById('coin-list-test');
+            let html = '';
+
+            coinData.forEach((coin, index) => {
+                const changePercent = parseFloat(coin.priceChangePercent || 0);
+                const changeAmount = parseFloat(coin.priceChange || 0);
+                const isPositive = changePercent >= 0;
+                const baseCoin = coin.symbol.replace('USDT', '');
+                
+                // 模擬市值計算
+                const simulatedSupply = {
+                    'BTC': 19700000,
+                    'ETH': 120000000,
+                    'BNB': 145000000,
+                    'SOL': 470000000,
+                    'USDC': 35000000000
+                };
+                
+                const supply = simulatedSupply[baseCoin] || 1000000000;
+                const marketCap = coin.price * supply;
+                
+                function formatNumber(value) {
+                    if (value >= 1e12) return `$${(value/1e12).toFixed(2)}T`;
+                    if (value >= 1e9) return `$${(value/1e9).toFixed(2)}B`;
+                    if (value >= 1e6) return `$${(value/1e6).toFixed(2)}M`;
+                    return `$${value.toFixed(2)}`;
+                }
+                
+                // 使用新的本地圖標系統
+                const iconHtml = window.getCryptoIcon ? window.getCryptoIcon(coin.symbol, 32) : `<div>?</div>`;
+                
+                html += `
+                    <div class="coin-row">
+                        <div class="col-coin">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                ${iconHtml}
+                                <div>
+                                    <div style="font-weight: bold;">${baseCoin}</div>
+                                    <div style="font-size: 0.8em; color: #aaa;">${coin.name}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-price">$${parseFloat(coin.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 6})}</div>
+                        <div class="col-change" style="color: ${isPositive ? '#00d4aa' : '#ff4757'};">${changePercent.toFixed(2)}%</div>
+                        <div class="col-change-amount" style="color: ${isPositive ? '#00d4aa' : '#ff4757'};">${isPositive ? '+' : ''}$${Math.abs(changeAmount).toFixed(4)}</div>
+                        <div class="col-volume">${formatNumber(coin.quoteVolume)}</div>
+                        <div class="col-market-cap">${formatNumber(marketCap)}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function testIcons() {
+            const container = document.getElementById('icon-test');
+            const testSymbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT', 'USDCUSDT', 'ADAUSDT', 'DOGEUSDT', 'DOTUSDT'];
+            
+            let html = '';
+            testSymbols.forEach(symbol => {
+                const baseCoin = symbol.replace('USDT', '');
+                const iconHtml = window.getCryptoIcon ? window.getCryptoIcon(symbol, 40) : `<div>?</div>`;
+                
+                html += `
+                    <div style="text-align: center; padding: 10px;">
+                        ${iconHtml}
+                        <div style="margin-top: 5px; font-size: 12px;">${baseCoin}</div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // 頁面載入完成後執行
+        window.addEventListener('load', () => {
+            console.log('🧪 開始貨幣列表直接測試...');
+            
+            // 檢查本地圖標系統
+            if (typeof window.getCryptoIcon === 'function') {
+                console.log('✅ 本地圖標系統已載入');
+                if (window.CryptoIconsLocal) {
+                    console.log(`✅ 本地圖標映射包含 ${Object.keys(window.CryptoIconsLocal).length} 個圖標`);
+                }
+            } else {
+                console.error('❌ 本地圖標系統未載入');
+            }
+            
+            // 渲染測試數據
+            renderCoinList(mockCoinData);
+            testIcons();
+            
+            console.log('🎉 測試完成！');
+        });
+    </script>
+</body>
+</html>

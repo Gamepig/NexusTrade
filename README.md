@@ -159,6 +159,150 @@ npm run lint:fix
 npm run format
 ```
 
+## 🏗️ 應用程式架構
+
+### 📱 頁面結構圖
+
+```
+NexusTrade SPA 應用程式
+├── 🏠 儀表板 (#dashboard)
+│   ├── 市場概覽卡片
+│   │   ├── BTC/ETH/BNB 即時價格 (WebSocket)
+│   │   ├── 24小時漲跌幅顯示
+│   │   └── API: GET /api/market/overview
+│   ├── 通知狀態卡片
+│   │   ├── 通知系統狀態指示器
+│   │   ├── 活動警報數量
+│   │   └── API: GET /api/notifications/status
+│   └── AI 洞察卡片 (未來功能)
+│       ├── 市場趨勢預測
+│       └── API: GET /api/ai/insights (規劃中)
+│
+├── 📊 市場 (#market)
+│   ├── TradingView Crypto Screener
+│   ├── 熱門交易對列表
+│   │   ├── 漲幅排行榜
+│   │   ├── 成交量排行榜
+│   │   └── API: GET /api/market/trending
+│   ├── 交易對搜尋功能
+│   │   ├── 即時搜尋建議
+│   │   └── API: GET /api/market/search?q=
+│   └── TradingView Symbol Overview
+│       ├── 個股詳細資訊
+│       └── API: GET /api/market/price/:symbol
+│
+├── ⭐ 關注清單 (#watchlist)
+│   ├── 個人化資產追蹤 (需登入)
+│   ├── 關注資產列表
+│   │   ├── 即時價格更新 (WebSocket)
+│   │   ├── 自訂價格警報
+│   │   └── API: GET /api/watchlist (需認證)
+│   ├── TradingView Mini Charts
+│   └── 快速操作按鈕
+│       ├── 加入/移除關注
+│       └── API: POST/DELETE /api/watchlist (需認證)
+│
+├── 🔔 通知設定 (#notifications)
+│   ├── 價格警報管理 (需登入)
+│   │   ├── 警報條件設定
+│   │   ├── 通知方式選擇
+│   │   └── API: POST /api/notifications/alerts (需認證)
+│   ├── LINE 通知整合
+│   │   ├── LINE Messaging API 連結
+│   │   ├── OAuth 授權流程
+│   │   └── API: GET /api/notifications/line-notify/auth-url
+│   ├── 通知歷史記錄
+│   │   ├── 已發送通知列表
+│   │   └── API: GET /api/notifications/history (需認證)
+│   └── 測試通知功能
+│       └── API: POST /api/notifications/test
+│
+└── 🤖 AI 分析 (#ai-insights) [未來功能]
+    ├── OpenRouter API 整合
+    ├── 市場趨勢分析
+    ├── 技術指標預測
+    └── API: POST /api/ai/analyze (規劃中)
+```
+
+### 🔐 認證系統整合
+
+```
+認證流程
+├── 📧 Email 註冊/登入
+│   ├── 密碼加密 (BCrypt)
+│   ├── JWT Token 生成
+│   └── API: POST /api/auth/login|register
+│
+├── 🔗 Google OAuth 2.0
+│   ├── Passport.js Google Strategy
+│   ├── 自動帳戶連結
+│   └── API: GET /api/oauth/google
+│
+├── 📱 LINE Login OAuth
+│   ├── LINE Login API 整合
+│   ├── 使用者資料同步
+│   └── API: GET /api/oauth/line
+│
+└── 🔄 Token 管理
+    ├── Access Token (1小時)
+    ├── Refresh Token (7天)
+    └── API: POST /api/auth/refresh
+```
+
+### 🌐 即時數據架構
+
+```
+WebSocket 數據流
+├── 📡 Binance WebSocket 連接
+│   ├── wss://stream.binance.com:9443/ws
+│   ├── 多交易對即時訂閱
+│   └── 自動重連機制
+│
+├── 🔄 後端數據處理
+│   ├── 數據解析和格式化
+│   ├── 價格快取機制 (5秒有效期)
+│   └── WebSocket 轉發到前端
+│
+└── 🖥️ 前端即時更新
+    ├── 價格數據即時顯示
+    ├── 圖表動態更新
+    └── 通知觸發檢查
+```
+
+### 🎨 TradingView 整合規劃
+
+```
+TradingView 工具配置
+├── 🏠 儀表板頁面
+│   └── Market Overview Widget
+│       ├── 主要加密貨幣概覽
+│       ├── 市場總覽指標
+│       └── 響應式網格佈局
+│
+├── 📊 市場頁面
+│   ├── Crypto Screener Widget
+│   │   ├── 交易對篩選器
+│   │   ├── 自訂排序功能
+│   │   └── 即時數據更新
+│   └── Symbol Overview Widget
+│       ├── 個股詳細資訊
+│       ├── 技術指標顯示
+│       └── 動態幣種切換
+│
+├── ⭐ 關注清單頁面
+│   └── Mini Chart Widget
+│       ├── 小型價格圖表
+│       ├── 多時間週期
+│       └── 關注資產專用
+│
+└── 📈 圖表頁面 (新增)
+    └── Advanced Chart Widget
+        ├── 完整技術分析工具
+        ├── 自訂指標設定
+        ├── 多時間框架
+        └── 路由: #chart/:symbol
+```
+
 ## 📊 專案進度
 
 ### ✅ 已完成 (95%)

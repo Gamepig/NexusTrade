@@ -16,7 +16,8 @@ class BinanceService {
     this.baseURL = process.env.BINANCE_API_URL || 'https://api.binance.com';
     this.apiKey = process.env.BINANCE_API_KEY;
     this.apiSecret = process.env.BINANCE_API_SECRET;
-    this.wsURL = process.env.BINANCE_WEBSOCKET_URL || 'wss://stream.binance.com:9443/ws';
+    this.wsURL = process.env.BINANCE_WEBSOCKET_URL || 'wss://stream.binance.com:9443';
+    this.wsStreamURL = process.env.BINANCE_WEBSOCKET_STREAM_URL || 'wss://stream.binance.com:443';
     
     // WebSocket 連接管理
     this.wsConnections = new Map();
@@ -25,7 +26,19 @@ class BinanceService {
     // 數據快取
     this.priceCache = new Map();
     this.symbolCache = new Map();
+    this.allTickersCache = null;
+    this.allTickersCacheTime = null;
+    this.cacheExpiryTime = 60000; // 1 分鐘快取
     this.lastUpdateTime = null;
+    
+    // 速率限制保護 (2023年8月更新)
+    this.requestQueue = [];
+    this.requestCount = 0;
+    this.requestWindow = 60000; // 1分鐘窗口
+    this.maxRequestsPerWindow = 6000; // Binance 新限制為 6000 請求權重/分鐘
+    this.maxRawRequestsPerWindow = 1200; // 原始請求數限制
+    this.minRequestInterval = 50; // 最小請求間隔 50ms (提升性能)
+    this.lastRequestTime = 0;
     
     this.initializeService();
   }
@@ -53,11 +66,64 @@ class BinanceService {
   }
 
   /**
+   * 速率限制檢查和等待
+   */
+  async rateLimitCheck() {
+    const now = Date.now();
+    
+    // 清理過期的請求記錄
+    this.requestQueue = this.requestQueue.filter(timestamp => 
+      now - timestamp < this.requestWindow
+    );
+    
+    // 檢查是否超過速率限制
+    if (this.requestQueue.length >= this.maxRequestsPerWindow) {
+      const oldestRequest = Math.min(...this.requestQueue);
+      const waitTime = this.requestWindow - (now - oldestRequest);
+      logger.warn(`達到速率限制，等待 ${waitTime}ms`);
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      return this.rateLimitCheck(); // 遞歸檢查
+    }
+    
+    // 檢查最小請求間隔
+    const timeSinceLastRequest = now - this.lastRequestTime;
+    if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
+    
+    // 記錄請求
+    this.requestQueue.push(Date.now());
+    this.lastRequestTime = Date.now();
+  }
+
+  /**
+   * 帶速率限制的 HTTP 請求
+   */
+  async makeRequest(url, params = {}) {
+    await this.rateLimitCheck();
+    
+    try {
+      const response = await axios.get(url, { params });
+      return response;
+    } catch (error) {
+      if (error.response?.status === 429) {
+        // 429 Too Many Requests - 退避重試
+        const retryAfter = error.response.headers['retry-after'] || 60;
+        logger.warn(`收到 429 錯誤，等待 ${retryAfter} 秒後重試`);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        return this.makeRequest(url, params); // 重試
+      }
+      throw error;
+    }
+  }
+
+  /**
    * 測試 Binance API 連接
    */
   async testConnection() {
     try {
-      const response = await axios.get(`${this.baseURL}/api/v3/ping`);
+      await this.makeRequest(`${this.baseURL}/api/v3/ping`);
       logger.info('Binance API 連接測試成功');
       return true;
     } catch (error) {
@@ -71,7 +137,7 @@ class BinanceService {
    */
   async loadExchangeInfo() {
     try {
-      const response = await axios.get(`${this.baseURL}/api/v3/exchangeInfo`);
+      const response = await this.makeRequest(`${this.baseURL}/api/v3/exchangeInfo`);
       const exchangeInfo = response.data;
       
       // 快取交易對資訊
@@ -142,8 +208,8 @@ class BinanceService {
         return cached;
       }
 
-      const response = await axios.get(`${this.baseURL}/api/v3/ticker/price`, {
-        params: { symbol: symbol.toUpperCase() }
+      const response = await this.makeRequest(`${this.baseURL}/api/v3/ticker/price`, {
+        symbol: symbol.toUpperCase()
       });
 
       const priceData = {
@@ -163,16 +229,45 @@ class BinanceService {
   }
 
   /**
-   * 取得24小時價格統計
+   * 取得24小時價格統計 (帶快取優化)
    */
   async get24hrTicker(symbol = null) {
     try {
-      const params = symbol ? { symbol: symbol.toUpperCase() } : {};
-      const response = await axios.get(`${this.baseURL}/api/v3/ticker/24hr`, { params });
+      // 如果請求特定交易對，直接調用 API
+      if (symbol) {
+        const params = { symbol: symbol.toUpperCase() };
+        const response = await this.makeRequest(`${this.baseURL}/api/v3/ticker/24hr`, params);
+        return response.data;
+      }
       
+      // 如果請求所有交易對，檢查快取
+      const now = Date.now();
+      if (this.allTickersCache && 
+          this.allTickersCacheTime && 
+          (now - this.allTickersCacheTime) < this.cacheExpiryTime) {
+        logger.info('使用快取的24小時統計數據');
+        return this.allTickersCache;
+      }
+      
+      // 快取過期或不存在，重新獲取數據
+      logger.info('獲取新的24小時統計數據...');
+      const response = await this.makeRequest(`${this.baseURL}/api/v3/ticker/24hr`, {});
+      
+      // 更新快取
+      this.allTickersCache = response.data;
+      this.allTickersCacheTime = now;
+      
+      logger.info(`已快取 ${response.data.length} 個交易對的24小時統計數據`);
       return response.data;
     } catch (error) {
       logger.error('取得24小時價格統計失敗:', error.message);
+      
+      // 如果有快取數據，返回快取（即使過期）
+      if (this.allTickersCache) {
+        logger.warn('API 調用失敗，使用過期的快取數據');
+        return this.allTickersCache;
+      }
+      
       throw error;
     }
   }
@@ -182,12 +277,10 @@ class BinanceService {
    */
   async getKlineData(symbol, interval = '1h', limit = 100) {
     try {
-      const response = await axios.get(`${this.baseURL}/api/v3/klines`, {
-        params: {
-          symbol: symbol.toUpperCase(),
-          interval,
-          limit
-        }
+      const response = await this.makeRequest(`${this.baseURL}/api/v3/klines`, {
+        symbol: symbol.toUpperCase(),
+        interval,
+        limit
       });
 
       // 格式化K線數據
@@ -217,11 +310,9 @@ class BinanceService {
    */
   async getOrderBookDepth(symbol, limit = 100) {
     try {
-      const response = await axios.get(`${this.baseURL}/api/v3/depth`, {
-        params: {
-          symbol: symbol.toUpperCase(),
-          limit
-        }
+      const response = await this.makeRequest(`${this.baseURL}/api/v3/depth`, {
+        symbol: symbol.toUpperCase(),
+        limit
       });
 
       return {
@@ -298,14 +389,33 @@ class BinanceService {
    * 建立WebSocket連接
    */
   createWebSocketConnection(streams, onMessage, onError) {
-    const streamParam = Array.isArray(streams) ? streams.join('/') : streams;
-    const wsUrl = `${this.wsURL}/${streamParam}`;
+    let wsUrl;
+    
+    if (Array.isArray(streams) && streams.length > 1) {
+      // 多重串流使用組合格式
+      const streamParam = streams.join('/');
+      wsUrl = `${this.wsStreamURL}/stream?streams=${streamParam}`;
+    } else {
+      // 單一串流使用直接格式
+      const streamParam = Array.isArray(streams) ? streams[0] : streams;
+      wsUrl = `${this.wsURL}/ws/${streamParam}`;
+    }
     
     try {
       const ws = new WebSocket(wsUrl);
       
+      // 心跳檢測
+      let heartbeatInterval;
+      
       ws.on('open', () => {
-        logger.info(`WebSocket 連接建立: ${streamParam}`);
+        logger.info(`WebSocket 連接建立: ${wsUrl}`);
+        
+        // 設定心跳檢測 (每20秒)
+        heartbeatInterval = setInterval(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.ping();
+          }
+        }, 20000);
       });
       
       ws.on('message', (data) => {
@@ -317,13 +427,27 @@ class BinanceService {
         }
       });
       
+      ws.on('pong', () => {
+        // 收到 pong 回應，連接正常
+      });
+      
       ws.on('error', (error) => {
         logger.error('WebSocket 錯誤:', error.message);
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
         if (onError) onError(error);
       });
       
-      ws.on('close', () => {
-        logger.info(`WebSocket 連接關閉: ${streamParam}`);
+      ws.on('close', (code, reason) => {
+        logger.info(`WebSocket 連接關閉: ${code} - ${reason}`);
+        if (heartbeatInterval) clearInterval(heartbeatInterval);
+        
+        // 自動重連邏輯 (5秒後)
+        if (code !== 1000) { // 非正常關閉
+          setTimeout(() => {
+            logger.info('嘗試 WebSocket 重連...');
+            this.createWebSocketConnection(streams, onMessage, onError);
+          }, 5000);
+        }
       });
       
       // 儲存連接
@@ -370,17 +494,19 @@ class BinanceService {
     const priceData = {
       symbol: ticker.s,
       price: parseFloat(ticker.c),
-      priceChange: parseFloat(ticker.P),
-      priceChangePercent: parseFloat(ticker.P),
+      priceChange: parseFloat(ticker.p), // 修正：使用 ticker.p 表示價格變動
+      priceChangePercent: parseFloat(ticker.P), // 修正：使用 ticker.P 表示百分比變動
       volume: parseFloat(ticker.v),
       quoteVolume: parseFloat(ticker.q),
       high: parseFloat(ticker.h),
       low: parseFloat(ticker.l),
       openPrice: parseFloat(ticker.o),
+      count: parseInt(ticker.n), // 修正：使用 ticker.n 表示24小時交易筆數
       timestamp: Date.now()
     };
     
     this.priceCache.set(ticker.s, priceData);
+    logger.debug(`更新價格快取: ${ticker.s} = ${priceData.price} (${priceData.priceChangePercent}%)`);
   }
 
   /**

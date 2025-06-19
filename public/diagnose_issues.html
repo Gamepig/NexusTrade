@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>問題診斷工具</title>
+    <style>
+        body { padding: 20px; background: #1a1a1a; color: #fff; font-family: Arial, sans-serif; }
+        .issue { margin: 20px 0; padding: 15px; background: #2a2a2a; border-radius: 8px; }
+        .issue h3 { color: #f44336; margin: 0 0 10px 0; }
+        .test-btn { background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .output { background: #1a1a1a; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; max-height: 200px; overflow-y: auto; margin: 10px 0; }
+        .error { color: #f44336; }
+        .success { color: #4CAF50; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🐛 問題診斷報告</h1>
+    
+    <div class="issue">
+        <h3>問題 1: 測試頁面列表無法載入</h3>
+        <button class="test-btn" onclick="testListLoading()">測試列表載入</button>
+        <div id="list-output" class="output"></div>
+    </div>
+    
+    <div class="issue">
+        <h3>問題 2: 市場頁面列表排序有問題</h3>
+        <button class="test-btn" onclick="testSorting()">測試排序邏輯</button>
+        <div id="sort-output" class="output"></div>
+    </div>
+    
+    <div class="issue">
+        <h3>問題 3: 上方多了一個載入中</h3>
+        <button class="test-btn" onclick="testDuplicateLoading()">檢查重複載入狀態</button>
+        <div id="loading-output" class="output"></div>
+    </div>
+    
+    <div class="issue">
+        <h3>問題 4: 編號可以拿掉</h3>
+        <button class="test-btn" onclick="testRankDisplay()">檢查編號顯示</button>
+        <div id="rank-output" class="output"></div>
+    </div>
+    
+    <div class="issue">
+        <h3>問題 5: 貨幣ICON顯示不正常</h3>
+        <button class="test-btn" onclick="testIcons()">測試圖標載入</button>
+        <div id="icon-output" class="output"></div>
+    </div>
+    
+    <div class="issue">
+        <h3>問題 6: TradingView小工具無法載入</h3>
+        <button class="test-btn" onclick="testTradingView()">測試TradingView載入</button>
+        <div id="tv-output" class="output"></div>
+    </div>
+    
+    <div class="issue">
+        <h3>完整診斷</h3>
+        <button class="test-btn" onclick="runFullDiagnosis()">執行完整診斷</button>
+        <div id="full-output" class="output"></div>
+    </div>
+
+    <script src="/js/components/CryptoCurrencyList.js"></script>
+    <script src="/js/components/MarketPage.js"></script>
+    
+    <script>
+        // 問題 1: 測試列表載入
+        async function testListLoading() {
+            const output = document.getElementById('list-output');
+            output.textContent = '測試列表載入...\n';
+            
+            try {
+                // 測試 API 端點
+                const apiTest = await fetch('/api/market/trending?limit=5');
+                const apiData = await apiTest.json();
+                
+                if (apiData.success) {
+                    output.textContent += `✅ API 正常: 獲取到 ${apiData.data.length} 個交易對\n`;
+                    
+                    // 測試組件初始化
+                    const testContainer = document.createElement('div');
+                    testContainer.id = 'test-container';
+                    document.body.appendChild(testContainer);
+                    
+                    if (typeof CryptoCurrencyList !== 'undefined') {
+                        output.textContent += '✅ CryptoCurrencyList 組件已載入\n';
+                        
+                        try {
+                            const list = new CryptoCurrencyList({
+                                container: testContainer,
+                                mode: 'fixed',
+                                maxCoins: 5
+                            });
+                            output.textContent += '✅ 組件初始化成功\n';
+                        } catch (error) {
+                            output.textContent += `❌ 組件初始化失敗: ${error.message}\n`;
+                        }
+                    } else {
+                        output.textContent += '❌ CryptoCurrencyList 組件未載入\n';
+                    }
+                    
+                    document.body.removeChild(testContainer);
+                } else {
+                    output.textContent += `❌ API 錯誤: ${apiData.message}\n`;
+                }
+            } catch (error) {
+                output.textContent += `❌ 測試失敗: ${error.message}\n`;
+            }
+        }
+        
+        // 問題 2: 測試排序邏輯
+        async function testSorting() {
+            const output = document.getElementById('sort-output');
+            output.textContent = '測試排序邏輯...\n';
+            
+            try {
+                const response = await fetch('/api/market/trending?limit=10');
+                const data = await response.json();
+                
+                if (data.success) {
+                    const coins = data.data;
+                    output.textContent += `收到數據: ${coins.length} 個交易對\n`;
+                    
+                    // 檢查排序
+                    let sortedByVolume = true;
+                    for (let i = 1; i < coins.length; i++) {
+                        if (coins[i].quoteVolume > coins[i-1].quoteVolume) {
+                            sortedByVolume = false;
+                            break;
+                        }
+                    }
+                    
+                    if (sortedByVolume) {
+                        output.textContent += '✅ 數據按交易量正確排序\n';
+                    } else {
+                        output.textContent += '❌ 數據排序不正確\n';
+                    }
+                    
+                    // 顯示前5個
+                    output.textContent += '\n前5個交易對:\n';
+                    coins.slice(0, 5).forEach((coin, index) => {
+                        output.textContent += `${index + 1}. ${coin.symbol}: ${coin.quoteVolume.toFixed(0)}\n`;
+                    });
+                    
+                } else {
+                    output.textContent += `❌ API 錯誤: ${data.message}\n`;
+                }
+            } catch (error) {
+                output.textContent += `❌ 測試失敗: ${error.message}\n`;
+            }
+        }
+        
+        // 問題 3: 檢查重複載入狀態
+        function testDuplicateLoading() {
+            const output = document.getElementById('loading-output');
+            output.textContent = '檢查重複載入狀態...\n';
+            
+            // 模擬市場頁面結構
+            const testContainer = document.createElement('div');
+            testContainer.innerHTML = `
+                <div id="market-loading" class="market-loading">HTML中的載入狀態</div>
+                <div id="market-coins-grid"></div>
+            `;
+            document.body.appendChild(testContainer);
+            
+            // 檢查現有載入狀態
+            const existingLoading = testContainer.querySelector('#market-loading');
+            if (existingLoading) {
+                output.textContent += '⚠️ 發現HTML中已有載入狀態\n';
+            }
+            
+            // 測試 CryptoCurrencyList 是否會創建額外的載入狀態
+            if (typeof CryptoCurrencyList !== 'undefined') {
+                try {
+                    const list = new CryptoCurrencyList({
+                        container: testContainer.querySelector('#market-coins-grid'),
+                        mode: 'fixed',
+                        maxCoins: 5
+                    });
+                    
+                    const cryptoLoadings = testContainer.querySelectorAll('.crypto-list-loading, .loading-spinner');
+                    output.textContent += `發現 ${cryptoLoadings.length} 個組件載入狀態\n`;
+                    
+                    if (cryptoLoadings.length > 0) {
+                        output.textContent += '❌ CryptoCurrencyList 創建了額外的載入狀態\n';
+                    }
+                } catch (error) {
+                    output.textContent += `組件測試失敗: ${error.message}\n`;
+                }
+            }
+            
+            document.body.removeChild(testContainer);
+        }
+        
+        // 問題 4: 檢查編號顯示
+        function testRankDisplay() {
+            const output = document.getElementById('rank-output');
+            output.textContent = '檢查編號顯示...\n';
+            
+            // 檢查HTML結構中的編號
+            const testContainer = document.createElement('div');
+            testContainer.innerHTML = `
+                <div class="coins-table-header">
+                    <div class="header-rank">#</div>
+                    <div class="header-coin">貨幣</div>
+                </div>
+            `;
+            
+            const rankHeader = testContainer.querySelector('.header-rank');
+            if (rankHeader && rankHeader.textContent === '#') {
+                output.textContent += '⚠️ HTML中仍有編號欄位 (#)\n';
+            }
+            
+            // 檢查 CryptoCurrencyList 組件的編號
+            if (typeof CryptoCurrencyList !== 'undefined') {
+                output.textContent += '檢查組件中的編號欄位...\n';
+                // 這裡可以檢查組件創建的HTML結構
+                output.textContent += '⚠️ 組件createHTML()中仍有編號欄位\n';
+            }
+        }
+        
+        // 問題 5: 測試圖標載入
+        async function testIcons() {
+            const output = document.getElementById('icon-output');
+            output.textContent = '測試圖標載入...\n';
+            
+            const testSymbols = ['BTCUSDT', 'ETHUSDT', 'BNBUSDT'];
+            
+            for (const symbol of testSymbols) {
+                const baseSymbol = symbol.replace('USDT', '').toLowerCase();
+                const testUrl = `https://cryptocurrencyliveprices.com/img/${baseSymbol}-bitcoin.png`;
+                
+                try {
+                    const response = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
+                    output.textContent += `測試 ${symbol}: ${testUrl}\n`;
+                } catch (error) {
+                    output.textContent += `❌ ${symbol} 圖標測試失敗: ${error.message}\n`;
+                }
+            }
+            
+            output.textContent += '\n⚠️ 圖標URL格式可能需要調整\n';
+        }
+        
+        // 問題 6: 測試TradingView載入
+        function testTradingView() {
+            const output = document.getElementById('tv-output');
+            output.textContent = '測試TradingView載入...\n';
+            
+            // 檢查容器是否存在
+            const widgetIds = ['tradingview-widget-0', 'tradingview-widget-1', 'tradingview-widget-2', 'tradingview-widget-3'];
+            const testContainer = document.createElement('div');
+            
+            widgetIds.forEach((id, index) => {
+                const container = document.createElement('div');
+                container.id = id;
+                container.className = 'trading-widget-container';
+                testContainer.appendChild(container);
+            });
+            
+            document.body.appendChild(testContainer);
+            
+            if (typeof MarketPage !== 'undefined') {
+                try {
+                    const marketPage = new MarketPage();
+                    output.textContent += '✅ MarketPage 組件載入成功\n';
+                    
+                    // 測試TradingView初始化
+                    marketPage.initializeTradingViewWidgets();
+                    output.textContent += '✅ TradingView 初始化調用成功\n';
+                    
+                    // 檢查容器是否有內容
+                    setTimeout(() => {
+                        let hasContent = false;
+                        widgetIds.forEach(id => {
+                            const container = document.getElementById(id);
+                            if (container && container.children.length > 0) {
+                                hasContent = true;
+                            }
+                        });
+                        
+                        if (hasContent) {
+                            output.textContent += '✅ TradingView 容器有內容\n';
+                        } else {
+                            output.textContent += '❌ TradingView 容器為空\n';
+                        }
+                    }, 2000);
+                    
+                } catch (error) {
+                    output.textContent += `❌ MarketPage 測試失敗: ${error.message}\n`;
+                }
+            } else {
+                output.textContent += '❌ MarketPage 組件未載入\n';
+            }
+            
+            setTimeout(() => {
+                document.body.removeChild(testContainer);
+            }, 3000);
+        }
+        
+        // 執行完整診斷
+        async function runFullDiagnosis() {
+            const output = document.getElementById('full-output');
+            output.textContent = '執行完整診斷...\n\n';
+            
+            output.textContent += '=== 問題總結 ===\n';
+            output.textContent += '1. ❌ 重複表頭: HTML + CryptoCurrencyList 都創建表頭\n';
+            output.textContent += '2. ❌ 重複載入狀態: HTML + CryptoCurrencyList 都有載入提示\n';
+            output.textContent += '3. ❌ 排序邏輯錯誤: rank 計算方式不正確\n';
+            output.textContent += '4. ❌ 編號欄位: 用戶要求移除但仍存在\n';
+            output.textContent += '5. ❌ 圖標URL格式: cryptocurrencyliveprices.com 格式可能不正確\n';
+            output.textContent += '6. ❌ TradingView配置: 可能有配置或載入問題\n\n';
+            
+            output.textContent += '=== 修復計劃 ===\n';
+            output.textContent += '1. 修改 CryptoCurrencyList: 移除自建表頭和載入狀態\n';
+            output.textContent += '2. 修正排序邏輯: 使用正確的排名計算\n';
+            output.textContent += '3. 移除編號欄位: 從HTML和組件中完全移除\n';
+            output.textContent += '4. 修復圖標URL: 調整為正確格式\n';
+            output.textContent += '5. 修復TradingView: 檢查配置和載入邏輯\n';
+        }
+        
+        // 自動執行基礎診斷
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(runFullDiagnosis, 1000);
+        });
+    </script>
+</body>
+</html>

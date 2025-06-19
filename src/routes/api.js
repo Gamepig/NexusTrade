@@ -52,6 +52,18 @@ router.get('/', (req, res) => {
           'POST /api/notifications/test - 測試通知發送'
         ]
       },
+      news: {
+        description: '新聞系統 API',
+        endpoints: [
+          'GET /api/news/latest - 取得最新新聞 (跑馬燈)',
+          'GET /api/news - 分頁取得新聞',
+          'GET /api/news/search - 搜尋新聞',
+          'GET /api/news/sources - 取得新聞來源',
+          'POST /api/news/refresh - 重新整理新聞快取',
+          'GET /api/news/stats - 取得新聞統計',
+          'GET /api/news/:newsId/click - 新聞點擊追蹤'
+        ]
+      },
       ai: {
         description: 'AI 分析 API',
         endpoints: [
@@ -76,6 +88,11 @@ router.use('/market', require('./market'));
  * 通知系統模組路由
  */
 router.use('/notifications', require('./notifications'));
+
+/**
+ * 新聞系統模組路由
+ */
+router.use('/news', require('./news'));
 
 // ==================== 使用者管理 API ====================
 

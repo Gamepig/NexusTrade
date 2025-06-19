@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>價格更新除錯</title>
+    <style>
+        body { background: #000; color: white; font-family: Arial; padding: 20px; }
+        .debug { background: #222; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .chart-card { border: 1px solid #333; padding: 15px; margin: 10px 0; }
+        .coin-symbol { font-weight: bold; color: #f7931a; }
+        .current-price { color: #4f4; }
+        .price-change { margin-left: 10px; }
+        .positive { color: #4f4; }
+        .negative { color: #f44; }
+    </style>
+</head>
+<body>
+    <h1>價格更新除錯測試</h1>
+    
+    <!-- 模擬圖表卡片結構 -->
+    <div class="chart-card">
+        <div class="coin-info">
+            <span class="coin-symbol">BTC</span>
+            <span class="coin-name">Bitcoin</span>
+        </div>
+        <div class="price-info">
+            <span class="current-price">--</span>
+            <span class="price-change">--</span>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="coin-info">
+            <span class="coin-symbol">ETH</span>
+            <span class="coin-name">Ethereum</span>
+        </div>
+        <div class="price-info">
+            <span class="current-price">--</span>
+            <span class="price-change">--</span>
+        </div>
+    </div>
+    
+    <div class="chart-card">
+        <div class="coin-info">
+            <span class="coin-symbol">BNB</span>
+            <span class="coin-name">BNB</span>
+        </div>
+        <div class="price-info">
+            <span class="current-price">--</span>
+            <span class="price-change">--</span>
+        </div>
+    </div>
+    
+    <div class="debug">
+        <h3>測試結果</h3>
+        <div id="test-results"></div>
+    </div>
+    
+    <button onclick="testPriceUpdate()">測試價格更新</button>
+    
+    <script>
+        function updateCoinPrice(symbol, priceData) {
+            console.log('=== updateCoinPrice 開始 ===');
+            console.log('symbol:', symbol);
+            console.log('priceData:', priceData);
+            
+            const coinMap = {
+                'BTCUSDT': 'BTC',
+                'ETHUSDT': 'ETH', 
+                'BNBUSDT': 'BNB'
+            };
+            
+            const coinSymbol = coinMap[symbol];
+            console.log('coinSymbol:', coinSymbol);
+            
+            if (!coinSymbol) {
+                console.log('coinSymbol not found, returning');
+                return;
+            }
+
+            // 透過幣種符號找到對應的圖表卡片
+            const chartCards = document.querySelectorAll('.chart-card');
+            console.log('找到的 chartCards 數量:', chartCards.length);
+            
+            let targetCard = null;
+            
+            chartCards.forEach((card, index) => {
+                console.log(`檢查 card ${index}:`);
+                const symbolElement = card.querySelector('.coin-symbol');
+                console.log('symbolElement:', symbolElement);
+                console.log('symbolElement.textContent:', symbolElement ? symbolElement.textContent : 'null');
+                
+                if (symbolElement && symbolElement.textContent === coinSymbol) {
+                    console.log('找到匹配的卡片!');
+                    targetCard = card;
+                }
+            });
+
+            console.log('targetCard:', targetCard);
+
+            if (targetCard) {
+                const priceElement = targetCard.querySelector('.current-price');
+                const changeElement = targetCard.querySelector('.price-change');
+                
+                console.log('priceElement:', priceElement);
+                console.log('changeElement:', changeElement);
+
+                if (priceElement && priceData.price) {
+                    priceElement.textContent = `$${parseFloat(priceData.price).toLocaleString()}`;
+                    console.log('價格已更新');
+                }
+
+                if (changeElement && priceData.priceChangePercent !== undefined) {
+                    const change = parseFloat(priceData.priceChangePercent);
+                    const isPositive = change >= 0;
+                    
+                    changeElement.textContent = `${isPositive ? '+' : ''}${change.toFixed(2)}%`;
+                    changeElement.className = `price-change ${isPositive ? 'positive' : 'negative'}`;
+                    console.log('變化已更新');
+                }
+            } else {
+                console.error('❌ 未找到目標卡片');
+            }
+            
+            console.log('=== updateCoinPrice 結束 ===');
+        }
+        
+        function testPriceUpdate() {
+            const testData = [
+                { symbol: 'BTCUSDT', data: { price: '104567.89', priceChangePercent: '2.45' } },
+                { symbol: 'ETHUSDT', data: { price: '2513.42', priceChangePercent: '-1.23' } },
+                { symbol: 'BNBUSDT', data: { price: '542.78', priceChangePercent: '0.56' } }
+            ];
+            
+            const results = [];
+            
+            testData.forEach(test => {
+                try {
+                    updateCoinPrice(test.symbol, test.data);
+                    results.push(`✅ ${test.symbol}: 成功`);
+                } catch (error) {
+                    results.push(`❌ ${test.symbol}: ${error.message}`);
+                    console.error('錯誤:', error);
+                }
+            });
+            
+            document.getElementById('test-results').innerHTML = results.join('<br>');
+        }
+        
+        console.log('除錯頁面載入完成');
+    </script>
+</body>
+</html>

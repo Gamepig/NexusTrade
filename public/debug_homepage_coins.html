@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首頁熱門貨幣診斷</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            padding: 20px;
+        }
+        .debug-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .error { color: #ff4757; }
+        .success { color: #00d4aa; }
+        .warning { color: #ffa502; }
+        button {
+            background: #f7931a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏠 首頁熱門貨幣診斷</h1>
+    
+    <div class="debug-section">
+        <h2>1. DOM 元素檢查</h2>
+        <button onclick="checkDOMElements()">檢查 DOM 元素</button>
+        <pre id="dom-check"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h2>2. 組件載入檢查</h2>
+        <button onclick="checkComponents()">檢查組件</button>
+        <pre id="component-check"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h2>3. API 測試</h2>
+        <button onclick="testAPI()">測試 API</button>
+        <pre id="api-test"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h2>4. 手動初始化熱門貨幣</h2>
+        <button onclick="manualInit()">手動初始化</button>
+        <pre id="manual-init"></pre>
+    </div>
+    
+    <div class="debug-section">
+        <h2>5. 控制台日誌</h2>
+        <button onclick="showConsoleLogs()">顯示日誌</button>
+        <pre id="console-logs"></pre>
+    </div>
+
+    <script>
+        let logs = [];
+        
+        // 捕獲console.log
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        console.log = function(...args) {
+            logs.push({type: 'log', time: new Date().toLocaleTimeString(), args});
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            logs.push({type: 'error', time: new Date().toLocaleTimeString(), args});
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            logs.push({type: 'warn', time: new Date().toLocaleTimeString(), args});
+            originalWarn.apply(console, args);
+        };
+
+        function checkDOMElements() {
+            const result = document.getElementById('dom-check');
+            const checks = {
+                'trending-coins-list': document.getElementById('trending-coins-list'),
+                'CryptoCurrencyList class': typeof CryptoCurrencyList !== 'undefined',
+                'HomeCryptoList class': typeof HomeCryptoList !== 'undefined',
+                'getCryptoIcon function': typeof window.getCryptoIcon === 'function',
+                'NexusTradeApp instance': typeof window.app !== 'undefined'
+            };
+            
+            let output = '';
+            for (const [name, check] of Object.entries(checks)) {
+                const status = check ? '✅' : '❌';
+                const color = check ? 'success' : 'error';
+                output += `<span class="${color}">${status} ${name}: ${check ? 'OK' : 'MISSING'}</span>\n`;
+            }
+            
+            result.innerHTML = output;
+        }
+
+        function checkComponents() {
+            const result = document.getElementById('component-check');
+            let output = '';
+            
+            try {
+                // 檢查全局變數
+                output += `NexusTradeApp: ${typeof NexusTradeApp}\n`;
+                output += `CryptoCurrencyList: ${typeof CryptoCurrencyList}\n`;
+                output += `HomeCryptoList: ${typeof HomeCryptoList}\n`;
+                output += `window.app: ${typeof window.app}\n`;
+                
+                // 檢查 app 實例
+                if (window.app) {
+                    output += `app.homeCryptoListComponent: ${typeof window.app.homeCryptoListComponent}\n`;
+                }
+                
+                // 檢查容器
+                const container = document.getElementById('trending-coins-list');
+                if (container) {
+                    output += `Container innerHTML length: ${container.innerHTML.length}\n`;
+                    output += `Container component: ${typeof container.component}\n`;
+                }
+                
+            } catch (error) {
+                output += `<span class="error">錯誤: ${error.message}</span>\n`;
+            }
+            
+            result.innerHTML = output;
+        }
+
+        async function testAPI() {
+            const result = document.getElementById('api-test');
+            result.innerHTML = '測試中...\n';
+            
+            try {
+                // 測試健康檢查
+                const healthResponse = await fetch('/health');
+                const healthData = await healthResponse.json();
+                result.innerHTML += `<span class="success">✅ 健康檢查: ${healthData.status}</span>\n`;
+                
+                // 測試熱門貨幣 API
+                const trendingResponse = await fetch('/api/market/trending?limit=5');
+                const trendingData = await trendingResponse.json();
+                result.innerHTML += `<span class="success">✅ 熱門貨幣 API: ${trendingData.success ? 'OK' : 'FAILED'}</span>\n`;
+                result.innerHTML += `貨幣數量: ${trendingData.data?.length || 0}\n`;
+                
+                if (trendingData.data?.length > 0) {
+                    result.innerHTML += `第一個貨幣: ${JSON.stringify(trendingData.data[0], null, 2)}\n`;
+                }
+                
+            } catch (error) {
+                result.innerHTML += `<span class="error">❌ API 錯誤: ${error.message}</span>\n`;
+            }
+        }
+
+        async function manualInit() {
+            const result = document.getElementById('manual-init');
+            result.innerHTML = '手動初始化中...\n';
+            
+            try {
+                const container = document.getElementById('trending-coins-list');
+                if (!container) {
+                    result.innerHTML += '<span class="error">❌ 找不到容器元素</span>\n';
+                    return;
+                }
+                
+                // 檢查 CryptoCurrencyList 是否存在
+                if (typeof CryptoCurrencyList === 'undefined') {
+                    result.innerHTML += '<span class="error">❌ CryptoCurrencyList 未定義</span>\n';
+                    return;
+                }
+                
+                // 手動創建實例
+                result.innerHTML += '正在創建 CryptoCurrencyList 實例...\n';
+                
+                const cryptoList = new CryptoCurrencyList({
+                    container: container,
+                    mode: 'fixed',
+                    maxCoins: 10,
+                    coinsPerPage: 10,
+                    updateInterval: 15000,
+                    onCoinClick: (symbol) => {
+                        console.log(`點擊貨幣: ${symbol}`);
+                    }
+                });
+                
+                result.innerHTML += '<span class="success">✅ CryptoCurrencyList 實例創建成功</span>\n';
+                result.innerHTML += `實例類型: ${typeof cryptoList}\n`;
+                
+                // 等待一下看結果
+                setTimeout(() => {
+                    const containerContent = container.innerHTML;
+                    result.innerHTML += `容器內容長度: ${containerContent.length}\n`;
+                    if (containerContent.includes('coin-row') || containerContent.includes('crypto-')) {
+                        result.innerHTML += '<span class="success">✅ 貨幣數據已載入</span>\n';
+                    } else {
+                        result.innerHTML += '<span class="warning">⚠️ 可能還在載入中</span>\n';
+                    }
+                }, 3000);
+                
+            } catch (error) {
+                result.innerHTML += `<span class="error">❌ 初始化錯誤: ${error.message}</span>\n`;
+                result.innerHTML += `Stack: ${error.stack}\n`;
+            }
+        }
+
+        function showConsoleLogs() {
+            const result = document.getElementById('console-logs');
+            let output = `總共 ${logs.length} 條日誌:\n\n`;
+            
+            logs.slice(-20).forEach(log => {
+                const typeClass = log.type === 'error' ? 'error' : log.type === 'warn' ? 'warning' : 'success';
+                output += `<span class="${typeClass}">[${log.time}] ${log.type.toUpperCase()}: ${log.args.join(' ')}</span>\n`;
+            });
+            
+            result.innerHTML = output;
+        }
+
+        // 自動檢查
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkDOMElements();
+                checkComponents();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

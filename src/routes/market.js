@@ -48,7 +48,13 @@ router.get('/test', asyncErrorHandler(marketController.testConnection));
 router.get('/price/:symbol', asyncErrorHandler(marketController.getSymbolPrice));
 
 /**
- * 多個交易對價格
+ * 多個交易對價格 (GET版本，查詢參數)
+ * GET /api/market/prices?symbols=BTCUSDT,ETHUSDT
+ */
+router.get('/prices', asyncErrorHandler(marketController.getMultiplePricesQuery));
+
+/**
+ * 多個交易對價格 (POST版本，請求主體)
  * POST /api/market/prices
  */
 router.post('/prices', asyncErrorHandler(marketController.getMultiplePrices));
@@ -72,6 +78,18 @@ router.get('/klines/:symbol', asyncErrorHandler(marketController.getKlines));
 router.get('/depth/:symbol', asyncErrorHandler(marketController.getOrderBookDepth));
 
 /**
+ * 批量獲取價格數據 (新增)
+ * GET /api/market/batch-prices?symbols=BTCUSDT,ETHUSDT,BNBUSDT
+ */
+router.get('/batch-prices', asyncErrorHandler(marketController.getBatchPrices));
+
+/**
+ * 獲取24小時市場統計 (新增)
+ * GET /api/market/stats24h
+ */
+router.get('/stats24h', asyncErrorHandler(marketController.get24hStats));
+
+/**
  * 路由說明 - 開發階段用途
  * GET /api/market
  */
@@ -88,13 +106,17 @@ router.get('/', (req, res) => {
       'GET /api/market/test': '測試 Binance API 連接',
       'GET /api/market/price/:symbol': '單個交易對價格',
       'POST /api/market/prices': '多個交易對價格',
+      'GET /api/market/batch-prices': '批量獲取價格數據 (新增)',
+      'GET /api/market/stats24h': '24小時市場統計 (新增)',
       'GET /api/market/ticker/:symbol': '24小時價格統計',
       'GET /api/market/klines/:symbol': 'K線數據',
       'GET /api/market/depth/:symbol': '訂單簿深度'
     },
     parameters: {
-      'trending': 'limit - 限制返回數量 (預設: 10)',
+      'trending': 'limit - 限制返回數量 (預設: 200)',
       'search': 'q - 搜尋查詢, limit - 限制返回數量 (預設: 20)',
+      'batch-prices': 'symbols - 逗號分隔的交易對清單 (例: BTCUSDT,ETHUSDT)',
+      'stats24h': '無參數 - 返回24小時市場統計',
       'klines': 'interval - K線間隔 (預設: 1h), limit - 限制返回數量 (預設: 100)',
       'depth': 'limit - 限制返回數量 (預設: 100)'
     },

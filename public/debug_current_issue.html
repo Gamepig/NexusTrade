@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>當前問題除錯</title>
+    <style>
+        body { background: #000; color: white; font-family: Arial; padding: 20px; }
+        .debug { background: #222; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .success { background: #042; }
+        .error { background: #420; }
+        .warning { background: #440; }
+    </style>
+</head>
+<body>
+    <h1>🔍 當前問題除錯</h1>
+    
+    <div id="results"></div>
+    
+    <h2>TradingView 測試</h2>
+    <div style="border: 1px solid #333; height: 220px; margin: 20px 0;">
+        <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <div class="tradingview-widget-copyright">
+                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                    <span class="blue-text">Track all markets on TradingView</span>
+                </a>
+            </div>
+        </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "BINANCE:BTCUSDT",
+          "width": "100%",
+          "height": "200",
+          "locale": "en",
+          "dateRange": "12M",
+          "colorTheme": "dark",
+          "isTransparent": false,
+          "autosize": false,
+          "largeChartUrl": ""
+        }
+        </script>
+        <!-- TradingView Widget END -->
+    </div>
+    
+    <script>
+        function addResult(type, message) {
+            const div = document.createElement('div');
+            div.className = `debug ${type}`;
+            div.innerHTML = `<strong>${type.toUpperCase()}:</strong> ${message}`;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        // 檢查各種可能的問題
+        console.log('=== 除錯開始 ===');
+        
+        // 1. 檢查網路連接
+        fetch('https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js')
+            .then(response => {
+                if (response.ok) {
+                    addResult('success', 'TradingView 腳本可以正常訪問');
+                } else {
+                    addResult('error', `TradingView 腳本回應錯誤: ${response.status}`);
+                }
+            })
+            .catch(error => {
+                addResult('error', `TradingView 腳本載入失敗: ${error.message}`);
+            });
+        
+        // 2. 檢查 CSP
+        document.addEventListener('securitypolicyviolation', function(e) {
+            addResult('error', `CSP 違規: ${e.violatedDirective} - ${e.blockedURI}`);
+        });
+        
+        // 3. 檢查腳本錯誤
+        window.addEventListener('error', function(e) {
+            addResult('error', `腳本錯誤: ${e.message} (${e.filename}:${e.lineno})`);
+        });
+        
+        // 4. 檢查首頁的圖表卡片結構
+        setTimeout(() => {
+            const mainPageCards = window.parent.document ? 
+                window.parent.document.querySelectorAll('.chart-card') : 
+                [];
+            
+            if (mainPageCards.length > 0) {
+                addResult('success', `首頁找到 ${mainPageCards.length} 個圖表卡片`);
+                
+                mainPageCards.forEach((card, index) => {
+                    const symbol = card.querySelector('.coin-symbol');
+                    const symbolText = symbol ? symbol.textContent : '未知';
+                    addResult('success', `圖表卡片 ${index + 1}: ${symbolText}`);
+                });
+            } else {
+                addResult('warning', '無法訪問首頁的圖表卡片 (可能是跨框架限制)');
+            }
+        }, 1000);
+        
+        // 5. 檢查 TradingView 小工具載入
+        setTimeout(() => {
+            const widget = document.querySelector('.tradingview-widget-container__widget');
+            if (widget && widget.hasChildNodes()) {
+                addResult('success', 'TradingView 小工具載入成功');
+            } else {
+                addResult('error', 'TradingView 小工具未載入');
+            }
+        }, 5000);
+        
+        addResult('success', '除錯腳本初始化完成');
+    </script>
+</body>
+</html>

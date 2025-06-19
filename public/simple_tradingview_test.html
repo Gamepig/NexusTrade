@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple TradingView Test</title>
+    <style>
+        body { background: #000; color: white; font-family: Arial, sans-serif; padding: 20px; }
+        .container { height: 220px; border: 1px solid #333; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h1>Simple TradingView Test</h1>
+    
+    <h2>Test 1: Default Configuration</h2>
+    <div class="container">
+        <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <div class="tradingview-widget-copyright">
+                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                    <span class="blue-text">Track all markets on TradingView</span>
+                </a>
+            </div>
+        </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "FX:EURUSD",
+          "width": "100%",
+          "height": 220,
+          "locale": "en",
+          "dateRange": "12M",
+          "colorTheme": "dark",
+          "isTransparent": false,
+          "autosize": false,
+          "largeChartUrl": ""
+        }
+        </script>
+        <!-- TradingView Widget END -->
+    </div>
+    
+    <h2>Test 2: Crypto Symbol (Our Target)</h2>
+    <div class="container">
+        <!-- TradingView Widget BEGIN -->
+        <div class="tradingview-widget-container">
+            <div class="tradingview-widget-container__widget"></div>
+            <div class="tradingview-widget-copyright">
+                <a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank">
+                    <span class="blue-text">Track all markets on TradingView</span>
+                </a>
+            </div>
+        </div>
+        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+        {
+          "symbol": "BINANCE:BTCUSDT",
+          "width": "100%",
+          "height": 220,
+          "locale": "en",
+          "dateRange": "12M",
+          "colorTheme": "dark",
+          "isTransparent": false,
+          "autosize": false,
+          "largeChartUrl": ""
+        }
+        </script>
+        <!-- TradingView Widget END -->
+    </div>
+    
+    <script>
+        console.log('頁面載入完成');
+        
+        // 檢查小工具載入
+        setTimeout(() => {
+            const widgets = document.querySelectorAll('.tradingview-widget-container__widget');
+            console.log(`找到 ${widgets.length} 個小工具容器`);
+            
+            widgets.forEach((widget, index) => {
+                console.log(`小工具 ${index + 1}:`, widget.hasChildNodes() ? '已載入' : '未載入');
+                console.log(`小工具 ${index + 1} 內容:`, widget.innerHTML.substring(0, 100));
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>市場頁面載入診斷</title>
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        body { padding: 20px; background: #1a1a1a; color: #fff; }
+        .debug-section { margin: 20px 0; padding: 15px; background: #2a2a2a; border-radius: 8px; }
+        .debug-title { color: #4CAF50; font-weight: 600; margin-bottom: 10px; }
+        .debug-output { background: #1a1a1a; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.9rem; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+        .test-btn { background: #4CAF50; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .test-btn:hover { background: #45a049; }
+        .error { color: #f44336; }
+        .success { color: #4CAF50; }
+        .warning { color: #ff9800; }
+    </style>
+</head>
+<body>
+    <h1>🔍 市場頁面載入診斷工具</h1>
+    
+    <div class="debug-section">
+        <div class="debug-title">📋 Step 1: 組件載入檢查</div>
+        <button class="test-btn" onclick="step1_checkComponents()">檢查組件載入</button>
+        <div id="step1-output" class="debug-output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">🔌 Step 2: API 端點測試</div>
+        <button class="test-btn" onclick="step2_testAPIs()">測試所有 API</button>
+        <div id="step2-output" class="debug-output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">🎯 Step 3: DOM 元素檢查</div>
+        <button class="test-btn" onclick="step3_checkDOM()">檢查 DOM 結構</button>
+        <div id="step3-output" class="debug-output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">🧪 Step 4: 組件初始化測試</div>
+        <div id="test-market-stats" class="market-stats">
+            <div class="market-stat">
+                <div class="stat-label">載入中...</div>
+                <div class="stat-value">-</div>
+            </div>
+        </div>
+        <div id="test-market-coins-grid" style="min-height: 200px; border: 1px solid #444; margin: 10px 0; padding: 10px;">
+            測試容器
+        </div>
+        <button class="test-btn" onclick="step4_testMarketPage()">測試 MarketPage 組件</button>
+        <button class="test-btn" onclick="step4_testCryptoList()">測試 CryptoCurrencyList 組件</button>
+        <div id="step4-output" class="debug-output"></div>
+    </div>
+    
+    <div class="debug-section">
+        <div class="debug-title">🔄 Step 5: 完整流程測試</div>
+        <button class="test-btn" onclick="step5_fullTest()">執行完整測試</button>
+        <div id="step5-output" class="debug-output"></div>
+    </div>
+
+    <!-- JavaScript 模組 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/components/CryptoCurrencyList.js"></script>
+    <script src="/js/components/HomeCryptoList.js"></script>
+    <script src="/js/components/MarketPage.js"></script>
+    
+    <script>
+        // Step 1: 檢查組件載入
+        function step1_checkComponents() {
+            const output = document.getElementById('step1-output');
+            let result = '組件載入檢查結果：\n\n';
+            
+            const components = [
+                'CryptoCurrencyList',
+                'HomeCryptoList', 
+                'MarketPage'
+            ];
+            
+            let allLoaded = true;
+            components.forEach(comp => {
+                if (typeof window[comp] !== 'undefined') {
+                    result += `✅ ${comp}: 已載入\n`;
+                } else {
+                    result += `❌ ${comp}: 未載入\n`;
+                    allLoaded = false;
+                }
+            });
+            
+            result += `\n狀態: ${allLoaded ? '✅ 所有組件已載入' : '❌ 部分組件未載入'}`;
+            output.textContent = result;
+        }
+        
+        // Step 2: 測試 API
+        async function step2_testAPIs() {
+            const output = document.getElementById('step2-output');
+            output.textContent = '測試 API 端點...\n';
+            
+            const tests = [
+                { name: '熱門交易對', url: '/api/market/trending?limit=5' },
+                { name: '批量價格', url: '/api/market/batch-prices?symbols=BTCUSDT,ETHUSDT' },
+                { name: '24h統計', url: '/api/market/stats24h' }
+            ];
+            
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url);
+                    const data = await response.json();
+                    if (data.success) {
+                        output.textContent += `✅ ${test.name}: 成功 (${data.data?.length || 'N/A'} 項目)\n`;
+                    } else {
+                        output.textContent += `❌ ${test.name}: ${data.message}\n`;
+                    }
+                } catch (error) {
+                    output.textContent += `❌ ${test.name}: ${error.message}\n`;
+                }
+            }
+        }
+        
+        // Step 3: 檢查 DOM
+        function step3_checkDOM() {
+            const output = document.getElementById('step3-output');
+            let result = 'DOM 元素檢查結果：\n\n';
+            
+            const elements = [
+                'test-market-stats',
+                'test-market-coins-grid'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    result += `✅ #${id}: 存在 (${element.tagName})\n`;
+                } else {
+                    result += `❌ #${id}: 不存在\n`;
+                }
+            });
+            
+            output.textContent = result;
+        }
+        
+        // Step 4: 測試 MarketPage 組件
+        function step4_testMarketPage() {
+            const output = document.getElementById('step4-output');
+            output.textContent = '測試 MarketPage 組件...\n';
+            
+            try {
+                if (typeof MarketPage === 'undefined') {
+                    output.textContent += '❌ MarketPage 組件未載入\n';
+                    return;
+                }
+                
+                // 測試初始化
+                output.textContent += '🔧 嘗試初始化 MarketPage...\n';
+                const marketPage = new MarketPage();
+                output.textContent += '✅ MarketPage 組件初始化成功\n';
+                
+                // 檢查方法
+                const methods = ['loadMarketStats', 'renderMarketStats', 'refresh'];
+                methods.forEach(method => {
+                    if (typeof marketPage[method] === 'function') {
+                        output.textContent += `✅ 方法 ${method}: 存在\n`;
+                    } else {
+                        output.textContent += `❌ 方法 ${method}: 不存在\n`;
+                    }
+                });
+                
+                // 嘗試載入市場統計
+                output.textContent += '🔄 嘗試載入市場統計...\n';
+                marketPage.loadMarketStats().then(() => {
+                    output.textContent += '✅ 市場統計載入成功\n';
+                }).catch(err => {
+                    output.textContent += `❌ 市場統計載入失敗: ${err.message}\n`;
+                });
+                
+            } catch (error) {
+                output.textContent += `❌ MarketPage 組件測試失敗：\n${error.message}\n${error.stack}\n`;
+            }
+        }
+        
+        // Step 4: 測試 CryptoCurrencyList 組件
+        function step4_testCryptoList() {
+            const output = document.getElementById('step4-output');
+            output.textContent = '測試 CryptoCurrencyList 組件...\n';
+            
+            try {
+                if (typeof CryptoCurrencyList === 'undefined') {
+                    output.textContent += '❌ CryptoCurrencyList 組件未載入\n';
+                    return;
+                }
+                
+                const container = document.getElementById('test-market-coins-grid');
+                if (!container) {
+                    output.textContent += '❌ 測試容器不存在\n';
+                    return;
+                }
+                
+                // 清空容器
+                container.innerHTML = '';
+                
+                // 測試初始化
+                output.textContent += '🔧 嘗試初始化 CryptoCurrencyList...\n';
+                const cryptoList = new CryptoCurrencyList({
+                    container: container,
+                    mode: 'infinite',
+                    maxCoins: 10,
+                    coinsPerPage: 5,
+                    updateInterval: 15000
+                });
+                
+                output.textContent += '✅ CryptoCurrencyList 組件初始化成功\n';
+                output.textContent += `✅ 容器: ${container.id}\n`;
+                output.textContent += `✅ 模式: infinite\n`;
+                output.textContent += `✅ 最大貨幣數: 10\n`;
+                
+            } catch (error) {
+                output.textContent += `❌ CryptoCurrencyList 組件測試失敗：\n${error.message}\n${error.stack}\n`;
+            }
+        }
+        
+        // Step 5: 完整流程測試
+        async function step5_fullTest() {
+            const output = document.getElementById('step5-output');
+            output.textContent = '執行完整流程測試...\n\n';
+            
+            // 1. 檢查組件
+            output.textContent += '步驟 1: 檢查組件載入\n';
+            if (typeof MarketPage === 'undefined' || typeof CryptoCurrencyList === 'undefined') {
+                output.textContent += '❌ 必要組件未載入，測試終止\n';
+                return;
+            }
+            output.textContent += '✅ 組件檢查通過\n\n';
+            
+            // 2. 測試 API
+            output.textContent += '步驟 2: 測試 API 連通性\n';
+            try {
+                const apiTest = await fetch('/api/market/trending?limit=3');
+                const apiData = await apiTest.json();
+                if (apiData.success) {
+                    output.textContent += '✅ API 連通性正常\n\n';
+                } else {
+                    output.textContent += '❌ API 回應異常\n';
+                    return;
+                }
+            } catch (error) {
+                output.textContent += `❌ API 連接失敗: ${error.message}\n`;
+                return;
+            }
+            
+            // 3. 測試完整組件初始化
+            output.textContent += '步驟 3: 初始化完整組件\n';
+            try {
+                const container = document.getElementById('test-market-coins-grid');
+                container.innerHTML = '';
+                
+                // 創建市場頁面組件 (模擬真實環境)
+                const marketPage = new MarketPage();
+                output.textContent += '✅ MarketPage 初始化成功\n';
+                
+                // 手動初始化加密貨幣列表
+                const cryptoList = new CryptoCurrencyList({
+                    container: container,
+                    mode: 'infinite',
+                    maxCoins: 10,
+                    coinsPerPage: 5,
+                    updateInterval: 15000
+                });
+                
+                output.textContent += '✅ CryptoCurrencyList 初始化成功\n';
+                output.textContent += '✅ 完整流程測試通過！\n';
+                
+            } catch (error) {
+                output.textContent += `❌ 組件初始化失敗: ${error.message}\n`;
+            }
+        }
+        
+        // 自動運行基礎檢查
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                step1_checkComponents();
+                step3_checkDOM();
+            }, 500);
+        });
+        
+        // 捕獲 JavaScript 錯誤
+        window.addEventListener('error', (event) => {
+            console.error('JavaScript 錯誤:', event.error);
+        });
+        
+        // 捕獲未處理的 Promise 錯誤
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Promise 錯誤:', event.reason);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主頁面調試測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: white;
+            padding: 20px;
+            margin: 0;
+        }
+        .debug-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 10000;
+            min-width: 300px;
+            font-size: 12px;
+        }
+        .debug-item {
+            margin: 5px 0;
+        }
+        .success { color: #00d4aa; }
+        .error { color: #ff4757; }
+        .warning { color: #ffa502; }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h4>🔍 主頁面組件調試</h4>
+        <div class="debug-item">
+            <span>NexusTradeApp:</span>
+            <span id="app-status" class="warning">檢查中...</span>
+        </div>
+        <div class="debug-item">
+            <span>HomeCryptoList:</span>
+            <span id="home-crypto-status" class="warning">檢查中...</span>
+        </div>
+        <div class="debug-item">
+            <span>NewsTicker:</span>
+            <span id="news-ticker-status" class="warning">檢查中...</span>
+        </div>
+        <div class="debug-item">
+            <span>getCryptoIcon:</span>
+            <span id="icon-status" class="warning">檢查中...</span>
+        </div>
+        <div class="debug-item">
+            <span>trending-coins-list:</span>
+            <span id="container-status" class="warning">檢查中...</span>
+        </div>
+    </div>
+
+    <h1>🏠 主頁面組件調試</h1>
+    
+    <!-- 模擬主頁面的熱門貨幣列表結構 -->
+    <div style="background: #1a1a1a; padding: 20px; margin: 20px 0; border-radius: 8px;">
+        <h3>模擬熱門貨幣列表</h3>
+        <div class="trending-coins-container">
+            <div class="coins-table">
+                <div class="table-header" style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr; gap: 12px; padding: 16px 20px; background: #2a2a2a; color: #aaa; font-weight: bold; border-radius: 4px;">
+                    <div>貨幣</div>
+                    <div style="text-align: center;">價格</div>
+                    <div style="text-align: center;">24h 變化</div>
+                    <div style="text-align: center;">漲跌點數</div>
+                    <div style="text-align: center;">24h 交易量</div>
+                    <div style="text-align: center;">市值</div>
+                </div>
+                <div class="table-body" id="trending-coins-list" style="min-height: 400px; background: #1a1a1a;">
+                    <div class="loading-row" style="display: flex; align-items: center; justify-content: center; padding: 40px; color: #aaa;">
+                        <span>載入熱門貨幣中...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入主頁面的所有JavaScript -->
+    <script src="/js/crypto-icons-map.js"></script>
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/dom.js"></script>
+    <script src="/js/lib/router.js"></script>
+    <script src="/js/state/store.js"></script>
+    <script src="/js/components/Notification.js"></script>
+    <script src="/js/components/CryptoCurrencyList.js"></script>
+    <script src="/js/components/HomeCryptoList.js"></script>
+    <script src="/js/components/NewsTicker.js"></script>
+    <script src="/js/nexus-app-fixed.js"></script>
+
+    <script>
+        let debugResults = {
+            app: false,
+            homeCrypto: false,
+            newsTicker: false,
+            icon: false,
+            container: false
+        };
+
+        function updateDebugStatus(key, status, message) {
+            debugResults[key] = status;
+            const element = document.getElementById(`${key.replace(/([A-Z])/g, '-$1').toLowerCase()}-status`);
+            if (element) {
+                element.textContent = message;
+                element.className = status ? 'success' : 'error';
+            }
+        }
+
+        function checkComponents() {
+            // 檢查 NexusTradeApp
+            if (typeof NexusTradeApp !== 'undefined') {
+                updateDebugStatus('app', true, '✅ 已載入');
+            } else {
+                updateDebugStatus('app', false, '❌ 未載入');
+            }
+
+            // 檢查 HomeCryptoList
+            if (typeof HomeCryptoList !== 'undefined') {
+                updateDebugStatus('homeCrypto', true, '✅ 已載入');
+            } else {
+                updateDebugStatus('homeCrypto', false, '❌ 未載入');
+            }
+
+            // 檢查 NewsTicker
+            if (typeof NewsTicker !== 'undefined') {
+                updateDebugStatus('newsTicker', true, '✅ 已載入');
+            } else {
+                updateDebugStatus('newsTicker', false, '❌ 未載入');
+            }
+
+            // 檢查圖標系統
+            if (typeof window.getCryptoIcon === 'function') {
+                updateDebugStatus('icon', true, '✅ 已載入');
+            } else {
+                updateDebugStatus('icon', false, '❌ 未載入');
+            }
+
+            // 檢查容器
+            const container = document.getElementById('trending-coins-list');
+            if (container) {
+                updateDebugStatus('container', true, '✅ 找到容器');
+            } else {
+                updateDebugStatus('container', false, '❌ 未找到容器');
+            }
+        }
+
+        async function initializeHomeCrypto() {
+            console.log('🧪 嘗試手動初始化 HomeCryptoList...');
+            
+            try {
+                const container = document.getElementById('trending-coins-list');
+                if (!container) {
+                    console.error('❌ 找不到 trending-coins-list 容器');
+                    return;
+                }
+
+                if (typeof HomeCryptoList === 'undefined') {
+                    console.error('❌ HomeCryptoList 類別未定義');
+                    return;
+                }
+
+                console.log('🔧 創建 HomeCryptoList 實例...');
+                const homeCryptoList = new HomeCryptoList();
+                
+                setTimeout(() => {
+                    const content = container.innerHTML;
+                    if (content && !content.includes('載入熱門貨幣中')) {
+                        console.log('✅ HomeCryptoList 初始化成功');
+                    } else {
+                        console.log('⚠️ HomeCryptoList 可能還在載入中');
+                    }
+                }, 3000);
+
+            } catch (error) {
+                console.error('❌ 初始化失敗:', error);
+            }
+        }
+
+        // 頁面載入完成後開始調試
+        window.addEventListener('load', () => {
+            console.log('🧪 開始主頁面組件調試...');
+            
+            setTimeout(() => {
+                checkComponents();
+                
+                // 嘗試手動初始化
+                setTimeout(() => {
+                    initializeHomeCrypto();
+                }, 1000);
+                
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

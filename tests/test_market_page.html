@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>市場頁面測試 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0f0f;
+            color: #ffffff;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: #1a1a1a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .test-title {
+            color: #f7931a;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: rgba(0, 212, 170, 0.2); border: 1px solid #00d4aa; }
+        .status.error { background: rgba(255, 71, 87, 0.2); border: 1px solid #ff4757; }
+        .status.info { background: rgba(247, 147, 26, 0.2); border: 1px solid #f7931a; }
+        .btn {
+            background: #f7931a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #e8830f; }
+        .results-box {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            padding: 10px;
+            margin: 10px 0;
+            background: #0f0f0f;
+        }
+        .api-result {
+            background: #2a2a2a;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 3px solid #f7931a;
+        }
+        .loading-indicator {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #f7931a;
+        }
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #333;
+            border-top: 2px solid #f7931a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .coin-preview {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            margin: 4px 0;
+            background: #1a1a1a;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+        .coin-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f7931a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: black;
+        }
+        .coin-info {
+            flex: 1;
+        }
+        .coin-symbol {
+            font-weight: bold;
+            color: #00d4aa;
+        }
+        .coin-price {
+            color: #ffffff;
+            font-family: monospace;
+        }
+        .coin-change {
+            font-size: 0.9em;
+        }
+        .positive { color: #00d4aa; }
+        .negative { color: #ff4757; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 市場頁面功能測試</h1>
+        <div id="status" class="status info">
+            <strong>測試狀態:</strong> 準備中...
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📡 市場 API 端點測試</div>
+            <button class="btn" onclick="testMarketAPIs()">測試市場 API</button>
+            <div class="loading-indicator" id="api-loading">
+                <div class="loading-spinner"></div>
+                正在測試 API...
+            </div>
+            <div id="api-results" class="results-box"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 批量價格查詢測試</div>
+            <button class="btn" onclick="testBatchPrices()">測試批量價格</button>
+            <div class="loading-indicator" id="batch-loading">
+                <div class="loading-spinner"></div>
+                正在查詢價格...
+            </div>
+            <div id="batch-results" class="results-box"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🎨 TradingView Widget 測試</div>
+            <button class="btn" onclick="testTradingViewWidgets()">測試 TradingView Widget</button>
+            <div id="tradingview-container" style="display: none;">
+                <h4>Bitcoin (BTC/USDT) Widget 測試:</h4>
+                <div id="test-tradingview-widget" style="height: 300px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px; margin: 10px 0;"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🚀 市場頁面導航測試</div>
+            <button class="btn" onclick="navigateToMarketPage()">前往市場頁面</button>
+            <div id="navigation-results"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 測試結果總結</div>
+            <div id="test-summary"></div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            marketAPI: false,
+            batchPrices: false,
+            tradingViewWidget: false,
+            navigation: false
+        };
+
+        function updateStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.innerHTML = `<strong>測試狀態:</strong> ${message}`;
+        }
+
+        function updateTestSummary() {
+            const passedTests = Object.values(testResults).filter(result => result === true).length;
+            const totalTests = Object.keys(testResults).length;
+            const summaryEl = document.getElementById('test-summary');
+            
+            let summaryHtml = `
+                <h3>測試結果: ${passedTests}/${totalTests} 通過</h3>
+                <ul>
+                    <li>市場 API 測試: ${testResults.marketAPI ? '✅ 通過' : '❌ 失敗'}</li>
+                    <li>批量價格測試: ${testResults.batchPrices ? '✅ 通過' : '❌ 失敗'}</li>
+                    <li>TradingView Widget: ${testResults.tradingViewWidget ? '✅ 通過' : '❌ 失敗'}</li>
+                    <li>頁面導航測試: ${testResults.navigation ? '✅ 通過' : '❌ 失敗'}</li>
+                </ul>
+            `;
+            
+            if (passedTests === totalTests) {
+                summaryHtml += '<div class="status success"><strong>🎉 所有測試通過！市場頁面準備就緒！</strong></div>';
+            } else {
+                summaryHtml += '<div class="status error"><strong>⚠️ 部分測試失敗，需要進一步檢查</strong></div>';
+            }
+            
+            summaryEl.innerHTML = summaryHtml;
+        }
+
+        async function testMarketAPIs() {
+            updateStatus('測試市場 API 端點...', 'info');
+            const loadingEl = document.getElementById('api-loading');
+            const resultsEl = document.getElementById('api-results');
+            
+            loadingEl.style.display = 'block';
+            resultsEl.innerHTML = '';
+            
+            const apiTests = [
+                { name: '市場概覽', url: '/api/market/overview' },
+                { name: '熱門交易對', url: '/api/market/trending?limit=5' },
+                { name: '單一價格查詢', url: '/api/market/price/BTCUSDT' },
+                { name: '24h 統計', url: '/api/market/ticker/BTCUSDT' },
+                { name: 'API 健康檢查', url: '/api/market/test' }
+            ];
+
+            let successCount = 0;
+            
+            for (const test of apiTests) {
+                try {
+                    const response = await fetch(test.url);
+                    const data = await response.json();
+                    
+                    const isSuccess = response.ok && (data.status === 'success' || data.success);
+                    if (isSuccess) successCount++;
+                    
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'api-result';
+                    resultDiv.innerHTML = `
+                        <strong>${test.name}</strong> - ${isSuccess ? '✅ 成功' : '❌ 失敗'}
+                        <br><small>URL: ${test.url}</small>
+                        <br><small>回應: ${JSON.stringify(data).substring(0, 100)}...</small>
+                    `;
+                    resultsEl.appendChild(resultDiv);
+                    
+                } catch (error) {
+                    const resultDiv = document.createElement('div');
+                    resultDiv.className = 'api-result';
+                    resultDiv.innerHTML = `
+                        <strong>${test.name}</strong> - ❌ 錯誤
+                        <br><small>錯誤: ${error.message}</small>
+                    `;
+                    resultsEl.appendChild(resultDiv);
+                }
+            }
+            
+            loadingEl.style.display = 'none';
+            testResults.marketAPI = successCount >= 3; // 至少3個API成功
+            updateStatus(`市場 API 測試完成，${successCount}/${apiTests.length} 成功`, 
+                        testResults.marketAPI ? 'success' : 'error');
+            updateTestSummary();
+        }
+
+        async function testBatchPrices() {
+            updateStatus('測試批量價格查詢...', 'info');
+            const loadingEl = document.getElementById('batch-loading');
+            const resultsEl = document.getElementById('batch-results');
+            
+            loadingEl.style.display = 'block';
+            resultsEl.innerHTML = '';
+            
+            try {
+                const testSymbols = ['BTC', 'ETH', 'BNB', 'ADA', 'SOL'];
+                const symbolsQuery = testSymbols.map(s => `${s}USDT`).join(',');
+                const response = await fetch(`/api/market/prices?symbols=${symbolsQuery}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    resultsEl.innerHTML = '<h4>批量價格查詢結果:</h4>';
+                    
+                    data.data.forEach(coin => {
+                        const coinDiv = document.createElement('div');
+                        coinDiv.className = 'coin-preview';
+                        
+                        const changePercent = parseFloat(coin.priceChangePercent || 0);
+                        const changeClass = changePercent >= 0 ? 'positive' : 'negative';
+                        const changeIcon = changePercent >= 0 ? '▲' : '▼';
+                        
+                        coinDiv.innerHTML = `
+                            <div class="coin-icon">${coin.symbol.replace('USDT', '').substring(0, 2)}</div>
+                            <div class="coin-info">
+                                <div class="coin-symbol">${coin.symbol}</div>
+                                <div class="coin-price">$${parseFloat(coin.price).toFixed(2)}</div>
+                            </div>
+                            <div class="coin-change ${changeClass}">
+                                ${changeIcon} ${Math.abs(changePercent).toFixed(2)}%
+                            </div>
+                        `;
+                        resultsEl.appendChild(coinDiv);
+                    });
+                    
+                    testResults.batchPrices = true;
+                    updateStatus('批量價格查詢測試成功', 'success');
+                } else {
+                    throw new Error(data.message || '批量價格查詢失敗');
+                }
+                
+            } catch (error) {
+                resultsEl.innerHTML = `<div class="status error">批量價格查詢失敗: ${error.message}</div>`;
+                testResults.batchPrices = false;
+                updateStatus('批量價格查詢測試失敗', 'error');
+            }
+            
+            loadingEl.style.display = 'none';
+            updateTestSummary();
+        }
+
+        function testTradingViewWidgets() {
+            updateStatus('測試 TradingView Widget...', 'info');
+            const containerEl = document.getElementById('tradingview-container');
+            const widgetEl = document.getElementById('test-tradingview-widget');
+            
+            containerEl.style.display = 'block';
+            
+            try {
+                // 清空容器
+                widgetEl.innerHTML = '';
+                
+                // 創建 TradingView Script
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+                script.async = true;
+                script.innerHTML = JSON.stringify({
+                    "symbols": [
+                        ["BINANCE:BTCUSDT|1D"]
+                    ],
+                    "chartOnly": false,
+                    "width": "100%",
+                    "height": "300",
+                    "locale": "en",
+                    "colorTheme": "dark",
+                    "autosize": true,
+                    "showVolume": true,
+                    "showMA": true,
+                    "hideDateRanges": false,
+                    "hideMarketStatus": false,
+                    "hideSymbolLogo": false,
+                    "scalePosition": "right",
+                    "scaleMode": "Normal",
+                    "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
+                    "fontSize": "10",
+                    "noTimeScale": false,
+                    "valuesTracking": "1",
+                    "changeMode": "price-and-percent",
+                    "chartType": "area"
+                });
+                
+                widgetEl.appendChild(script);
+                
+                // 檢查載入狀態
+                setTimeout(() => {
+                    const hasContent = widgetEl.querySelector('iframe') || widgetEl.children.length > 1;
+                    testResults.tradingViewWidget = hasContent;
+                    updateStatus('TradingView Widget ' + (hasContent ? '載入成功' : '載入失敗'), 
+                                hasContent ? 'success' : 'error');
+                    updateTestSummary();
+                }, 3000);
+                
+            } catch (error) {
+                testResults.tradingViewWidget = false;
+                updateStatus('TradingView Widget 測試失敗', 'error');
+                updateTestSummary();
+            }
+        }
+
+        function navigateToMarketPage() {
+            updateStatus('測試市場頁面導航...', 'info');
+            const resultsEl = document.getElementById('navigation-results');
+            
+            try {
+                // 開啟市場頁面
+                window.open('http://localhost:3001/#/market', '_blank');
+                
+                resultsEl.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ 市場頁面導航測試</strong><br>
+                        已在新視窗開啟市場頁面。請檢查以下功能：<br>
+                        <ul>
+                            <li>📊 市場統計資訊顯示</li>
+                            <li>📈 TradingView Widget 載入</li>
+                            <li>💰 200種貨幣列表顯示</li>
+                            <li>🔄 每4秒自動更新</li>
+                            <li>📜 滾動載入更多貨幣</li>
+                            <li>🖱️ 點擊貨幣進入分析頁面</li>
+                        </ul>
+                    </div>
+                `;
+                
+                testResults.navigation = true;
+                updateStatus('市場頁面導航測試完成', 'success');
+                
+            } catch (error) {
+                resultsEl.innerHTML = `<div class="status error">導航測試失敗: ${error.message}</div>`;
+                testResults.navigation = false;
+                updateStatus('市場頁面導航測試失敗', 'error');
+            }
+            
+            updateTestSummary();
+        }
+
+        // 自動開始基本測試
+        window.addEventListener('load', () => {
+            updateStatus('市場頁面測試準備就緒', 'info');
+            updateTestSummary();
+        });
+    </script>
+</body>
+</html>

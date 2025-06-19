@@ -16,7 +16,9 @@
     "docker:run": "docker run --rm -p 3000:3000 nexustrade:latest",
     "docker:compose": "docker-compose up -d",
     "docker:compose:dev": "docker-compose -f docker-compose.dev.yml up -d",
-    "docker:compose:down": "docker-compose down"
+    "docker:compose:down": "docker-compose down",
+    "docker:autostart": "./scripts/docker-autostart.sh",
+    "docker:status": "docker-compose ps && echo '\\n🌐 Services:' && echo 'NexusTrade: http://localhost:3000' && echo 'Health Check: http://localhost:3000/health'"
   },
   "keywords": [],
   "author": "",
@@ -47,6 +49,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-line": "^0.0.4",
     "winston": "^3.17.0",
-    "ws": "^8.18.2"
+    "ws": "^8.18.2",
+    "xml2js": "^0.6.2"
   }
 }

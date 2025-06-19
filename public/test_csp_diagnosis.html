@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSP 測試</title>
+</head>
+<body>
+    <h1>CSP 測試頁面</h1>
+    <p>這個頁面用來測試 Content Security Policy 是否阻擋了 TradingView 腳本</p>
+    
+    <div id="test-results"></div>
+    
+    <script>
+        console.log('本地腳本可以執行');
+        
+        // 嘗試載入 TradingView 腳本
+        const script = document.createElement('script');
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+        script.async = true;
+        
+        script.onload = function() {
+            console.log('✅ TradingView 腳本載入成功');
+            document.getElementById('test-results').innerHTML = '✅ TradingView 腳本載入成功';
+        };
+        
+        script.onerror = function() {
+            console.error('❌ TradingView 腳本載入失敗 - 可能被 CSP 阻擋');
+            document.getElementById('test-results').innerHTML = '❌ TradingView 腳本載入失敗 - 可能被 CSP 阻擋';
+        };
+        
+        document.head.appendChild(script);
+    </script>
+</body>
+</html>

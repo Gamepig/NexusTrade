@@ -649,3 +649,2058 @@ body {
 .notification-info {
   border-left: 4px solid var(--primary-color);
 }
+
+/* ==================== 新聞跑馬燈樣式 ==================== */
+
+.news-ticker-section {
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0;
+}
+
+/* ==================== 新聞頁面樣式 ==================== */
+
+.news-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.search-box {
+  display: flex;
+  flex: 1;
+  min-width: 280px;
+  position: relative;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color var(--transition-fast);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-btn {
+  padding: 12px 16px;
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color var(--transition-fast);
+}
+
+.search-btn:hover {
+  background: var(--primary-dark);
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.category-select {
+  padding: 12px 16px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--text-primary);
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.category-select option {
+  background: var(--background-primary);
+  color: var(--text-primary);
+}
+
+/* 新聞網格佈局 */
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* 新聞卡片 */
+.news-card {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.news-card:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.news-card.visited {
+  opacity: 0.8;
+}
+
+.news-card.visited .news-title a {
+  color: var(--text-muted);
+}
+
+.news-image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.news-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-normal);
+}
+
+.news-card:hover .news-image img {
+  transform: scale(1.05);
+}
+
+.news-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.news-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.news-source {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.news-time {
+  color: var(--text-muted);
+}
+
+.news-title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.news-title a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.news-title a:hover {
+  color: var(--primary-color);
+}
+
+.news-description {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.news-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+
+.read-more-btn {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.read-more-btn:hover {
+  color: var(--primary-light);
+}
+
+.news-tags {
+  display: flex;
+  gap: 8px;
+}
+
+.priority-badge {
+  padding: 2px 6px;
+  border-radius: var(--border-radius-small);
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.priority-badge.high {
+  background: var(--danger-color);
+  color: white;
+}
+
+.priority-badge.medium {
+  background: var(--warning-color);
+  color: white;
+}
+
+.priority-badge.low {
+  background: var(--text-muted);
+  color: white;
+}
+
+/* 載入狀態 */
+.news-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 錯誤狀態 */
+.news-error,
+.no-news {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.error-icon,
+.no-news-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.news-error h3,
+.no-news h3 {
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+/* 分頁控制 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.page-info {
+  color: var(--text-secondary);
+  font-size: 14px;
+  min-width: 100px;
+  text-align: center;
+}
+
+/* 載入更多按鈕 */
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .news-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .search-box {
+    min-width: 100%;
+  }
+  
+  .filter-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .news-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .news-image {
+    height: 160px;
+  }
+  
+  .news-content {
+    padding: 16px;
+  }
+  
+  .news-title {
+    font-size: 16px;
+  }
+  
+  .news-description {
+    font-size: 13px;
+  }
+  
+  .pagination {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-controls {
+    padding: 16px;
+  }
+  
+  .news-grid {
+    gap: 12px;
+  }
+  
+  .news-image {
+    height: 140px;
+  }
+  
+  .news-content {
+    padding: 12px;
+  }
+  
+  .news-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .category-select {
+    width: 100%;
+  }
+}
+
+/* ==================== 首頁專用樣式 ==================== */
+
+.homepage-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 0;
+}
+
+/* 區塊標題樣式 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.more-link {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.more-link:hover {
+  color: var(--primary-light);
+}
+
+.status-badge {
+  background: var(--background-tertiary);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: var(--border-radius-small);
+  font-size: 0.8rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* 第0排 - 主要新聞五則 */
+.section-news-highlights {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.news-highlights-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+}
+
+.featured-news {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.main-story {
+  display: flex;
+  gap: 20px;
+  background: linear-gradient(135deg, var(--background-tertiary) 0%, rgba(42, 42, 42, 0.8) 100%);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-story::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.main-story:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
+}
+
+.main-story:hover::before {
+  opacity: 1;
+}
+
+.story-image {
+  flex-shrink: 0;
+  width: 200px;
+  height: 120px;
+  border-radius: var(--border-radius-small);
+  overflow: hidden;
+}
+
+.story-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.story-content {
+  flex: 1;
+}
+
+.story-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.story-summary {
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.secondary-news {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.story-item {
+  background: linear-gradient(135deg, var(--background-tertiary) 0%, rgba(30, 30, 30, 0.9) 100%);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  position: relative;
+  cursor: pointer;
+}
+
+.story-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.story-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-small);
+}
+
+.story-item:hover::before {
+  opacity: 1;
+}
+
+/* 新聞元數據樣式 */
+.story-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.story-category {
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.story-time {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* 次要新聞樣式 */
+.story-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.story-index {
+  background: var(--primary-color);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.story-source {
+  color: var(--secondary-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 圖表佔位符樣式 */
+.chart-placeholder {
+  background: linear-gradient(135deg, var(--background-tertiary) 0%, rgba(42, 42, 42, 0.8) 100%);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.chart-placeholder:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-small);
+}
+
+.chart-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chart-info h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.chart-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.chart-change {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.chart-change.positive {
+  color: var(--secondary-color);
+}
+
+.chart-change.negative {
+  color: var(--danger-color);
+}
+
+.chart-visual {
+  margin-top: 8px;
+  opacity: 0.8;
+}
+
+/* TradingView Widget 容器樣式 */
+.chart-container {
+  height: 200px;
+  background: transparent;
+}
+
+.tradingview-widget-container {
+  height: 100%;
+  width: 100%;
+}
+
+.tradingview-widget-container__widget {
+  height: 100%;
+  width: 100%;
+}
+
+/* 加密貨幣圖標樣式 */
+.crypto-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.crypto-icon:hover {
+  border-color: var(--primary-color);
+  transform: scale(1.1);
+}
+
+/* 熱門貨幣表格樣式更新 */
+.coin-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.crypto-fallback {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+  line-height: 1;
+}
+
+.story-item .story-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 第0.5排 - AI 大勢分析 */
+.section-ai-insights {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.ai-insights-placeholder {
+  background: var(--background-tertiary);
+  border-radius: var(--border-radius);
+  padding: 40px;
+  text-align: center;
+  border: 2px dashed var(--border-color);
+}
+
+.placeholder-content .placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.placeholder-content h3 {
+  color: var(--text-primary);
+  margin: 0 0 12px 0;
+  font-size: 1.2rem;
+}
+
+.placeholder-content p {
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* 第一排 - K線圖 */
+.section-main-charts {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.chart-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.time-btn {
+  background: var(--background-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 6px 16px;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.time-btn:hover {
+  background: var(--background-primary);
+  border-color: var(--primary-color);
+}
+
+.time-btn.active {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: #000;
+}
+
+.main-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.chart-card {
+  background: var(--background-tertiary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  aspect-ratio: 1 / 1; /* 強制正方形 */
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.coin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coin-symbol {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.coin-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.price-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.current-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.price-change {
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: var(--border-radius-small);
+  font-family: var(--font-mono);
+}
+
+.price-change.positive {
+  background: rgba(0, 212, 170, 0.2);
+  color: var(--secondary-color);
+}
+
+.price-change.negative {
+  background: rgba(255, 71, 87, 0.2);
+  color: var(--danger-color);
+}
+
+.chart-container {
+  height: 100%;
+  padding: 0;
+}
+
+.tradingview-chart {
+  width: 100%;
+  height: 100%;
+}
+
+/* 第二排 - 熱門貨幣 */
+.section-trending-coins {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  border: 1px solid var(--border-color);
+}
+
+.coins-table {
+  background: var(--background-tertiary);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--background-primary);
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+
+.table-header .col-coin {
+  text-align: left;
+}
+
+.table-body {
+  min-height: 400px;
+}
+
+.coin-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.3s ease;
+  align-items: center;
+  text-align: center;
+}
+
+.coin-row .col-coin {
+  text-align: left;
+}
+
+.coin-row:hover {
+  background: var(--background-primary);
+}
+
+.coin-row:last-child {
+  border-bottom: none;
+}
+
+.col-rank {
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-align: center;
+}
+
+.col-coin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.coin-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.coin-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coin-symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.coin-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.col-price {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.col-change {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.col-volume {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.col-market-cap {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* 漲跌顏色和動畫 */
+.col-change, .col-change-amount {
+  position: relative;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.col-change.positive, .col-change-amount.positive {
+  color: #00d4aa;
+  background: rgba(0, 212, 170, 0.1);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+.col-change.negative, .col-change-amount.negative {
+  color: #ff4757;
+  background: rgba(255, 71, 87, 0.1);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+/* 動畫箭頭 */
+.col-change.positive::before {
+  content: "▲";
+  display: inline-block;
+  margin-right: 4px;
+  animation: bounceUp 2s infinite;
+  color: #00d4aa;
+}
+
+.col-change.negative::before {
+  content: "▼";
+  display: inline-block;
+  margin-right: 4px;
+  animation: bounceDown 2s infinite;
+  color: #ff4757;
+}
+
+/* 動畫定義 */
+@keyframes bounceUp {
+  0%, 100% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(-3px); opacity: 1; }
+}
+
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); opacity: 0.8; }
+  50% { transform: translateY(3px); opacity: 1; }
+}
+
+/* 數據更新動畫 */
+.coin-row {
+  transition: all 0.3s ease;
+}
+
+.coin-row.updating {
+  background: rgba(0, 212, 170, 0.05);
+  transform: scale(1.01);
+}
+
+/* 價格更新閃爍效果 */
+.col-price.flash-update {
+  animation: priceFlash 0.6s ease-in-out;
+}
+
+@keyframes priceFlash {
+  0% { background: rgba(0, 212, 170, 0.3); }
+  100% { background: transparent; }
+}
+
+.col-chart {
+  text-align: center;
+}
+
+.mini-chart {
+  width: 60px;
+  height: 30px;
+  background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+  border-radius: var(--border-radius-small);
+  opacity: 0.7;
+}
+
+.loading-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  color: var(--text-secondary);
+}
+
+/* 響應式設計 */
+@media (max-width: 1024px) {
+  .news-highlights-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-story {
+    flex-direction: column;
+  }
+  
+  .story-image {
+    width: 100%;
+    height: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .homepage-container {
+    gap: 24px;
+  }
+  
+  .section-news-highlights,
+  .section-ai-insights,
+  .section-main-charts,
+  .section-trending-coins {
+    padding: 16px;
+  }
+  
+  .table-header,
+  .coin-row {
+    grid-template-columns: 30px 1fr 80px 80px;
+    gap: 12px;
+  }
+  
+  .col-volume,
+  .col-chart {
+    display: none;
+  }
+  
+  .chart-header {
+    padding: 12px 16px;
+  }
+  
+  .chart-container {
+    height: 150px;
+  }
+}
+
+/* ==================== 市場頁面樣式 ==================== */
+
+/* 市場統計資訊 */
+.market-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 20px 0 30px 0;
+  padding: 20px;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+}
+
+.market-stat {
+  text-align: center;
+}
+
+.market-stat .stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.market-stat .stat-value {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.market-stat .positive {
+  color: var(--secondary-color);
+}
+
+.market-stat .negative {
+  color: var(--danger-color);
+}
+
+/* TradingView Widgets 區域 */
+.trading-widgets-section {
+  margin: 30px 0;
+}
+
+.trading-widgets-section h2 {
+  margin-bottom: 20px;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.trading-widgets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.trading-widget-container {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.tradingview-widget {
+  width: 100%;
+  height: 400px;
+  position: relative;
+}
+
+/* Widget 載入狀態 */
+.widget-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-secondary);
+  z-index: 1;
+}
+
+.widget-loading .loading-content {
+  text-align: center;
+}
+
+.widget-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px;
+}
+
+.widget-loading p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Widget 錯誤狀態 */
+.widget-error {
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.widget-error .error-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.6;
+}
+
+.widget-error h4 {
+  color: var(--text-primary);
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.widget-error p {
+  color: var(--text-secondary);
+  margin: 0 0 20px 0;
+  font-size: 0.9rem;
+}
+
+.widget-error .retry-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.widget-error .retry-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* 市場貨幣區域 */
+.market-coins-section {
+  margin: 30px 0;
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.section-header p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* 貨幣表格標題 */
+.coins-table-header {
+  display: grid;
+  grid-template-columns: 200px 120px 150px 150px;
+  gap: 15px;
+  padding: 15px 20px;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius-small);
+  border: 1px solid var(--border-color);
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.coins-table-header > div {
+  display: flex;
+  align-items: center;
+}
+
+.header-coin,
+.header-change {
+  justify-content: flex-start;
+}
+
+.header-rank,
+.header-price,
+.header-volume,
+.header-marketcap {
+  justify-content: center;
+}
+
+/* 市場載入狀態 */
+.market-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.market-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+/* 貨幣卡片網格 */
+.market-coins-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 單個貨幣卡片 */
+.coin-card {
+  display: grid;
+  grid-template-columns: 200px 120px 150px 150px;
+  gap: 15px;
+  padding: 15px 20px;
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-small);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  align-items: center;
+}
+
+.coin-card:hover {
+  background: var(--background-tertiary);
+  border-color: var(--border-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-small);
+}
+
+/* 貨幣排名 */
+.coin-rank {
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+/* 貨幣資訊區域 */
+.coin-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.coin-info .coin-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.coin-info .coin-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coin-info .coin-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.coin-info .coin-symbol {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.coin-info .coin-name {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 價格區域 */
+.coin-price {
+  text-align: center;
+}
+
+.coin-price .price-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+/* 漲跌幅區域 */
+.coin-change {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.coin-change.positive .change-percent,
+.coin-change.positive .change-amount {
+  color: var(--secondary-color);
+}
+
+.coin-change.negative .change-percent,
+.coin-change.negative .change-amount {
+  color: var(--danger-color);
+}
+
+.change-percent {
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.change-icon {
+  font-size: 0.7rem;
+  animation: bounce 2s infinite;
+}
+
+.coin-change.positive .change-icon {
+  animation: bounceUp 2s infinite;
+}
+
+.coin-change.negative .change-icon {
+  animation: bounceDown 2s infinite;
+}
+
+.change-amount {
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+/* 交易量區域 */
+.coin-volume {
+  text-align: center;
+}
+
+.coin-volume .volume-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.coin-volume .volume-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* 市值區域 */
+.coin-marketcap {
+  text-align: center;
+}
+
+.coin-marketcap .marketcap-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.coin-marketcap .marketcap-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* 載入更多按鈕 */
+.market-load-more {
+  display: flex;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+/* 錯誤訊息 */
+.error-message,
+.no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.error-icon,
+.no-data-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.error-message h3,
+.no-data h3 {
+  color: var(--text-primary);
+  margin-bottom: 10px;
+}
+
+/* 動畫 */
+@keyframes bounceUp {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-4px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes bounceDown {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(4px);
+  }
+  60% {
+    transform: translateY(2px);
+  }
+}
+
+/* 響應式設計 - 市場頁面 */
+@media (max-width: 1200px) {
+  .coins-table-header,
+  .coin-card {
+    grid-template-columns: 180px 100px 120px 120px;
+    gap: 12px;
+  }
+  
+  .trading-widgets-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .coins-table-header,
+  .coin-card {
+    grid-template-columns: 160px 90px 100px;
+    gap: 10px;
+  }
+  
+  .header-volume,
+  .coin-volume {
+    display: none;
+  }
+  
+  .trading-widgets-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .market-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 15px;
+  }
+  
+  .trading-widgets-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 15px;
+  }
+  
+  .coins-table-header,
+  .coin-card {
+    grid-template-columns: 140px 80px 90px;
+    gap: 8px;
+    padding: 12px 15px;
+  }
+  
+  .coin-info .coin-details {
+    gap: 1px;
+  }
+  
+  .coin-info .coin-symbol {
+    font-size: 0.9rem;
+  }
+  
+  .coin-info .coin-name {
+    font-size: 0.75rem;
+  }
+  
+  .coin-change {
+    gap: 2px;
+  }
+  
+  .change-percent {
+    font-size: 0.85rem;
+  }
+  
+  .change-amount {
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .coins-table-header,
+  .coin-card {
+    grid-template-columns: 120px 70px 80px;
+    gap: 6px;
+    padding: 10px 12px;
+  }
+  
+  .coin-info .coin-icon {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .section-header h2 {
+    font-size: 1.3rem;
+  }
+}
+
+/* ==================== CryptoCurrencyList 組件樣式 ==================== */
+
+/* 加密貨幣列表基礎容器 */
+.crypto-list-container {
+  position: relative;
+  width: 100%;
+}
+
+/* 貨幣卡片網格佈局 */
+.crypto-grid {
+  display: grid;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+/* 固定模式網格 (首頁使用) */
+.crypto-grid.fixed-mode {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  max-height: none;
+}
+
+/* 無限滾動模式網格 (市場頁面使用) */
+.crypto-grid.infinite-mode {
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* 滾動條樣式 */
+.crypto-grid.infinite-mode::-webkit-scrollbar {
+  width: 6px;
+}
+
+.crypto-grid.infinite-mode::-webkit-scrollbar-track {
+  background: var(--background-secondary);
+  border-radius: 3px;
+}
+
+.crypto-grid.infinite-mode::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.crypto-grid.infinite-mode::-webkit-scrollbar-thumb:hover {
+  background: var(--border-light);
+}
+
+/* 貨幣卡片樣式 */
+.crypto-coin-card {
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.crypto-coin-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-medium);
+  transform: translateY(-2px);
+}
+
+/* 卡片頂部資訊 */
+.crypto-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.crypto-coin-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crypto-coin-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--background-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.crypto-coin-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.crypto-coin-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crypto-coin-symbol {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.crypto-coin-name {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.crypto-coin-rank {
+  background: var(--background-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-small);
+  font-weight: 500;
+}
+
+/* 價格資訊區域 */
+.crypto-price-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.crypto-current-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.crypto-price-change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crypto-change-percent {
+  padding: 4px 8px;
+  border-radius: var(--border-radius-small);
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-family: var(--font-mono);
+}
+
+.crypto-change-percent.positive {
+  background: rgba(0, 212, 170, 0.2);
+  color: var(--secondary-color);
+}
+
+.crypto-change-percent.negative {
+  background: rgba(255, 71, 87, 0.2);
+  color: var(--danger-color);
+}
+
+.crypto-change-amount {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* 交易量資訊 */
+.crypto-volume-info {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.crypto-volume {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crypto-volume-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.crypto-volume-value {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* 載入狀態 */
+.crypto-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.crypto-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border-color);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+.crypto-loading-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* 錯誤狀態 */
+.crypto-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--background-secondary);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--danger-color);
+}
+
+.crypto-error-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.crypto-error-title {
+  color: var(--danger-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.crypto-error-message {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.crypto-retry-btn {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--border-radius-small);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all var(--transition-fast);
+}
+
+.crypto-retry-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* 載入更多按鈕 */
+.crypto-load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.crypto-load-more-btn {
+  background: var(--background-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+}
+
+.crypto-load-more-btn:hover {
+  border-color: var(--primary-color);
+  background: var(--background-tertiary);
+}
+
+.crypto-load-more-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  .crypto-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .crypto-coin-card {
+    padding: 14px;
+  }
+  
+  .crypto-coin-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .crypto-current-price {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .crypto-coin-card {
+    padding: 12px;
+  }
+  
+  .crypto-card-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .crypto-price-info {
+    width: 100%;
+  }
+}
