@@ -115,4 +115,88 @@ Thumbs.db
 # Task & Memory Bank Files
 tasks/
 memory-bank/
-NexusTrading規劃書.md 
+NexusTrading規劃書.md
+
+# Development and Configuration Directories
+.claude/
+.cursor/
+.git/
+.github/
+archive/
+backups/
+coverage/
+reference/
+
+# Development Configuration Files
+CLAUDE.md
+GEMINI.md
+
+# Archive and Test Files (Development Only)
+archive/
+test-*.js
+debug-*.js
+fix-*.js
+check-*.js
+reset-*.js
+cleanup-*.js
+create-*.js
+emergency-*.js
+diagnose-*.js
+monitor-*.js
+organize-*.js
+quick-*.js
+simple-*.js
+demo-*.js
+clear-*.js
+
+# Test HTML Files
+public/test-*.html
+public/debug-*.html
+public/debug_*.html
+public/fix-*.html
+public/*test*.html
+public/diagnose*.html
+public/manual_*.html
+public/token-*.html
+public/force-*.html
+public/final-*.html
+public/oauth_*.html
+public/simple-*.html
+
+# Test and Development Directories
+test/
+tests/
+debug/
+scripts/
+layout/
+test-reports/
+
+# Configuration and Temporary Files
+jest.*.config.js
+docker-compose.test.yml
+Dockerfile.test
+*.json.backup
+*.log
+*.txt
+temp_*.txt
+*.json
+!package.json
+!package-lock.json
+!.mcp.json
+
+# Backup and Archive Files
+*.backup.*
+src/*.backup.*
+*.md.backup
+FIXES_SUMMARY.md
+CHANGELOG.md
+GEMINI.md
+
+# Third-party Tools
+openrouter-rate-limit-monitor/
+
+# File Extensions to Ignore
+*.tgz
+*.tar.gz
+*.zip
+*.rar 
