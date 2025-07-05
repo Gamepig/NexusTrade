@@ -130,6 +130,13 @@ reference/
 # Development Configuration Files
 CLAUDE.md
 GEMINI.md
+.dockerignore
+
+# macOS and Windows System Files
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
 
 # Archive and Test Files (Development Only)
 archive/
