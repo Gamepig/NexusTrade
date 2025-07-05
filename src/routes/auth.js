@@ -47,40 +47,28 @@ router.post('/refresh', asyncErrorHandler(authController.refresh));
 router.get('/verify', authenticateToken, asyncErrorHandler(authController.verify));
 
 /**
- * Google OAuth 登入
+ * Google OAuth 2.0 登入 (統一 REST API 實作)
  * GET /auth/google
  */
 router.get('/google', oauthController.googleLogin);
 
 /**
- * Google OAuth 回調
+ * Google OAuth 2.0 回調 (統一 REST API 實作)
  * GET /auth/google/callback
  */
 router.get('/google/callback', oauthController.googleCallback);
 
 /**
- * LINE OAuth 登入
+ * LINE Login (統一 REST API 實作)
  * GET /auth/line
  */
 router.get('/line', oauthController.lineLogin);
 
 /**
- * LINE OAuth 回調
+ * LINE Login 回調 (統一 REST API 實作)
  * GET /auth/line/callback
  */
 router.get('/line/callback', oauthController.lineCallback);
-
-/**
- * 連結 OAuth 帳戶 (需要認證)
- * POST /auth/link/:provider
- */
-router.post('/link/:provider', authenticateToken, asyncErrorHandler(oauthController.linkOAuthAccount));
-
-/**
- * 取消連結 OAuth 帳戶 (需要認證)
- * DELETE /auth/link/:provider
- */
-router.delete('/link/:provider', authenticateToken, asyncErrorHandler(oauthController.unlinkOAuthAccount));
 
 /**
  * 取得 OAuth 連結狀態 (需要認證)
@@ -127,16 +115,17 @@ router.get('/', (req, res) => {
       'POST /auth/logout': '用戶登出',
       'POST /auth/refresh': '刷新 Token',
       'GET /auth/verify': '驗證 Token',
-      'GET /auth/google': 'Google OAuth 登入',
-      'GET /auth/google/callback': 'Google OAuth 回調',
-      'GET /auth/line': 'LINE OAuth 登入',
-      'GET /auth/line/callback': 'LINE OAuth 回調',
+      'GET /auth/google': 'Google OAuth 2.0 登入',
+      'GET /auth/google/callback': 'Google OAuth 2.0 回調',
+      'GET /auth/line': 'LINE Login',
+      'GET /auth/line/callback': 'LINE Login 回調',
+      'GET /auth/oauth/status': '取得 OAuth 狀態',
       'POST /auth/forgot-password': '忘記密碼',
       'POST /auth/reset-password': '重設密碼',
       'POST /auth/change-password': '更改密碼',
       'GET /auth/me': '取得當前用戶資訊'
     },
-    note: '所有端點目前返回 501 (尚未實現)，將在後續階段實現具體功能',
+    note: 'OAuth 認證系統已完成，使用統一的 REST API 實作',
     timestamp: new Date().toISOString()
   });
 });

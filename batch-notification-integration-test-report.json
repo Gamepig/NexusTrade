@@ -1,0 +1,76 @@
+{
+  "timestamp": "2025-07-03T21:58:32.132Z",
+  "tests": [
+    {
+      "testName": "智慧分發器基礎整合",
+      "passed": true,
+      "message": "任務已加入佇列: batch_1751579912143_rp3dwy38p",
+      "timestamp": "2025-07-03T21:58:32.144Z"
+    },
+    {
+      "testName": "批量優化流程",
+      "passed": true,
+      "message": "批量任務創建成功: batch_1751579912144_dj30fhwkq",
+      "timestamp": "2025-07-03T21:58:32.144Z"
+    },
+    {
+      "testName": "優先級處理機制",
+      "passed": true,
+      "message": "所有優先級 (critical, high, medium, low) 處理成功",
+      "timestamp": "2025-07-03T21:58:32.146Z"
+    },
+    {
+      "testName": "錯誤回退機制",
+      "passed": true,
+      "message": "錯誤回退機制正常運作",
+      "timestamp": "2025-07-03T21:58:32.146Z"
+    },
+    {
+      "testName": "效能優化測試",
+      "passed": true,
+      "message": "處理 10 個通知耗時 2.64ms",
+      "timestamp": "2025-07-03T21:58:32.149Z"
+    },
+    {
+      "testName": "用戶分群功能",
+      "passed": true,
+      "message": "2/4 分群處理成功",
+      "timestamp": "2025-07-03T21:58:32.150Z"
+    },
+    {
+      "testName": "訊息去重邏輯",
+      "passed": true,
+      "message": "去重邏輯正常運作",
+      "timestamp": "2025-07-03T21:58:32.150Z"
+    },
+    {
+      "testName": "頻率限制行為",
+      "passed": true,
+      "message": "頻率限制設定: 1000/分鐘",
+      "timestamp": "2025-07-03T21:58:32.150Z"
+    },
+    {
+      "testName": "並發處理能力",
+      "passed": true,
+      "message": "3/3 並發任務成功",
+      "timestamp": "2025-07-03T21:58:32.151Z"
+    },
+    {
+      "testName": "價格警報監控整合",
+      "passed": true,
+      "message": "緊急程度判斷正確: high",
+      "timestamp": "2025-07-03T21:58:32.151Z"
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "passed": 10,
+    "failed": 0,
+    "warnings": 0
+  },
+  "performance": {
+    "totalTime": 18.22429199999999,
+    "averageLatency": 0.26417500000000016,
+    "throughput": 3785.3695467019943
+  }
+}

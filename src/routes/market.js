@@ -48,6 +48,12 @@ router.get('/test', asyncErrorHandler(marketController.testConnection));
 router.get('/price/:symbol', asyncErrorHandler(marketController.getSymbolPrice));
 
 /**
+ * 單一貨幣詳細資訊
+ * GET /api/market/symbol-info/:symbol
+ */
+router.get('/symbol-info/:symbol', asyncErrorHandler(marketController.getSymbolInfo));
+
+/**
  * 多個交易對價格 (GET版本，查詢參數)
  * GET /api/market/prices?symbols=BTCUSDT,ETHUSDT
  */

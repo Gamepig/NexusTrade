@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- 樣式 -->
-    <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="/css/main.css?v=20250624p">
     
     <!-- 圖示 -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -45,14 +45,12 @@
                             <li><a href="#market" class="nav-link">市場</a></li>
                             <li><a href="#news" class="nav-link">新聞</a></li>
                             <li><a href="#watchlist" class="nav-link">關注</a></li>
-                            <li><a href="#notifications" class="nav-link">通知</a></li>
-                            <li><a href="#ai-insights" class="nav-link">AI 分析</a></li>
+                            <li><a href="#price-alerts" class="nav-link">價格警報</a></li>
                         </ul>
                     </nav>
                     
                     <div class="header-actions">
                         <button class="btn btn-secondary" id="login-btn">登入</button>
-                        <button class="btn btn-primary" id="signup-btn">註冊</button>
                     </div>
                 </div>
             </div>
@@ -79,87 +77,47 @@
                             <div class="main-charts-grid">
                                 <div class="chart-card">
                                     <div class="chart-container">
-                                        <!-- TradingView Widget BEGIN -->
-                                        <div class="tradingview-widget-container">
-                                            <div class="tradingview-widget-container__widget"></div>
-                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-                                            {
-                                              "symbol": "BINANCE:BTCUSDT",
-                                              "width": "100%",
-                                              "height": "300",
-                                              "locale": "en",
-                                              "dateRange": "12M",
-                                              "colorTheme": "dark",
-                                              "isTransparent": false,
-                                              "autosize": false,
-                                              "largeChartUrl": ""
-                                            }
-                                            </script>
+                                        <!-- 動態 TradingView Widget 容器 -->
+                                        <div id="homepage-tradingview-0" class="tradingview-widget-container">
+                                            <div class="loading-widget">
+                                                <div class="loading-spinner"></div>
+                                                <p>載入 BTC 圖表中...</p>
+                                            </div>
                                         </div>
-                                        <!-- TradingView Widget END -->
                                     </div>
                                 </div>
                                 
                                 <div class="chart-card">
                                     <div class="chart-container">
-                                        <!-- TradingView Widget BEGIN -->
-                                        <div class="tradingview-widget-container">
-                                            <div class="tradingview-widget-container__widget"></div>
-                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-                                            {
-                                              "symbol": "BINANCE:ETHUSDT",
-                                              "width": "100%",
-                                              "height": "300",
-                                              "locale": "en",
-                                              "dateRange": "12M",
-                                              "colorTheme": "dark",
-                                              "isTransparent": false,
-                                              "autosize": false,
-                                              "largeChartUrl": ""
-                                            }
-                                            </script>
+                                        <!-- 動態 TradingView Widget 容器 -->
+                                        <div id="homepage-tradingview-1" class="tradingview-widget-container">
+                                            <div class="loading-widget">
+                                                <div class="loading-spinner"></div>
+                                                <p>載入 ETH 圖表中...</p>
+                                            </div>
                                         </div>
-                                        <!-- TradingView Widget END -->
                                     </div>
                                 </div>
                                 
                                 <div class="chart-card">
                                     <div class="chart-container">
-                                        <!-- TradingView Widget BEGIN -->
-                                        <div class="tradingview-widget-container">
-                                            <div class="tradingview-widget-container__widget"></div>
-                                            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
-                                            {
-                                              "symbol": "BINANCE:BNBUSDT",
-                                              "width": "100%",
-                                              "height": "300",
-                                              "locale": "en",
-                                              "dateRange": "12M",
-                                              "colorTheme": "dark",
-                                              "isTransparent": false,
-                                              "autosize": false,
-                                              "largeChartUrl": ""
-                                            }
-                                            </script>
+                                        <!-- 動態 TradingView Widget 容器 -->
+                                        <div id="homepage-tradingview-2" class="tradingview-widget-container">
+                                            <div class="loading-widget">
+                                                <div class="loading-spinner"></div>
+                                                <p>載入 BNB 圖表中...</p>
+                                            </div>
                                         </div>
-                                        <!-- TradingView Widget END -->
                                     </div>
                                 </div>
                             </div>
                         </section>
 
-                        <!-- 第0.5排 - AI 大勢分析空間 -->
+                        <!-- 第0.5排 - AI 大勢分析 -->
                         <section class="section-ai-insights">
-                            <div class="section-header">
-                                <h2>AI 市場趨勢分析</h2>
-                                <span class="status-badge">即將推出</span>
-                            </div>
-                            <div class="ai-insights-placeholder">
-                                <div class="placeholder-content">
-                                    <div class="placeholder-icon">🤖</div>
-                                    <h3>智慧市場分析</h3>
-                                    <p>AI 驅動的市場趨勢分析、技術指標解讀和投資建議將在此處顯示</p>
-                                </div>
+                            <!-- AI 首頁大趨勢分析組件 -->
+                            <div id="homepage-ai-trend-container">
+                                <!-- 組件內容將由 JavaScript 動態載入 -->
                             </div>
                         </section>
 
@@ -272,21 +230,34 @@
                         </div>
                     </div>
                     
-                    <!-- TradingView 主要貨幣 Widget -->
+                    <!-- TradingView 加密貨幣熱力圖 -->
                     <div class="trading-widgets-section">
                         <h2>主要加密貨幣</h2>
-                        <div class="trading-widgets-grid">
-                            <div class="trading-widget-container">
-                                <div id="tradingview-widget-0" class="tradingview-widget"></div>
-                            </div>
-                            <div class="trading-widget-container">
-                                <div id="tradingview-widget-1" class="tradingview-widget"></div>
-                            </div>
-                            <div class="trading-widget-container">
-                                <div id="tradingview-widget-2" class="tradingview-widget"></div>
-                            </div>
-                            <div class="trading-widget-container">
-                                <div id="tradingview-widget-3" class="tradingview-widget"></div>
+                        <div class="crypto-heatmap-container">
+                            <div id="crypto-heatmap-widget" class="crypto-heatmap-widget">
+                                <!-- TradingView Widget BEGIN -->
+                                <div class="tradingview-widget-container">
+                                  <div class="tradingview-widget-container__widget"></div>
+                                  <div class="tradingview-widget-copyright"><a href="https://tw.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">追蹤TradingView上的所有市場</span></a></div>
+                                  <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js" async>
+                                  {
+                                  "dataSource": "Crypto",
+                                  "blockSize": "market_cap_calc",
+                                  "blockColor": "24h_close_change|5",
+                                  "locale": "zh_TW",
+                                  "symbolUrl": "",
+                                  "colorTheme": "dark",
+                                  "hasTopBar": false,
+                                  "isDataSetEnabled": false,
+                                  "isZoomEnabled": true,
+                                  "hasSymbolTooltip": true,
+                                  "isMonoSize": false,
+                                  "width": "100%",
+                                  "height": "100%"
+                                }
+                                  </script>
+                                </div>
+                                <!-- TradingView Widget END -->
                             </div>
                         </div>
                     </div>
@@ -298,13 +269,7 @@
                             <p>每10秒自動更新 • 點擊查看技術分析</p>
                         </div>
                         
-                        <!-- 表格標題 -->
-                        <div class="coins-table-header">
-                            <div class="header-coin">貨幣</div>
-                            <div class="header-price">價格</div>
-                            <div class="header-change">即時變化</div>
-                            <div class="header-volume">24h 累積交易量</div>
-                        </div>
+                        <!-- 表格標題會由JavaScript動態生成 -->
                         
                         <!-- 載入狀態 -->
                         <div id="market-loading" class="market-loading">
@@ -364,13 +329,44 @@
                     </div>
                 </section>
                 
+                <!-- 觀察清單頁面 -->
                 <section id="watchlist-page" class="page">
                     <div class="page-header">
-                        <h1>關注清單</h1>
-                        <p>即將推出</p>
+                        <h1>我的觀察清單</h1>
+                        <p>追蹤您關注的加密貨幣價格變化</p>
+                    </div>
+                    
+                    <!-- 觀察清單統計 -->
+                    <div id="watchlist-stats" class="watchlist-stats">
+                        <!-- 動態載入統計資訊 -->
+                    </div>
+                    
+                    <!-- 觀察清單內容 -->
+                    <div id="watchlist-container" class="watchlist-content">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>載入觀察清單中...</p>
+                        </div>
                     </div>
                 </section>
                 
+                <!-- 價格警報頁面 -->
+                <section id="price-alerts-page" class="page">
+                    <div class="page-header">
+                        <h1>💰 價格警報</h1>
+                        <p>設定您關注的加密貨幣價格提醒，及時掌握市場動態</p>
+                    </div>
+                    
+                    <!-- 價格警報內容 -->
+                    <div id="price-alerts-content" class="price-alerts-content">
+                        <!-- 載入中狀態 -->
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>載入價格警報中...</p>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="notifications-page" class="page">
                     <div class="page-header">
                         <h1>通知設定</h1>
@@ -378,11 +374,25 @@
                     </div>
                 </section>
                 
-                <section id="ai-insights-page" class="page">
+                <!-- 使用者設定頁面 -->
+                <section id="settings-page" class="page">
                     <div class="page-header">
-                        <h1>AI 分析</h1>
-                        <p>即將推出</p>
+                        <h1>使用者設定</h1>
+                        <p>個人化您的 NexusTrade 體驗</p>
                     </div>
+                    
+                    <!-- 設定內容將由 JavaScript 動態載入 -->
+                    <div id="settings-container" class="settings-content">
+                        <div class="loading-state">
+                            <div class="loading-spinner"></div>
+                            <p>載入設定中...</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- 單一貨幣詳情頁面 -->
+                <section id="currency-detail-page" class="page">
+                    <!-- 內容將由 CurrencyDetailPage 組件動態載入 -->
                 </section>
             </div>
         </main>
@@ -412,14 +422,25 @@
     <script src="/js/lib/api.js"></script>
     <script src="/js/lib/dom.js"></script>
     <script src="/js/lib/router.js"></script>
+    <!-- 新的認證系統 -->
+    <script src="/js/auth/AuthManager.js"></script>
     <script src="/js/state/store.js"></script>
     <script src="/js/components/Notification.js"></script>
+    <!-- <script src="/js/components/LoginModal.js"></script> 暫時停用舊的登入系統 -->
+    <script src="/js/components/PriceAlertModal.js"></script>
     <script src="/js/components/CryptoCurrencyList.js"></script>
     <script src="/js/components/HomeCryptoList.js"></script>
     <script src="/js/components/MarketPage.js"></script>
     <script src="/js/components/TradingViewWidgets.js"></script>
     <script src="/js/components/NewsTicker.js"></script>
     <script src="/js/components/NewsPage.js"></script>
-    <script src="/js/nexus-app-fixed.js"></script>
+    <script src="/js/components/WatchlistPage.js"></script>
+    <script src="/js/components/PriceAlertsPage.js"></script>
+    <script src="/js/components/AIInsightsPage.js"></script>
+    <script src="/js/components/AIHomepageTrend.js?v=20250622c"></script>
+    <script src="/js/components/AICurrencyAnalysis.js?v=20250625fix6"></script>
+    <script src="/js/components/CurrencyDetailPage.js?v=20250624c"></script>
+    <script src="/js/components/SettingsPage.js?v=20250622c"></script>
+    <script src="/js/nexus-app-fixed.js?v=20250622c"></script>
 </body>
 </html>

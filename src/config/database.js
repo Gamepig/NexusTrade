@@ -20,10 +20,12 @@ const getConnectionOptions = () => {
     minPoolSize: isProduction ? 2 : 1,  // 最小連接數
     maxIdleTimeMS: 30000,               // 連接閒置時間
     
-    // 超時設定
-    serverSelectionTimeoutMS: 5000,     // 伺服器選擇超時
-    socketTimeoutMS: 45000,             // Socket 超時
-    connectTimeoutMS: 10000,            // 連接超時
+    // 超時設定 - 針對事件驅動監控優化
+    serverSelectionTimeoutMS: 30000,    // 伺服器選擇超時
+    socketTimeoutMS: 60000,             // Socket 超時 (增加為 60 秒)
+    connectTimeoutMS: 30000,            // 連接超時
+    // bufferMaxEntries: 0,                // 禁用 buffer，立即失敗而非等待
+    // bufferCommands: false,              // 禁用命令緩衝
     
     // 心跳設定
     heartbeatFrequencyMS: 30000,        // 心跳頻率

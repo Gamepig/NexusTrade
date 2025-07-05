@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 分析最終修復測試</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body {
+      background: #0a0e27;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .test-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .test-section {
+      background: #1a1f3a;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 25px;
+      border: 1px solid #2d3748;
+    }
+    
+    .section-title {
+      color: #4ade80;
+      font-size: 1.4em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .test-controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .test-btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .test-btn:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+    
+    .test-btn.danger {
+      background: #ef4444;
+    }
+    
+    .test-btn.danger:hover {
+      background: #dc2626;
+    }
+    
+    .test-btn.success {
+      background: #10b981;
+    }
+    
+    .test-btn.success:hover {
+      background: #059669;
+    }
+    
+    .ai-test-container {
+      min-height: 400px;
+      border: 2px solid #374151;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    
+    .status-display {
+      background: #262a47;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+      gap: 10px;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    
+    .loading { background: #fbbf24; }
+    .success { background: #10b981; }
+    .error { background: #ef4444; }
+    
+    .debug-log {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 15px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    
+    .highlight {
+      background: #fbbf24;
+      color: #000;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <div class="test-header">
+      <h1>🔧 AI 分析系統最終修復測試</h1>
+      <p>測試 Williams %R 第6個技術指標與快取清除功能</p>
+    </div>
+    
+    <!-- 快速狀態檢查 -->
+    <div class="test-section">
+      <div class="section-title">🚀 快速狀態檢查</div>
+      <div class="status-display" id="quick-status">
+        <div class="status-item">
+          <span class="status-indicator loading" id="status-ai"></span>
+          <span>AI 服務狀態: 檢查中...</span>
+        </div>
+        <div class="status-item">
+          <span class="status-indicator loading" id="status-cache"></span>
+          <span>快取狀態: 檢查中...</span>
+        </div>
+        <div class="status-item">
+          <span class="status-indicator loading" id="status-analysis"></span>
+          <span>分析數據: 檢查中...</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 測試控制 -->
+    <div class="test-section">
+      <div class="section-title">🎛️ 測試控制</div>
+      <div class="test-controls">
+        <button class="test-btn" onclick="testCurrentAnalysis()">檢查當前分析</button>
+        <button class="test-btn danger" onclick="forceNewAnalysis()">強制重新分析</button>
+        <button class="test-btn success" onclick="testWilliamsR()">測試 Williams %R</button>
+        <button class="test-btn" onclick="testFrontendComponent()">測試前端組件</button>
+        <button class="test-btn" onclick="clearAll()">清空所有</button>
+      </div>
+    </div>
+    
+    <!-- AI 組件測試區域 -->
+    <div class="test-section">
+      <div class="section-title">🤖 AI 分析組件測試</div>
+      <div class="test-controls">
+        <select id="currency-selector">
+          <option value="BTCUSDT">Bitcoin (BTCUSDT)</option>
+          <option value="ETHUSDT">Ethereum (ETHUSDT)</option>
+          <option value="BNBUSDT">Binance Coin (BNBUSDT)</option>
+        </select>
+        <button class="test-btn" onclick="loadAIComponent()">載入 AI 組件</button>
+      </div>
+      <div id="ai-component-container" class="ai-test-container">
+        <div style="padding: 40px; text-align: center; color: #9ca3af;">
+          點擊「載入 AI 組件」開始測試
+        </div>
+      </div>
+    </div>
+    
+    <!-- 除錯日誌 -->
+    <div class="test-section">
+      <div class="section-title">📋 除錯日誌</div>
+      <div id="debug-log" class="debug-log"></div>
+    </div>
+  </div>
+
+  <!-- 載入必要的 JavaScript -->
+  <script src="/js/components/AICurrencyAnalysis.js?v=20250625fix4"></script>
+  
+  <script>
+    let currentAIComponent = null;
+    const debugLog = document.getElementById('debug-log');
+    
+    // 日誌函數
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+      const logEntry = `[${timestamp}] ${prefix} ${message}\n`;
+      debugLog.textContent += logEntry;
+      debugLog.scrollTop = debugLog.scrollHeight;
+      console.log(logEntry);
+    }
+    
+    // 更新狀態指示器
+    function updateStatus(elementId, status, text) {
+      const element = document.getElementById(elementId);
+      element.className = `status-indicator ${status}`;
+      element.nextElementSibling.textContent = text;
+    }
+    
+    // 快速狀態檢查
+    async function quickStatusCheck() {
+      log('開始快速狀態檢查');
+      
+      try {
+        // 檢查 AI 服務
+        const aiResponse = await fetch('/api/ai/status');
+        const aiData = await aiResponse.json();
+        if (aiData.status === 'success') {
+          updateStatus('status-ai', 'success', `AI 服務: ${aiData.data.stats.model} 正常`);
+          log('AI 服務狀態正常', 'success');
+        } else {
+          throw new Error('AI 服務異常');
+        }
+        
+        // 檢查分析數據
+        const analysisResponse = await fetch('/api/ai/currency-analysis/BTCUSDT');
+        const analysisData = await analysisResponse.json();
+        if (analysisData.status === 'success') {
+          const indicators = analysisData.data.analysis.technicalAnalysis;
+          const indicatorCount = Object.keys(indicators || {}).length;
+          const hasWilliamsR = indicators?.williamsR ? '含 Williams %R' : '無 Williams %R';
+          
+          updateStatus('status-analysis', indicatorCount >= 6 ? 'success' : 'error', 
+            `分析數據: ${indicatorCount} 個指標, ${hasWilliamsR}`);
+          updateStatus('status-cache', analysisData.data.isFromCache ? 'warning' : 'success', 
+            `快取狀態: ${analysisData.data.isFromCache ? '使用快取' : '新分析'}`);
+          
+          log(`分析數據檢查完成: ${indicatorCount} 個技術指標`, indicatorCount >= 6 ? 'success' : 'warning');
+        } else {
+          throw new Error('分析數據異常');
+        }
+        
+      } catch (error) {
+        updateStatus('status-ai', 'error', `檢查失敗: ${error.message}`);
+        log(`狀態檢查失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 檢查當前分析
+    async function testCurrentAnalysis() {
+      log('檢查當前 BTCUSDT 分析數據...');
+      try {
+        const response = await fetch('/api/ai/currency-analysis/BTCUSDT');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          const indicators = data.data.analysis.technicalAnalysis;
+          const indicatorNames = Object.keys(indicators || {});
+          
+          log(`當前分析包含 ${indicatorNames.length} 個技術指標:`);
+          indicatorNames.forEach(name => {
+            const indicator = indicators[name];
+            log(`  - ${name}: 值=${indicator.value || 'N/A'}, 信號=${indicator.signal || 'N/A'}`);
+          });
+          
+          if (indicators.williamsR) {
+            log('✅ Williams %R 指標已存在!', 'success');
+          } else {
+            log('⚠️ Williams %R 指標不存在', 'warning');
+          }
+          
+          log(`分析來源: ${data.data.isFromCache ? '快取' : '新分析'}`, 'info');
+          
+        } else {
+          throw new Error(data.message || '分析請求失敗');
+        }
+      } catch (error) {
+        log(`分析檢查失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 強制重新分析 (需要認證)
+    async function forceNewAnalysis() {
+      log('⚠️ 注意: 強制重新分析需要認證權限', 'warning');
+      log('嘗試發送強制分析請求...');
+      
+      try {
+        const response = await fetch('/api/ai/currency-analysis/BTCUSDT?force=true', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.status === 401) {
+          log('需要登入權限才能強制重新分析', 'warning');
+          return;
+        }
+        
+        const data = await response.json();
+        if (data.status === 'success') {
+          log('✅ 強制重新分析成功!', 'success');
+          await quickStatusCheck(); // 重新檢查狀態
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        log(`強制分析失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 測試 Williams %R 計算
+    function testWilliamsR() {
+      log('測試 Williams %R 計算邏輯...');
+      
+      // 模擬數據測試
+      const highs = [110, 115, 120, 118, 125, 130, 128, 135, 140, 138, 142, 145, 148, 150];
+      const lows = [100, 105, 110, 108, 115, 120, 118, 125, 130, 128, 132, 135, 138, 140];
+      const closes = [105, 110, 115, 113, 120, 125, 123, 130, 135, 133, 137, 140, 143, 145];
+      
+      function calculateWilliamsR(highs, lows, closes, period = 14) {
+        const recentHighs = highs.slice(-period);
+        const recentLows = lows.slice(-period);
+        const currentClose = closes[closes.length - 1];
+        const highestHigh = Math.max(...recentHighs);
+        const lowestLow = Math.min(...recentLows);
+        
+        if (highestHigh === lowestLow) return -50;
+        
+        const williamsR = ((highestHigh - currentClose) / (highestHigh - lowestLow)) * -100;
+        return Math.round(williamsR * 100) / 100;
+      }
+      
+      const williamsR = calculateWilliamsR(highs, lows, closes);
+      log(`Williams %R 計算結果: ${williamsR}%`);
+      
+      let signal = 'neutral';
+      if (williamsR < -80) signal = 'bullish';  // 超賣，可能反彈
+      else if (williamsR > -20) signal = 'bearish'; // 超買，可能回調
+      
+      log(`Williams %R 信號: ${signal}`);
+      log('✅ Williams %R 計算邏輯測試完成', 'success');
+    }
+    
+    // 載入 AI 組件
+    function loadAIComponent() {
+      const symbol = document.getElementById('currency-selector').value;
+      log(`載入 ${symbol} AI 分析組件...`);
+      
+      try {
+        // 清理舊組件
+        if (currentAIComponent) {
+          currentAIComponent.destroy && currentAIComponent.destroy();
+        }
+        
+        // 創建新組件
+        currentAIComponent = new AICurrencyAnalysis('ai-component-container', symbol);
+        log(`✅ ${symbol} AI 組件已初始化`, 'success');
+        
+      } catch (error) {
+        log(`AI 組件載入失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 測試前端組件
+    function testFrontendComponent() {
+      log('測試前端組件各項功能...');
+      
+      // 檢查組件類別是否存在
+      if (typeof AICurrencyAnalysis !== 'undefined') {
+        log('✅ AICurrencyAnalysis 類別已載入', 'success');
+      } else {
+        log('❌ AICurrencyAnalysis 類別未找到', 'error');
+        return;
+      }
+      
+      // 檢查容器
+      const container = document.getElementById('ai-component-container');
+      if (container) {
+        log('✅ AI 組件容器存在', 'success');
+      } else {
+        log('❌ AI 組件容器未找到', 'error');
+      }
+      
+      log('前端組件檢查完成');
+    }
+    
+    // 清空所有
+    function clearAll() {
+      if (currentAIComponent) {
+        currentAIComponent.destroy && currentAIComponent.destroy();
+        currentAIComponent = null;
+      }
+      document.getElementById('ai-component-container').innerHTML = `
+        <div style="padding: 40px; text-align: center; color: #9ca3af;">
+          組件已清空，點擊「載入 AI 組件」重新開始測試
+        </div>
+      `;
+      debugLog.textContent = '';
+      log('所有內容已清空');
+    }
+    
+    // 頁面載入時自動執行
+    window.addEventListener('load', async () => {
+      log('🚀 AI 分析系統最終修復測試開始');
+      await quickStatusCheck();
+      await testCurrentAnalysis();
+      log('初始檢查完成，可以開始手動測試');
+    });
+    
+    // 監聽未處理的錯誤
+    window.addEventListener('error', (e) => {
+      log(`未處理的錯誤: ${e.error.message}`, 'error');
+    });
+  </script>
+</body>
+</html>

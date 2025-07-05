@@ -121,11 +121,11 @@ class CryptoCurrencyList {
     try {
       this.setLoading(true);
       await this.fetchAndDisplayCoins(1);
+      this.setLoading(false); // 只有成功時才隱藏載入狀態
     } catch (error) {
       console.error('❌ 載入初始數據失敗:', error);
+      this.setLoading(false); // 確保載入狀態被隱藏
       this.showError('載入失敗，請重試');
-    } finally {
-      this.setLoading(false);
     }
   }
 
@@ -159,6 +159,12 @@ class CryptoCurrencyList {
     try {
       // 獲取熱門貨幣列表
       const response = await fetch('/api/market/trending?limit=200');
+      
+      // ✅ 檢查 HTTP 狀態碼
+      if (!response.ok) {
+        throw new Error(`API 請求失敗: ${response.status} ${response.statusText}`);
+      }
+      
       const result = await response.json();
       
       if (!result.success) {
@@ -228,6 +234,12 @@ class CryptoCurrencyList {
     try {
       const symbolsParam = symbols.join(',');
       const response = await fetch(`/api/market/batch-prices?symbols=${symbolsParam}`);
+      
+      // ✅ 檢查 HTTP 狀態碼
+      if (!response.ok) {
+        throw new Error(`API 請求失敗: ${response.status} ${response.statusText}`);
+      }
+      
       const result = await response.json();
       
       if (!result.success) {
@@ -246,6 +258,17 @@ class CryptoCurrencyList {
       
     } catch (error) {
       console.error('❌ 批量獲取價格失敗:', error);
+      
+      // ✅ 改善錯誤處理 - 429 錯誤特殊處理
+      if (error.message && error.message.includes('429')) {
+        console.warn('⚠️ 檢測到 429 錯誤，暫停自動更新 30 秒');
+        this.stopAutoUpdate();
+        setTimeout(() => {
+          console.log('🔄 恢復自動更新');
+          this.startAutoUpdate();
+        }, 30000);
+      }
+      
       throw error;
     }
   }
@@ -271,15 +294,26 @@ class CryptoCurrencyList {
   }
 
   /**
-   * 獲取貨幣圖標 HTML (使用新的本地圖標系統)
+   * 獲取貨幣圖標 URL (優先使用圖片 URL)
    */
-  getCoinIcon(symbol, name) {
-    // 優先使用全局的本地圖標系統
-    if (typeof window.getCryptoIcon === 'function') {
-      return window.getCryptoIcon(symbol, 32);
-    }
+  getCoinIconUrl(symbol) {
+    const baseSymbol = symbol.replace('USDT', '').replace('BUSD', '').replace('USDC', '').toLowerCase();
+    const coinName = this.getCoinName(symbol) || baseSymbol;
     
-    // 後備方案：文字圖標
+    // 嘗試多個圖標來源
+    const iconSources = [
+      `https://cryptocurrencyliveprices.com/img/${baseSymbol}-${coinName.toLowerCase()}.png`,
+      `https://cryptologos.cc/logos/${baseSymbol}-${baseSymbol}-logo.png`,
+      `https://assets.coingecko.com/coins/images/1/large/${baseSymbol}.png`
+    ];
+    
+    return iconSources[0]; // 返回第一個URL，錯誤處理由前端完成
+  }
+
+  /**
+   * 獲取貨幣圖標 HTML (文字後備方案)
+   */
+  getCoinIconFallback(symbol) {
     const baseSymbol = symbol.replace('USDT', '').replace('BUSD', '').replace('USDC', '').toLowerCase();
     const colors = {
       'btc': '#f7931a', 'eth': '#627eea', 'bnb': '#f0b90b', 'ada': '#0033ad',
@@ -348,11 +382,12 @@ class CryptoCurrencyList {
       <div class="coin-card" data-symbol="${coin.symbol}">
         <div class="coin-info">
           <div class="coin-icon">
-            <img src="${this.getCoinIcon(coin.symbol, coin.name)}" 
+            <img src="${this.getCoinIconUrl(coin.symbol)}" 
                  alt="${coin.name}" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                 style="width: 32px; height: 32px; border-radius: 50%;"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="coin-icon-fallback" style="display: none;">
-              ${coin.symbol.substring(0, 3)}
+              ${this.getCoinIconFallback(coin.symbol)}
             </div>
           </div>
           <div class="coin-details">
@@ -388,9 +423,9 @@ class CryptoCurrencyList {
         if (this.onCoinClick) {
           this.onCoinClick(symbol);
         } else {
-          // 預設行為：導航到技術分析頁面
-          console.log(`點擊貨幣: ${symbol}`);
-          // window.location.hash = `#/analysis/${symbol}`;
+          // 預設行為：導航到貨幣詳情頁面
+          console.log(`📊 點擊貨幣: ${symbol}，導航到詳情頁面`);
+          window.location.hash = `#/currency/${symbol}`;
         }
       });
     });

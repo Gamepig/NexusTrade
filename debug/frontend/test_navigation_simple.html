@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貨幣導航驗證 - NexusTrade</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 12px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #333;
+            border-radius: 8px;
+            border-left: 4px solid #00d4aa;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 10px 10px 10px 0;
+            background: #00d4aa;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .test-link:hover {
+            background: #00b894;
+            transform: translateY(-2px);
+        }
+        .status {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .check-item {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+        }
+        .check-item:last-child {
+            border-bottom: none;
+        }
+        h1, h2, h3 { color: #00d4aa; }
+        .direct-test { background: #2d4a22; border-left-color: #4caf50; }
+        .homepage-test { background: #2d3f4a; border-left-color: #2196f3; }
+        .market-test { background: #4a2d2d; border-left-color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧭 貨幣列表導航驗證</h1>
+        <p>測試所有貨幣列表的點擊導航功能是否正常工作</p>
+
+        <div class="test-section direct-test">
+            <h3>🎯 直接路由測試</h3>
+            <p>測試直接訪問貨幣詳情頁面 URL</p>
+            <a href="http://localhost:3000/#/currency/BTCUSDT" class="test-link" target="_blank">
+                ₿ Bitcoin (BTCUSDT)
+            </a>
+            <a href="http://localhost:3000/#/currency/ETHUSDT" class="test-link" target="_blank">
+                Ξ Ethereum (ETHUSDT)
+            </a>
+            <a href="http://localhost:3000/#/currency/BNBUSDT" class="test-link" target="_blank">
+                🔶 BNB (BNBUSDT)
+            </a>
+        </div>
+
+        <div class="test-section homepage-test">
+            <h3>🏠 首頁貨幣列表測試</h3>
+            <p>測試首頁熱門貨幣列表的點擊導航</p>
+            <a href="http://localhost:3000/#/dashboard" class="test-link" target="_blank">
+                📊 打開首頁並測試貨幣卡片點擊
+            </a>
+            <div class="status">
+                <strong>測試步驟：</strong><br>
+                1. 點擊上方按鈕打開首頁<br>
+                2. 找到「熱門貨幣」區域<br>
+                3. 點擊任意貨幣卡片<br>
+                4. 確認跳轉到 /#/currency/SYMBOL 格式的 URL
+            </div>
+        </div>
+
+        <div class="test-section market-test">
+            <h3>💹 市場頁面貨幣列表測試</h3>
+            <p>測試市場頁面200種貨幣列表的點擊導航</p>
+            <a href="http://localhost:3000/#/market" class="test-link" target="_blank">
+                📈 打開市場頁面並測試貨幣卡片點擊
+            </a>
+            <div class="status">
+                <strong>測試步驟：</strong><br>
+                1. 點擊上方按鈕打開市場頁面<br>
+                2. 等待貨幣列表載入（約3-5秒）<br>
+                3. 點擊任意貨幣卡片<br>
+                4. 確認跳轉到 /#/currency/SYMBOL 格式的 URL
+            </div>
+        </div>
+
+        <div class="status">
+            <h3>✅ 驗證檢查清單</h3>
+            <div class="check-item">
+                <strong>□ 路由系統</strong> - URL 格式正確：/#/currency/SYMBOL
+            </div>
+            <div class="check-item">
+                <strong>□ 首頁列表</strong> - HomeCryptoList → CryptoCurrencyList 點擊導航
+            </div>
+            <div class="check-item">
+                <strong>□ 市場列表</strong> - MarketPage → CryptoCurrencyList 點擊導航
+            </div>
+            <div class="check-item">
+                <strong>□ 頁面載入</strong> - CurrencyDetailPage 正常顯示
+            </div>
+            <div class="check-item">
+                <strong>□ Widget 載入</strong> - 7個 TradingView Widget 正常載入
+            </div>
+            <div class="check-item">
+                <strong>□ 瀏覽器歷史</strong> - 前進/後退按鈕正常工作
+            </div>
+        </div>
+
+        <div class="status">
+            <h3>🔍 除錯資訊</h3>
+            <div id="debug-info">
+                當前時間: <span id="current-time"></span><br>
+                瀏覽器: <span id="browser-info"></span><br>
+                服務狀態: <span id="service-status">檢查中...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新除錯資訊
+        function updateDebugInfo() {
+            document.getElementById('current-time').textContent = new Date().toLocaleString('zh-TW');
+            document.getElementById('browser-info').textContent = navigator.userAgent.split(' ')[0];
+        }
+
+        // 檢查服務狀態
+        async function checkServiceStatus() {
+            try {
+                const response = await fetch('http://localhost:3000/api/market/symbols');
+                if (response.ok) {
+                    document.getElementById('service-status').textContent = '✅ API 服務正常';
+                    document.getElementById('service-status').style.color = '#4caf50';
+                } else {
+                    throw new Error('API 異常');
+                }
+            } catch (error) {
+                document.getElementById('service-status').textContent = '❌ API 服務異常';
+                document.getElementById('service-status').style.color = '#f44336';
+            }
+        }
+
+        // 初始化
+        updateDebugInfo();
+        checkServiceStatus();
+        setInterval(updateDebugInfo, 1000);
+
+        console.log('🧪 貨幣導航驗證頁面已載入');
+        console.log('📋 請依序測試：');
+        console.log('  1. 直接路由測試');
+        console.log('  2. 首頁貨幣列表點擊');
+        console.log('  3. 市場頁面貨幣列表點擊');
+    </script>
+</body>
+</html>

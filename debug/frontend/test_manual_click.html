@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手動點擊測試 - NexusTrade</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #2a2a2a;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00d4aa;
+        }
+        .test-btn {
+            display: inline-block;
+            padding: 12px 20px;
+            margin: 5px;
+            background: #00d4aa;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+        }
+        .test-btn:hover {
+            background: #00b894;
+        }
+        .result {
+            background: #333;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .success { color: #00d4aa; }
+        .error { color: #ff4757; }
+        .warning { color: #ffa502; }
+    </style>
+</head>
+<body>
+    <h1>🖱️ 手動點擊導航測試</h1>
+    <p>這個頁面會開啟實際的 NexusTrade 首頁和市場頁面，測試貨幣卡片點擊導航功能。</p>
+
+    <div class="test-section">
+        <h3>📋 測試步驟說明</h3>
+        <ol>
+            <li>點擊下方按鈕開啟首頁或市場頁面</li>
+            <li>在新分頁中，找到任意貨幣卡片</li>
+            <li>點擊貨幣卡片</li>
+            <li>觀察 URL 是否變為 <code>#/currency/SYMBOL</code> 格式</li>
+            <li>檢查是否正確載入單一貨幣詳情頁面</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>🏠 首頁測試</h3>
+        <p>測試首頁熱門貨幣列表的點擊導航</p>
+        <a href="http://localhost:3000/#/dashboard" target="_blank" class="test-btn">
+            🏠 開啟首頁 (新分頁)
+        </a>
+        <div class="result">
+            <strong>預期行為：</strong><br>
+            1. 首頁載入完成<br>
+            2. 熱門貨幣區域顯示<br>
+            3. 點擊任意貨幣卡片<br>
+            4. URL 變為 #/currency/BTCUSDT (或其他幣種)<br>
+            5. 載入單一貨幣詳情頁面
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>💹 市場頁面測試</h3>
+        <p>測試市場頁面200種貨幣列表的點擊導航</p>
+        <a href="http://localhost:3000/#/market" target="_blank" class="test-btn">
+            📈 開啟市場頁面 (新分頁)
+        </a>
+        <div class="result">
+            <strong>預期行為：</strong><br>
+            1. 市場頁面載入完成<br>
+            2. 200種貨幣列表顯示<br>
+            3. 點擊任意貨幣卡片<br>
+            4. URL 變為 #/currency/SYMBOL<br>
+            5. 載入單一貨幣詳情頁面
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🎯 直接路由測試</h3>
+        <p>測試直接訪問貨幣詳情頁面 URL</p>
+        <a href="http://localhost:3000/#/currency/BTCUSDT" target="_blank" class="test-btn">
+            ₿ Bitcoin 詳情頁
+        </a>
+        <a href="http://localhost:3000/#/currency/ETHUSDT" target="_blank" class="test-btn">
+            Ξ Ethereum 詳情頁
+        </a>
+        <a href="http://localhost:3000/#/currency/BNBUSDT" target="_blank" class="test-btn">
+            🔶 BNB 詳情頁
+        </a>
+        <div class="result">
+            <strong>預期行為：</strong><br>
+            1. 直接載入對應貨幣的詳情頁面<br>
+            2. 頁面標題更新為 "NexusTrade - SYMBOL 詳情分析"<br>
+            3. 顯示 7 個 TradingView Widget<br>
+            4. AI 分析區域正常載入（或顯示錯誤狀態）
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔍 除錯資訊</h3>
+        <div id="debug-info" class="result">
+            <strong>測試環境：</strong><br>
+            服務器：http://localhost:3000<br>
+            測試時間：<span id="test-time"></span><br>
+            瀏覽器：<span id="browser-info"></span>
+        </div>
+        
+        <div class="result">
+            <strong>檢查要點：</strong><br>
+            ✅ URL 路由是否正確 (#/currency/SYMBOL)<br>
+            ✅ 頁面標題是否更新<br>
+            ✅ TradingView Widget 是否載入<br>
+            ✅ AI 分析區域是否顯示<br>
+            ✅ 瀏覽器歷史是否正常<br>
+            ✅ 頁面間導航是否流暢
+        </div>
+    </div>
+
+    <script>
+        // 更新除錯資訊
+        document.getElementById('test-time').textContent = new Date().toLocaleString('zh-TW');
+        document.getElementById('browser-info').textContent = navigator.userAgent.split(' ')[0] + ' ' + navigator.userAgent.match(/Chrome\/[\d.]+|Firefox\/[\d.]+|Safari\/[\d.]+/)?.[0];
+        
+        console.log('🧪 手動點擊測試頁面已載入');
+        console.log('👆 請依序測試首頁和市場頁面的貨幣卡片點擊功能');
+    </script>
+</body>
+</html>

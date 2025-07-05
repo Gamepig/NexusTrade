@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth 修復測試 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            display: inline-block;
+        }
+        .button:hover { background: #0056b3; }
+        .button.google { background: #db4437; }
+        .button.line { background: #00c300; }
+        
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        
+        h1 { color: #333; text-align: center; }
+        h2 { color: #555; }
+    </style>
+</head>
+<body>
+    <h1>🔧 OAuth 修復效果測試</h1>
+    <p style="text-align: center;"><strong>注意：如果看到舊的錯誤訊息，請按 Ctrl+F5 強制重新整理頁面</strong></p>
+    
+    <div class="section">
+        <h2>📊 修復狀態檢查</h2>
+        <div id="fix-status" class="status info">正在檢查修復狀態...</div>
+        <div id="version-info" class="result">載入中...</div>
+    </div>
+    
+    <div class="section">
+        <h2>🧪 登入功能測試</h2>
+        <p>這些按鈕會直接觸發 OAuth 重定向：</p>
+        
+        <button class="button google" onclick="testGoogleLogin()">🔴 Google 登入測試</button>
+        <button class="button line" onclick="testLineLogin()">💚 LINE 登入測試</button>
+        
+        <div id="test-result" class="result">點擊按鈕測試 OAuth 登入功能...</div>
+    </div>
+    
+    <div class="section">
+        <h2>🔍 詳細診斷</h2>
+        <button class="button" onclick="runDetailedDiagnostic()">執行詳細診斷</button>
+        <div id="diagnostic-result" class="result">點擊執行詳細診斷...</div>
+    </div>
+
+    <!-- 載入所有必要的腳本，不使用快取 -->
+    <script src="/js/lib/api.js?nocache=true"></script>
+    <script src="/js/lib/dom.js?nocache=true"></script>
+    <script src="/js/lib/router.js?nocache=true"></script>
+    <script src="/js/lib/auth-state-manager.js?nocache=true"></script>
+    <script src="/js/state/store.js?nocache=true"></script>
+    <script src="/js/components/Notification.js?nocache=true"></script>
+    <script src="/js/components/LoginModal.js?nocache=true"></script>
+
+    <script>
+        // 檢查修復狀態
+        function checkFixStatus() {
+            const statusEl = document.getElementById('fix-status');
+            const versionEl = document.getElementById('version-info');
+            
+            let output = '';
+            
+            // 檢查 LoginModal 是否載入
+            if (typeof LoginModal !== 'undefined') {
+                output += '✅ LoginModal 類別已載入\n';
+                
+                try {
+                    // 檢查方法簽名
+                    const modal = new LoginModal();
+                    const googleLoginMethod = modal.handleGoogleLogin.toString();
+                    
+                    if (googleLoginMethod.includes('OAuth 端點回應異常')) {
+                        output += '❌ 仍在使用舊版本程式碼 (包含端點檢查)\n';
+                        statusEl.className = 'status error';
+                        statusEl.textContent = '❌ 需要強制重新整理頁面 (Ctrl+F5)';
+                    } else if (googleLoginMethod.includes('直接重定向到 Google OAuth')) {
+                        output += '✅ 已使用新版本程式碼 (移除端點檢查)\n';
+                        statusEl.className = 'status success';
+                        statusEl.textContent = '✅ 修復版本已載入';
+                    } else {
+                        output += '⚠️ 程式碼版本不明確\n';
+                        statusEl.className = 'status info';
+                        statusEl.textContent = '⚠️ 程式碼版本不明確';
+                    }
+                    
+                    // 顯示方法的一部分
+                    output += '\n方法內容檢查:\n';
+                    const lines = googleLoginMethod.split('\n').slice(0, 10);
+                    lines.forEach((line, index) => {
+                        output += `${index + 1}: ${line}\n`;
+                    });
+                    
+                } catch (error) {
+                    output += `❌ LoginModal 實例化失敗: ${error.message}\n`;
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ LoginModal 實例化失敗';
+                }
+            } else {
+                output += '❌ LoginModal 類別未載入\n';
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ LoginModal 類別未載入';
+            }
+            
+            // 檢查載入時間
+            output += `\n頁面載入時間: ${new Date().toLocaleTimeString()}\n`;
+            output += `User Agent: ${navigator.userAgent.split(' ').slice(-2).join(' ')}\n`;
+            
+            versionEl.textContent = output;
+        }
+
+        // 測試 Google 登入
+        function testGoogleLogin() {
+            const resultEl = document.getElementById('test-result');
+            resultEl.textContent = '🔴 測試 Google 登入...\n';
+            
+            try {
+                if (typeof LoginModal !== 'undefined') {
+                    const modal = new LoginModal();
+                    
+                    // 模擬點擊事件
+                    const mockEvent = {
+                        preventDefault: () => console.log('preventDefault called'),
+                        stopPropagation: () => console.log('stopPropagation called')
+                    };
+                    
+                    resultEl.textContent += '正在執行 handleGoogleLogin...\n';
+                    modal.handleGoogleLogin(mockEvent);
+                    
+                    resultEl.textContent += '✅ Google 登入方法執行完成\n';
+                    resultEl.textContent += '⏳ 如果修復成功，應該會重定向到 Google OAuth\n';
+                } else {
+                    resultEl.textContent += '❌ LoginModal 類別不存在\n';
+                }
+            } catch (error) {
+                resultEl.textContent += `❌ Google 登入測試失敗: ${error.message}\n`;
+            }
+        }
+
+        // 測試 LINE 登入
+        function testLineLogin() {
+            const resultEl = document.getElementById('test-result');
+            resultEl.textContent = '💚 測試 LINE 登入...\n';
+            
+            try {
+                if (typeof LoginModal !== 'undefined') {
+                    const modal = new LoginModal();
+                    
+                    // 模擬點擊事件
+                    const mockEvent = {
+                        preventDefault: () => console.log('preventDefault called'),
+                        stopPropagation: () => console.log('stopPropagation called')
+                    };
+                    
+                    resultEl.textContent += '正在執行 handleLineLogin...\n';
+                    modal.handleLineLogin(mockEvent);
+                    
+                    resultEl.textContent += '✅ LINE 登入方法執行完成\n';
+                    resultEl.textContent += '⏳ 如果修復成功，應該會重定向到 LINE OAuth\n';
+                } else {
+                    resultEl.textContent += '❌ LoginModal 類別不存在\n';
+                }
+            } catch (error) {
+                resultEl.textContent += `❌ LINE 登入測試失敗: ${error.message}\n`;
+            }
+        }
+
+        // 執行詳細診斷
+        function runDetailedDiagnostic() {
+            const resultEl = document.getElementById('diagnostic-result');
+            let output = '=== 詳細診斷報告 ===\n';
+            
+            // 1. 檢查 DOM 元素
+            output += '\n1. DOM 元素檢查:\n';
+            const loginBtn = document.getElementById('login-btn');
+            output += `主頁面登入按鈕: ${loginBtn ? '存在' : '不存在'}\n`;
+            
+            // 2. 檢查事件監聽器
+            output += '\n2. 事件監聽器檢查:\n';
+            if (window.app) {
+                output += '✅ window.app 存在\n';
+                output += `app.loginModal: ${window.app.loginModal ? '存在' : '不存在'}\n`;
+            } else {
+                output += '❌ window.app 不存在\n';
+            }
+            
+            // 3. 檢查 OAuth 端點
+            output += '\n3. OAuth 端點檢查:\n';
+            
+            // 使用 fetch 檢查端點
+            Promise.all([
+                fetch('/auth/google', { redirect: 'error' }).catch(e => ({ error: e.message })),
+                fetch('/auth/line', { redirect: 'error' }).catch(e => ({ error: e.message }))
+            ]).then(results => {
+                results.forEach((result, index) => {
+                    const endpoint = index === 0 ? 'Google' : 'LINE';
+                    if (result.error) {
+                        if (result.error.includes('redirect')) {
+                            output += `✅ ${endpoint} OAuth 端點正常 (預期重定向錯誤)\n`;
+                        } else {
+                            output += `❌ ${endpoint} OAuth 端點錯誤: ${result.error}\n`;
+                        }
+                    } else {
+                        output += `⚠️ ${endpoint} OAuth 端點未重定向 (狀態: ${result.status})\n`;
+                    }
+                });
+                
+                output += '\n診斷完成。\n';
+                resultEl.textContent = output;
+            });
+            
+            resultEl.textContent = output + '\n正在檢查 OAuth 端點...';
+        }
+
+        // 頁面載入後自動檢查
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 OAuth 修復測試頁面已載入');
+            
+            // 延遲檢查，確保所有腳本載入完成
+            setTimeout(() => {
+                checkFixStatus();
+            }, 1000);
+        });
+
+        // 監聽錯誤
+        window.addEventListener('error', function(event) {
+            console.error('頁面錯誤:', event.error);
+        });
+    </script>
+</body>
+</html>

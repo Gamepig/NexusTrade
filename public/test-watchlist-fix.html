@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>觀察清單功能修復測試 - NexusTrade</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #0a0e17;
+            color: #ffffff;
+        }
+
+        .section {
+            background: #1a1d29;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #4299e1;
+            border-bottom: 2px solid #2d3748;
+            padding-bottom: 10px;
+        }
+
+        .section h3 {
+            color: #68d391;
+            margin-top: 24px;
+        }
+
+        .button {
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.2s;
+        }
+
+        .button:hover {
+            background: #2c5aa0;
+        }
+
+        .button.success {
+            background: #38a169;
+        }
+
+        .button.warning {
+            background: #dd6b20;
+        }
+
+        .button.danger {
+            background: #e53e3e;
+        }
+
+        .result {
+            background: #2d3748;
+            border-left: 4px solid #4299e1;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            border-left-color: #38a169;
+            background: #1a2f1a;
+        }
+
+        .result.error {
+            border-left-color: #e53e3e;
+            background: #2f1a1a;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-success {
+            background: #38a169;
+        }
+
+        .status-error {
+            background: #e53e3e;
+        }
+
+        .status-warning {
+            background: #dd6b20;
+        }
+
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #2d3748;
+            border-radius: 6px;
+        }
+
+        .test-step .step-number {
+            background: #4299e1;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .auth-info {
+            background: #2d3748;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .auth-info h4 {
+            margin-top: 0;
+            color: #68d391;
+        }
+
+        .code-block {
+            background: #1a202c;
+            border: 1px solid #2d3748;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .alert.info {
+            background: rgba(66, 153, 225, 0.1);
+            border: 1px solid #4299e1;
+            color: #4299e1;
+        }
+
+        .alert.warning {
+            background: rgba(221, 107, 32, 0.1);
+            border: 1px solid #dd6b20;
+            color: #dd6b20;
+        }
+
+        .alert.success {
+            background: rgba(56, 161, 105, 0.1);
+            border: 1px solid #38a169;
+            color: #38a169;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 觀察清單功能修復測試</h1>
+    
+    <div class="alert info">
+        <strong>ℹ️ 診斷說明</strong><br>
+        這個頁面將幫助您診斷和修復觀察清單功能的問題，包括「加入關注」按鈕無反應的情況。
+    </div>
+
+    <!-- 第一步：檢查認證狀態 -->
+    <div class="section">
+        <h2>🔐 第一步：檢查認證狀態</h2>
+        <p>首先檢查用戶是否正確登入以及認證狀態</p>
+        
+        <button class="button" onclick="checkAuthStatus()">🔍 檢查認證狀態</button>
+        <button class="button warning" onclick="clearAuthData()">🧹 清除認證資料</button>
+        <button class="button success" onclick="forceAuthSync()">🚀 強制同步認證</button>
+        
+        <div id="auth-status-result" class="result" style="display: none;"></div>
+        
+        <div class="auth-info">
+            <h4>📋 認證狀態檢查清單</h4>
+            <ul>
+                <li><span class="status-indicator" id="token-status"></span>JWT Token 存在且有效</li>
+                <li><span class="status-indicator" id="user-status"></span>用戶資料完整</li>
+                <li><span class="status-indicator" id="line-status"></span>LINE 連接狀態</li>
+                <li><span class="status-indicator" id="authmanager-status"></span>AuthManager 運作正常</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 第二步：測試 API 連接 -->
+    <div class="section">
+        <h2>🌐 第二步：測試 API 連接</h2>
+        <p>測試觀察清單相關的 API 端點是否正常運作</p>
+        
+        <button class="button" onclick="testWatchlistAPI()">📡 測試觀察清單 API</button>
+        <button class="button" onclick="testAddToWatchlist()">➕ 測試添加到觀察清單</button>
+        <button class="button" onclick="testWatchlistStatus()">🔍 測試狀態檢查</button>
+        
+        <div id="api-test-result" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- 第三步：模擬按鈕點擊 -->
+    <div class="section">
+        <h2>🖱️ 第三步：模擬按鈕功能</h2>
+        <p>模擬貨幣詳細頁面的「加入關注」按鈕功能</p>
+        
+        <div class="test-step">
+            <span class="step-number">1</span>
+            選擇測試貨幣：
+            <select id="test-symbol" style="margin-left: 10px; padding: 5px;">
+                <option value="BTCUSDT">BTCUSDT (Bitcoin)</option>
+                <option value="ETHUSDT">ETHUSDT (Ethereum)</option>
+                <option value="BNBUSDT">BNBUSDT (BNB)</option>
+                <option value="ADAUSDT">ADAUSDT (Cardano)</option>
+            </select>
+        </div>
+        
+        <button class="button" onclick="simulateAddToWatchlist()">⭐ 模擬加入關注</button>
+        <button class="button" onclick="checkWatchlistStatus()">📊 檢查關注狀態</button>
+        <button class="button warning" onclick="removeFromWatchlist()">🗑️ 移除關注</button>
+        
+        <div id="simulation-result" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- 第四步：前端事件診斷 -->
+    <div class="section">
+        <h2>🐛 第四步：前端事件診斷</h2>
+        <p>檢查前端 JavaScript 事件綁定和組件狀態</p>
+        
+        <button class="button" onclick="checkFrontendComponents()">🔧 檢查前端組件</button>
+        <button class="button" onclick="checkEventBindings()">🎯 檢查事件綁定</button>
+        <button class="button" onclick="testNavigationToDetailPage()">🧭 測試導航到詳細頁面</button>
+        
+        <div id="frontend-check-result" class="result" style="display: none;"></div>
+    </div>
+
+    <!-- 修復建議 -->
+    <div class="section">
+        <h2>🛠️ 修復建議</h2>
+        <div id="fix-recommendations">
+            <p>執行上述測試後，這裡將顯示具體的修復建議。</p>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {
+            auth: {},
+            api: {},
+            frontend: {}
+        };
+
+        // 第一步：檢查認證狀態
+        async function checkAuthStatus() {
+            const resultDiv = document.getElementById('auth-status-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '🔍 檢查認證狀態中...\n';
+
+            try {
+                // 檢查 localStorage 中的認證資料
+                const token = localStorage.getItem('nexustrade_token');
+                const userStr = localStorage.getItem('nexustrade_user');
+                const user = userStr ? JSON.parse(userStr) : null;
+
+                let status = '📊 認證狀態檢查結果：\n\n';
+
+                // 檢查 Token
+                if (token) {
+                    try {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const isExpired = payload.exp * 1000 <= Date.now();
+                        
+                        status += `✅ JWT Token: 存在\n`;
+                        status += `   - 有效期限: ${new Date(payload.exp * 1000).toLocaleString()}\n`;
+                        status += `   - 狀態: ${isExpired ? '❌ 已過期' : '✅ 有效'}\n`;
+                        
+                        updateStatusIndicator('token-status', !isExpired);
+                        testResults.auth.tokenValid = !isExpired;
+                    } catch (e) {
+                        status += `❌ JWT Token: 格式錯誤\n`;
+                        updateStatusIndicator('token-status', false);
+                        testResults.auth.tokenValid = false;
+                    }
+                } else {
+                    status += `❌ JWT Token: 不存在\n`;
+                    updateStatusIndicator('token-status', false);
+                    testResults.auth.tokenValid = false;
+                }
+
+                // 檢查用戶資料
+                if (user) {
+                    status += `✅ 用戶資料: 存在\n`;
+                    status += `   - 用戶 ID: ${user.id || user._id || '未知'}\n`;
+                    status += `   - 電子郵件: ${user.email || '未知'}\n`;
+                    status += `   - LINE ID: ${user.lineId || user.lineUserId || '未設定'}\n`;
+                    status += `   - 提供者: ${user.provider || '未知'}\n`;
+                    
+                    updateStatusIndicator('user-status', true);
+                    testResults.auth.userDataValid = true;
+                } else {
+                    status += `❌ 用戶資料: 不存在\n`;
+                    updateStatusIndicator('user-status', false);
+                    testResults.auth.userDataValid = false;
+                }
+
+                // 檢查 LINE 連接狀態
+                const isLineConnected = !!(user?.lineUserId || user?.lineId || (user?.provider === 'line'));
+                status += `${isLineConnected ? '✅' : '⚠️'} LINE 連接: ${isLineConnected ? '已連接' : '未連接'}\n`;
+                updateStatusIndicator('line-status', isLineConnected);
+                testResults.auth.lineConnected = isLineConnected;
+
+                // 檢查 AuthManager
+                const hasAuthManager = !!(window.authManager || window.authStateManager);
+                status += `${hasAuthManager ? '✅' : '❌'} AuthManager: ${hasAuthManager ? '已載入' : '未載入'}\n`;
+                updateStatusIndicator('authmanager-status', hasAuthManager);
+                testResults.auth.authManagerLoaded = hasAuthManager;
+
+                if (hasAuthManager && window.authManager) {
+                    status += `   - AuthManager 類型: ${typeof window.authManager}\n`;
+                    if (typeof window.authManager.isAuthenticated === 'function') {
+                        const isAuth = window.authManager.isAuthenticated();
+                        status += `   - 認證狀態: ${isAuth ? '已認證' : '未認證'}\n`;
+                    }
+                }
+
+                resultDiv.textContent = status;
+                resultDiv.className = 'result success';
+
+            } catch (error) {
+                resultDiv.textContent = `❌ 檢查認證狀態失敗:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function updateStatusIndicator(id, isSuccess) {
+            const indicator = document.getElementById(id);
+            if (indicator) {
+                indicator.className = `status-indicator ${isSuccess ? 'status-success' : 'status-error'}`;
+            }
+        }
+
+        function clearAuthData() {
+            localStorage.removeItem('nexustrade_token');
+            localStorage.removeItem('nexustrade_user');
+            sessionStorage.removeItem('nexustrade_token');
+            sessionStorage.removeItem('nexustrade_user');
+            
+            alert('✅ 認證資料已清除！請重新登入。');
+            checkAuthStatus();
+        }
+
+        async function forceAuthSync() {
+            try {
+                if (window.authStateManager && typeof window.authStateManager.forceAuthStateRefresh === 'function') {
+                    await window.authStateManager.forceAuthStateRefresh();
+                    alert('✅ 認證狀態已強制同步！');
+                } else {
+                    alert('⚠️ AuthStateManager 不可用，請重新載入頁面');
+                }
+                checkAuthStatus();
+            } catch (error) {
+                alert(`❌ 強制同步失敗: ${error.message}`);
+            }
+        }
+
+        // 第二步：測試 API 連接
+        async function testWatchlistAPI() {
+            const resultDiv = document.getElementById('api-test-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = '🔍 測試觀察清單 API...\n';
+
+            const token = localStorage.getItem('nexustrade_token');
+            if (!token) {
+                resultDiv.textContent = '❌ 沒有找到認證 Token，請先登入';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            try {
+                let results = '📡 API 測試結果：\n\n';
+
+                // 測試 GET /api/watchlist
+                const getResponse = await fetch('/api/watchlist', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                results += `GET /api/watchlist: ${getResponse.status}\n`;
+                if (getResponse.ok) {
+                    const data = await getResponse.json();
+                    results += `✅ 成功載入觀察清單 (${data.data?.watchlist?.length || 0} 項目)\n`;
+                    testResults.api.getWatchlist = true;
+                } else {
+                    const errorData = await getResponse.json();
+                    results += `❌ 失敗: ${errorData.message || getResponse.statusText}\n`;
+                    if (errorData.message && errorData.message.includes('使用者不存在')) {
+                        results += `🎯 發現問題: 用戶在資料庫中不存在！\n`;
+                    }
+                    testResults.api.getWatchlist = false;
+                }
+
+                resultDiv.textContent = results;
+                resultDiv.className = getResponse.ok ? 'result success' : 'result error';
+
+            } catch (error) {
+                resultDiv.textContent = `❌ API 測試失敗:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testAddToWatchlist() {
+            const symbol = document.getElementById('test-symbol').value;
+            const resultDiv = document.getElementById('api-test-result');
+            resultDiv.style.display = 'block';
+            
+            const token = localStorage.getItem('nexustrade_token');
+            if (!token) {
+                resultDiv.textContent = '❌ 沒有找到認證 Token，請先登入';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = `🔍 測試添加 ${symbol} 到觀察清單...\n`;
+
+                const response = await fetch('/api/watchlist', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        symbol: symbol,
+                        priority: 3,
+                        category: 'default'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = `✅ 成功添加 ${symbol} 到觀察清單！\n\n回應: ${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                    testResults.api.addToWatchlist = true;
+                } else {
+                    resultDiv.textContent = `❌ 添加失敗 (HTTP ${response.status}):\n\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                    testResults.api.addToWatchlist = false;
+                    
+                    if (data.message && data.message.includes('使用者不存在')) {
+                        resultDiv.textContent += '\n\n🎯 核心問題: 使用者在資料庫中不存在！';
+                    }
+                }
+
+            } catch (error) {
+                resultDiv.textContent = `❌ 網路錯誤:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testWatchlistStatus() {
+            const symbol = document.getElementById('test-symbol').value;
+            const resultDiv = document.getElementById('api-test-result');
+            resultDiv.style.display = 'block';
+            
+            const token = localStorage.getItem('nexustrade_token');
+            if (!token) {
+                resultDiv.textContent = '❌ 沒有找到認證 Token，請先登入';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = `🔍 檢查 ${symbol} 的關注狀態...\n`;
+
+                const response = await fetch(`/api/watchlist/status/${symbol}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const isWatched = data.data?.isWatched || false;
+                    resultDiv.textContent = `✅ ${symbol} 關注狀態: ${isWatched ? '已關注' : '未關注'}\n\n回應: ${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ 狀態檢查失敗 (HTTP ${response.status}):\n\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+
+            } catch (error) {
+                resultDiv.textContent = `❌ 網路錯誤:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 第三步：模擬按鈕功能
+        function simulateAddToWatchlist() {
+            testAddToWatchlist();
+        }
+
+        function checkWatchlistStatus() {
+            testWatchlistStatus();
+        }
+
+        async function removeFromWatchlist() {
+            const symbol = document.getElementById('test-symbol').value;
+            const resultDiv = document.getElementById('simulation-result');
+            resultDiv.style.display = 'block';
+            
+            const token = localStorage.getItem('nexustrade_token');
+            if (!token) {
+                resultDiv.textContent = '❌ 沒有找到認證 Token，請先登入';
+                resultDiv.className = 'result error';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = `🗑️ 移除 ${symbol} 從觀察清單...\n`;
+
+                const response = await fetch(`/api/watchlist/${symbol}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.textContent = `✅ 成功移除 ${symbol}\n\n回應: ${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.textContent = `❌ 移除失敗 (HTTP ${response.status}):\n\n${JSON.stringify(data, null, 2)}`;
+                    resultDiv.className = 'result error';
+                }
+
+            } catch (error) {
+                resultDiv.textContent = `❌ 網路錯誤:\n${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // 第四步：檢查前端組件
+        function checkFrontendComponents() {
+            const resultDiv = document.getElementById('frontend-check-result');
+            resultDiv.style.display = 'block';
+            
+            let results = '🔧 前端組件檢查結果：\n\n';
+
+            // 檢查全局組件
+            const components = [
+                { name: 'CurrencyDetailPage', obj: window.CurrencyDetailPage },
+                { name: 'WatchlistPage', obj: window.WatchlistPage },
+                { name: 'PriceAlertModal', obj: window.PriceAlertModal },
+                { name: 'priceAlertModal', obj: window.priceAlertModal },
+                { name: 'AuthManager', obj: window.authManager },
+                { name: 'AuthStateManager', obj: window.authStateManager },
+                { name: 'Router', obj: window.router },
+                { name: 'NexusTradeApp', obj: window.app }
+            ];
+
+            components.forEach(comp => {
+                const exists = comp.obj !== undefined;
+                results += `${exists ? '✅' : '❌'} ${comp.name}: ${exists ? '已載入' : '未載入'}\n`;
+                if (exists && typeof comp.obj === 'object') {
+                    results += `   類型: ${typeof comp.obj}\n`;
+                }
+            });
+
+            // 檢查路由狀態
+            results += '\n🧭 路由狀態:\n';
+            results += `當前 hash: ${window.location.hash}\n`;
+            results += `當前 pathname: ${window.location.pathname}\n`;
+
+            resultDiv.textContent = results;
+            resultDiv.className = 'result';
+        }
+
+        function checkEventBindings() {
+            const resultDiv = document.getElementById('frontend-check-result');
+            resultDiv.style.display = 'block';
+            
+            let results = '🎯 事件綁定檢查結果：\n\n';
+
+            // 檢查觀察清單按鈕是否存在
+            const watchlistBtn = document.getElementById('add-watchlist-btn');
+            results += `${watchlistBtn ? '✅' : '❌'} add-watchlist-btn: ${watchlistBtn ? '存在' : '不存在'}\n`;
+            
+            if (watchlistBtn) {
+                const hasClickListener = watchlistBtn.onclick !== null || 
+                                      watchlistBtn.getAttribute('onclick') !== null;
+                results += `   點擊事件: ${hasClickListener ? '已綁定' : '未綁定'}\n`;
+            }
+
+            // 檢查警報按鈕
+            const alertBtn = document.getElementById('set-alert-btn');
+            results += `${alertBtn ? '✅' : '❌'} set-alert-btn: ${alertBtn ? '存在' : '不存在'}\n`;
+
+            if (alertBtn) {
+                const hasClickListener = alertBtn.onclick !== null || 
+                                      alertBtn.getAttribute('onclick') !== null;
+                results += `   點擊事件: ${hasClickListener ? '已綁定' : '未綁定'}\n`;
+            }
+
+            // 檢查是否在貨幣詳細頁面
+            const currencyDetailPage = document.getElementById('currency-detail-page');
+            results += `${currencyDetailPage ? '✅' : '❌'} currency-detail-page: ${currencyDetailPage ? '存在' : '不存在'}\n`;
+
+            if (!watchlistBtn && !alertBtn) {
+                results += '\n⚠️ 建議: 您可能不在貨幣詳細頁面，請先導航到貨幣頁面\n';
+            }
+
+            resultDiv.textContent = results;
+            resultDiv.className = 'result';
+        }
+
+        function testNavigationToDetailPage() {
+            const symbol = document.getElementById('test-symbol').value;
+            const resultDiv = document.getElementById('frontend-check-result');
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = `🧭 導航到 ${symbol} 詳細頁面...\n請稍候...`;
+            
+            // 導航到貨幣詳細頁面
+            window.location.hash = `#/currency/${symbol}`;
+            
+            setTimeout(() => {
+                resultDiv.textContent += `\n✅ 已導航到: ${window.location.hash}\n`;
+                resultDiv.textContent += `請等待頁面載入完成後，再次檢查事件綁定。`;
+            }, 1000);
+        }
+
+        // 初始化時自動執行認證檢查
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkAuthStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

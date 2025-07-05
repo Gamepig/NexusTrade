@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 分析簡單測試</title>
+    <link rel="stylesheet" href="css/main.css?v=20250625fix5">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e27;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .debug-info {
+            background: #1a1f3a;
+            border: 1px solid #2d3748;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 AI 分析簡單測試</h1>
+    
+    <div id="debug-log" class="debug-info">
+        載入中...<br>
+    </div>
+    
+    <div id="ai-currency-analysis" style="margin: 20px 0;"></div>
+    
+    <script src="js/components/AICurrencyAnalysis.js?v=20250625fix5"></script>
+    
+    <script>
+        const debugLog = document.getElementById('debug-log');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            debugLog.innerHTML += `[${timestamp}] ${message}<br>`;
+            console.log(message);
+        }
+        
+        async function testAIAnalysis() {
+            try {
+                log('🔄 開始測試 AI 分析...');
+                
+                // 1. 測試 API 直接調用
+                log('📡 測試 API 端點...');
+                const response = await fetch('/api/ai/currency-analysis/BTCUSDT');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    log('✅ API 調用成功');
+                    log(`📊 技術指標數量: ${Object.keys(data.data.analysis.technicalAnalysis).length}`);
+                    log(`📈 趨勢方向: ${data.data.analysis.trend.direction}`);
+                    log(`🎯 信心度: ${data.data.analysis.trend.confidence}%`);
+                    
+                    // 檢查每個技術指標
+                    const indicators = data.data.analysis.technicalAnalysis;
+                    Object.keys(indicators).forEach(key => {
+                        const indicator = indicators[key];
+                        log(`  📋 ${key}: ${indicator.signal || 'N/A'} (值: ${indicator.value || 'N/A'})`);
+                    });
+                    
+                    // 2. 測試前端組件
+                    log('🎨 初始化前端組件...');
+                    const aiComponent = new AICurrencyAnalysis('ai-currency-analysis', 'BTCUSDT');
+                    
+                    // 等待組件載入
+                    setTimeout(() => {
+                        const container = document.getElementById('ai-currency-analysis');
+                        if (container.innerHTML.includes('indicators-grid')) {
+                            log('✅ 前端組件載入成功，包含技術指標網格');
+                        } else if (container.innerHTML.includes('error')) {
+                            log('❌ 前端組件載入失敗，顯示錯誤狀態');
+                        } else if (container.innerHTML.includes('loading')) {
+                            log('⏳ 前端組件仍在載入中...');
+                        } else {
+                            log('⚠️ 前端組件狀態未知');
+                            log(`   容器內容長度: ${container.innerHTML.length} 字符`);
+                        }
+                    }, 3000);
+                    
+                } else {
+                    log(`❌ API 調用失敗: ${data.message}`);
+                }
+                
+            } catch (error) {
+                log(`❌ 測試過程發生錯誤: ${error.message}`);
+                console.error('測試錯誤:', error);
+            }
+        }
+        
+        // 頁面載入完成後開始測試
+        window.addEventListener('load', () => {
+            log('🚀 頁面載入完成，開始測試...');
+            testAIAnalysis();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登入按鈕手動修復</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .fix-container { background: white; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .step { background: #f8f9fa; padding: 15px; margin: 10px 0; border-left: 4px solid #007bff; }
+        pre { background: #f1f1f1; padding: 10px; overflow-x: auto; white-space: pre-wrap; }
+        .urgent { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🚨 登入按鈕手動修復工具</h1>
+    
+    <div class="fix-container">
+        <h2>🔧 一鍵修復</h2>
+        <p>點擊下方按鈕立即修復登入功能</p>
+        <button onclick="emergencyFix()" class="urgent">🚨 緊急修復登入按鈕</button>
+        <button onclick="goToMainPage()">🏠 返回主頁測試</button>
+        <div id="fix-result"></div>
+    </div>
+    
+    <div class="fix-container">
+        <h2>📋 修復步驟說明</h2>
+        <div class="step">
+            <h3>步驟 1: 清理無效狀態</h3>
+            <button onclick="cleanupState()">清理 localStorage</button>
+            <div id="cleanup-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>步驟 2: 創建登入按鈕</h3>
+            <button onclick="createLoginBtn()">創建登入按鈕</button>
+            <div id="create-result"></div>
+        </div>
+        
+        <div class="step">
+            <h3>步驟 3: 設定登入功能</h3>
+            <button onclick="setupLogin()">設定登入事件</button>
+            <div id="setup-result"></div>
+        </div>
+    </div>
+    
+    <div class="fix-container">
+        <h2>🧪 測試區域</h2>
+        <button onclick="testLoginModal()">測試登入模態框</button>
+        <button onclick="testGoogleLogin()">測試 Google 登入</button>
+        <div id="test-result"></div>
+    </div>
+
+    <script>
+        function showResult(containerId, type, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        // 緊急修復函數
+        function emergencyFix() {
+            console.log('🚨 開始緊急修復...');
+            
+            try {
+                // 1. 清理狀態
+                cleanupState();
+                
+                // 2. 創建按鈕
+                createLoginBtn();
+                
+                // 3. 設定功能
+                setupLogin();
+                
+                showResult('fix-result', 'success', '✅ 緊急修復完成！請返回主頁測試登入功能。');
+                
+            } catch (error) {
+                console.error('修復失敗:', error);
+                showResult('fix-result', 'error', '❌ 修復失敗: ' + error.message);
+            }
+        }
+        
+        // 清理無效狀態
+        function cleanupState() {
+            const keysToClean = [
+                'nexustrade_token', 'nexustrade_refresh_token', 'nexustrade_user',
+                'nexustrade_line_bound', 'nexustrade_return_state'
+            ];
+            
+            keysToClean.forEach(key => {
+                const value = localStorage.getItem(key);
+                if (value && (value === 'null' || value === 'undefined' || value === '')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            
+            showResult('cleanup-result', 'success', '🧹 localStorage 已清理');
+            console.log('✅ 狀態清理完成');
+        }
+        
+        // 創建登入按鈕 - 在主頁面中
+        function createLoginBtn() {
+            // 因為這是在修復頁面，需要操作主頁面
+            const mainPageUrl = window.location.origin;
+            
+            // 保存修復腳本到 sessionStorage，讓主頁面執行
+            const fixScript = `
+                console.log('🔧 執行登入按鈕修復...');
+                
+                // 查找容器
+                const container = document.querySelector('.header-actions') || 
+                                 document.querySelector('.header-right') ||
+                                 document.querySelector('header');
+                
+                if (container) {
+                    // 移除舊按鈕
+                    const oldBtn = document.getElementById('login-btn');
+                    if (oldBtn) oldBtn.remove();
+                    
+                    // 創建新按鈕
+                    const loginBtn = document.createElement('button');
+                    loginBtn.id = 'login-btn';
+                    loginBtn.className = 'btn btn-secondary';
+                    loginBtn.textContent = '登入';
+                    loginBtn.style.cssText = 'padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; display: inline-block; margin-left: 10px;';
+                    
+                    container.appendChild(loginBtn);
+                    
+                    // 設定點擊事件
+                    loginBtn.addEventListener('click', function() {
+                        showLoginModal();
+                    });
+                    
+                    console.log('✅ 登入按鈕已創建');
+                } else {
+                    console.error('❌ 找不到容器');
+                }
+                
+                // 登入模態框函數
+                function showLoginModal() {
+                    const oldModal = document.getElementById('fix-login-modal');
+                    if (oldModal) oldModal.remove();
+                    
+                    const modalHTML = \`
+                        <div id="fix-login-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                            <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;">
+                                <h2 style="margin-bottom: 20px;">登入 NexusTrade</h2>
+                                <div style="display: flex; flex-direction: column; gap: 15px;">
+                                    <button onclick="window.location.href='/api/auth/google'" style="padding: 12px 20px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                                        🌟 使用 Google 登入
+                                    </button>
+                                    <button onclick="window.location.href='/api/auth/line'" style="padding: 12px 20px; background: #00c300; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">
+                                        💬 使用 LINE 登入
+                                    </button>
+                                    <button onclick="document.getElementById('fix-login-modal').remove()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                        取消
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                    
+                    document.body.insertAdjacentHTML('beforeend', modalHTML);
+                }
+            `;
+            
+            sessionStorage.setItem('fixLoginScript', fixScript);
+            showResult('create-result', 'info', '📝 修復腳本已準備，請返回主頁面執行');
+        }
+        
+        // 設定登入功能
+        function setupLogin() {
+            showResult('setup-result', 'info', '⚠️ 請先返回主頁面，然後在 Console 執行: eval(sessionStorage.getItem("fixLoginScript"))');
+        }
+        
+        // 返回主頁面
+        function goToMainPage() {
+            window.location.href = '/';
+        }
+        
+        // 測試登入模態框
+        function testLoginModal() {
+            const modalHTML = \`
+                <div id="test-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center;">
+                    <div style="background: white; padding: 30px; border-radius: 8px; max-width: 400px; width: 90%; text-align: center;">
+                        <h2>🧪 測試登入模態框</h2>
+                        <p>這是登入模態框的預覽</p>
+                        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 20px;">
+                            <button style="padding: 12px 20px; background: #4285f4; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🌟 使用 Google 登入
+                            </button>
+                            <button style="padding: 12px 20px; background: #00c300; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                💬 使用 LINE 登入
+                            </button>
+                            <button onclick="document.getElementById('test-modal').remove()" style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                關閉測試
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            \`;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            showResult('test-result', 'success', '✅ 測試模態框已顯示');
+        }
+        
+        // 測試 Google 登入
+        function testGoogleLogin() {
+            fetch('/api/auth/google', { method: 'HEAD' })
+                .then(response => {
+                    if (response.status === 302) {
+                        showResult('test-result', 'success', '✅ Google OAuth 端點正常 (302 重定向)');
+                    } else {
+                        showResult('test-result', 'warning', '⚠️ 意外的回應狀態: ' + response.status);
+                    }
+                })
+                .catch(error => {
+                    showResult('test-result', 'error', '❌ OAuth 端點測試失敗: ' + error.message);
+                });
+        }
+        
+        // 頁面載入時自動執行清理
+        window.addEventListener('load', function() {
+            console.log('🔧 修復工具已載入');
+            
+            // 自動檢查主頁面狀態
+            setTimeout(() => {
+                showResult('fix-result', 'info', '💡 提示：請點擊「🚨 緊急修復登入按鈕」開始修復，然後返回主頁面測試。');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

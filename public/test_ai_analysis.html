@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 分析測試 - NexusTrade</title>
+    <link rel="stylesheet" href="/css/main.css?v=20250624a">
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 12px;
+        }
+        .mock-ai-container {
+            background: var(--background-secondary);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 400px;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            background: #00d4aa;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-btn:hover {
+            background: #00b894;
+        }
+        .status {
+            background: #333;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🤖 AI 分析組件測試</h1>
+        <p>測試 AICurrencyAnalysis 組件在新佈局中的顯示效果</p>
+
+        <div class="test-controls">
+            <button class="test-btn" onclick="testBTCAnalysis()">測試 BTC 分析</button>
+            <button class="test-btn" onclick="testETHAnalysis()">測試 ETH 分析</button>
+            <button class="test-btn" onclick="testLoadingState()">測試載入狀態</button>
+            <button class="test-btn" onclick="testErrorState()">測試錯誤狀態</button>
+            <button class="test-btn" onclick="testMockData()">測試模擬數據</button>
+        </div>
+
+        <div class="status" id="status">
+            準備測試 AI 分析組件...
+        </div>
+
+        <div class="mock-ai-container">
+            <div id="test-ai-analysis">
+                <!-- AI 分析組件將在這裡載入 -->
+                <div style="display: flex; align-items: center; justify-content: center; height: 200px; color: #666;">
+                    點擊上方按鈕開始測試
+                </div>
+            </div>
+        </div>
+
+        <div class="status">
+            <h3>📋 測試項目</h3>
+            <ul>
+                <li>載入狀態顯示</li>
+                <li>分析結果渲染</li>
+                <li>技術指標顏色分類</li>
+                <li>趨勢方向顯示</li>
+                <li>錯誤處理機制</li>
+                <li>響應式佈局適配</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 載入必要的腳本 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/state/store.js"></script>
+    <script src="/js/components/AICurrencyAnalysis.js"></script>
+
+    <script>
+        let currentAnalysisComponent = null;
+
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = message;
+        }
+
+        function testBTCAnalysis() {
+            updateStatus('🧪 測試 BTCUSDT AI 分析...');
+            
+            // 清理舊組件
+            if (currentAnalysisComponent) {
+                currentAnalysisComponent.destroy();
+            }
+            
+            // 創建新組件
+            currentAnalysisComponent = new AICurrencyAnalysis('test-ai-analysis', 'BTCUSDT');
+            updateStatus('✅ BTCUSDT 分析組件已啟動，查看實際 API 回應');
+        }
+
+        function testETHAnalysis() {
+            updateStatus('🧪 測試 ETHUSDT AI 分析...');
+            
+            if (currentAnalysisComponent) {
+                currentAnalysisComponent.destroy();
+            }
+            
+            currentAnalysisComponent = new AICurrencyAnalysis('test-ai-analysis', 'ETHUSDT');
+            updateStatus('✅ ETHUSDT 分析組件已啟動，查看實際 API 回應');
+        }
+
+        function testLoadingState() {
+            updateStatus('🧪 測試載入狀態顯示...');
+            
+            if (currentAnalysisComponent) {
+                currentAnalysisComponent.destroy();
+            }
+            
+            // 創建假的載入狀態
+            const container = document.getElementById('test-ai-analysis');
+            container.innerHTML = `
+                <div class="ai-currency-analysis loading">
+                    <div class="analysis-header">
+                        <div class="header-left">
+                            <h3>🤖 BTCUSDT AI 技術分析</h3>
+                            <div class="analysis-subtitle">
+                                <span>OpenRouter 驅動</span>
+                                <span class="separator">•</span>
+                                <span>日線分析</span>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <div class="analysis-status loading">
+                                <div class="status-dot"></div>
+                                <span>分析中...</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-content">
+                        <div class="loading-container">
+                            <div class="loading-spinner"></div>
+                            <p>正在分析 BTCUSDT 技術指標與市場情緒...</p>
+                            <small>首次分析約需 30-60 秒</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+            updateStatus('✅ 載入狀態顯示正常');
+        }
+
+        function testErrorState() {
+            updateStatus('🧪 測試錯誤狀態顯示...');
+            
+            const container = document.getElementById('test-ai-analysis');
+            container.innerHTML = `
+                <div class="ai-currency-analysis error">
+                    <div class="analysis-header">
+                        <div class="header-left">
+                            <h3>🤖 BTCUSDT AI 技術分析</h3>
+                        </div>
+                        <div class="header-right">
+                            <div class="analysis-status error">
+                                <div class="status-dot error"></div>
+                                <span>分析失敗</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-content">
+                        <div class="error-container">
+                            <div class="error-icon">⚠️</div>
+                            <h4>AI 分析暫時不可用</h4>
+                            <p>AI 服務暫時不可用</p>
+                            <button class="retry-btn" onclick="testBTCAnalysis()">重試分析</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            updateStatus('✅ 錯誤狀態顯示正常');
+        }
+
+        function testMockData() {
+            updateStatus('🧪 測試模擬分析數據顯示...');
+            
+            const container = document.getElementById('test-ai-analysis');
+            container.innerHTML = `
+                <div class="ai-currency-analysis">
+                    <div class="analysis-header">
+                        <div class="header-left">
+                            <h3>🤖 BTCUSDT AI 技術分析</h3>
+                            <div class="analysis-subtitle">
+                                <span>分析日期: 2025-06-24</span>
+                                <span class="separator">•</span>
+                                <span>模擬數據展示</span>
+                            </div>
+                        </div>
+                        <div class="header-right">
+                            <div class="analysis-status bullish">
+                                <div class="status-dot bullish"></div>
+                                <span>看漲</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="analysis-content">
+                        <!-- 趨勢總結 -->
+                        <div class="trend-summary">
+                            <div class="trend-card bullish">
+                                <div class="trend-icon">📈</div>
+                                <div class="trend-details">
+                                    <h4>市場趨勢</h4>
+                                    <div class="trend-direction">看漲</div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill" style="width: 78%; background-color: #2ed573"></div>
+                                    </div>
+                                    <div class="confidence-text">信心度: 78%</div>
+                                </div>
+                            </div>
+                            <div class="trend-summary-text">
+                                <p>Bitcoin 目前處於上升趨勢中，技術指標顯示持續看漲信號。</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 技術分析指標 -->
+                        <div class="technical-analysis">
+                            <h4>📊 技術指標分析</h4>
+                            <div class="indicators-grid">
+                                <div class="indicator-item">
+                                    <div class="indicator-label">RSI</div>
+                                    <div class="indicator-signal bullish">看漲</div>
+                                    <div class="indicator-value">65.2</div>
+                                </div>
+                                <div class="indicator-item">
+                                    <div class="indicator-label">MACD</div>
+                                    <div class="indicator-signal neutral">中性</div>
+                                    <div class="indicator-value">0.15</div>
+                                </div>
+                                <div class="indicator-item">
+                                    <div class="indicator-label">移動平均</div>
+                                    <div class="indicator-signal bullish">看漲</div>
+                                    <div class="indicator-value">上升</div>
+                                </div>
+                                <div class="indicator-item">
+                                    <div class="indicator-label">成交量</div>
+                                    <div class="indicator-signal hold">持有</div>
+                                    <div class="indicator-value">正常</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            updateStatus('✅ 模擬數據顯示正常，檢查技術指標顏色分類');
+        }
+
+        // 頁面載入完成
+        window.addEventListener('load', () => {
+            updateStatus('📊 AI 分析測試頁面已載入，可以開始測試');
+        });
+    </script>
+</body>
+</html>

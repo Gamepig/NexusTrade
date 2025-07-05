@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB 遷移修復 - NexusTrade</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #4CAF50;
+        }
+        .step h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn.secondary {
+            background: #6c757d;
+        }
+        .btn.secondary:hover {
+            background: #5a6268;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #ffeaa7;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 MongoDB 遷移修復</h1>
+        <p class="subtitle">系統已從 MockUser 遷移到正式的 MongoDB User 模型，需要更新前端認證資訊</p>
+
+        <div class="highlight">
+            <strong>⚠️ 重要說明：</strong> 系統已完成從 MockUser 到正式 MongoDB 的遷移，使用者 ID 格式已從字串改為 ObjectId。需要更新前端認證資訊才能正常使用所有功能。
+        </div>
+
+        <div class="step">
+            <h3>第一步：清除舊的認證資訊</h3>
+            <p>清除瀏覽器中的舊認證資料</p>
+            <button class="btn" onclick="clearOldAuth()">🗑️ 清除舊認證資料</button>
+            <div id="clearStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>第二步：設定新的認證資訊</h3>
+            <p>使用新的 ObjectId 和 JWT Token</p>
+            
+            <div class="code-block">
+新的使用者 ID: 6867bc852b8316e0d4b7f2ca
+新的 JWT Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3YmM4NTJiODMxNmUwZDRiN2YyY2EiLCJlbWFpbCI6ImxpbmVfdWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUxNjI4OTMzLCJleHAiOjE3NTIyMzM3MzN9.7z719d45nrOFIdGRm6ZqO7WQYVw7m6O7ZInPzAguVQE
+            </div>
+            
+            <button class="btn" onclick="setNewAuth()">🔑 設定新認證資訊</button>
+            <div id="authStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>第三步：驗證修復結果</h3>
+            <p>測試新的認證系統是否正常運作</p>
+            <button class="btn" onclick="testAuth()">🧪 測試認證系統</button>
+            <button class="btn secondary" onclick="testPriceAlert()">🔔 測試價格警報</button>
+            <div id="testStatus"></div>
+        </div>
+
+        <div class="step">
+            <h3>第四步：返回主頁面</h3>
+            <p>修復完成後，返回 NexusTrade 主頁面正常使用</p>
+            <button class="btn" onclick="goToHomepage()">🏠 返回主頁面</button>
+        </div>
+    </div>
+
+    <script>
+        // 清除舊的認證資料
+        function clearOldAuth() {
+            try {
+                localStorage.removeItem('nexustrade_token');
+                localStorage.removeItem('nexustrade_user');
+                sessionStorage.clear();
+                
+                document.getElementById('clearStatus').innerHTML = 
+                    '<div class="status success">✅ 舊認證資料已清除</div>';
+            } catch (error) {
+                document.getElementById('clearStatus').innerHTML = 
+                    '<div class="status error">❌ 清除失敗: ' + error.message + '</div>';
+            }
+        }
+
+        // 設定新的認證資訊
+        function setNewAuth() {
+            try {
+                const newToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3YmM4NTJiODMxNmUwZDRiN2YyY2EiLCJlbWFpbCI6ImxpbmVfdWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiQGV4YW1wbGUuY29tIiwiaWF0IjoxNzUxNjI4OTMzLCJleHAiOjE3NTIyMzM3MzN9.7z719d45nrOFIdGRm6ZqO7WQYVw7m6O7ZInPzAguVQE';
+                const newUser = {
+                    id: '6867bc852b8316e0d4b7f2ca',
+                    email: 'line_ue5cc188e1d2cdbac5cfda2abb6f6a34b@example.com',
+                    lineId: 'Ue5cc188e1d2cdbac5cfda2abb6f6a34b',
+                    lineUserId: 'Ue5cc188e1d2cdbac5cfda2abb6f6a34b',
+                    username: 'vic_huang',
+                    displayName: 'Vic Huang',
+                    provider: 'line'
+                };
+
+                localStorage.setItem('nexustrade_token', newToken);
+                localStorage.setItem('nexustrade_user', JSON.stringify(newUser));
+
+                document.getElementById('authStatus').innerHTML = 
+                    '<div class="status success">✅ 新認證資訊已設定</div>';
+            } catch (error) {
+                document.getElementById('authStatus').innerHTML = 
+                    '<div class="status error">❌ 設定失敗: ' + error.message + '</div>';
+            }
+        }
+
+        // 測試認證系統
+        async function testAuth() {
+            try {
+                const token = localStorage.getItem('nexustrade_token');
+                if (!token) {
+                    throw new Error('未找到認證 Token，請先設定新認證資訊');
+                }
+
+                const response = await fetch('/api/auth/verify', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('testStatus').innerHTML = 
+                        '<div class="status success">✅ 認證系統測試成功<br>使用者: ' + 
+                        data.data.user.email + '<br>LINE ID: ' + data.data.user.lineId + '</div>';
+                } else {
+                    const errorData = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorData}`);
+                }
+            } catch (error) {
+                document.getElementById('testStatus').innerHTML = 
+                    '<div class="status error">❌ 認證測試失敗: ' + error.message + '</div>';
+            }
+        }
+
+        // 測試價格警報功能
+        async function testPriceAlert() {
+            try {
+                const token = localStorage.getItem('nexustrade_token');
+                if (!token) {
+                    throw new Error('未找到認證 Token，請先設定新認證資訊');
+                }
+
+                const response = await fetch('/api/notifications/alerts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        symbol: 'BTCUSDT',
+                        alertType: 'price_above',
+                        targetPrice: 120000,
+                        notificationMethods: {
+                            lineMessaging: {
+                                enabled: true
+                            }
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('testStatus').innerHTML = 
+                        '<div class="status success">✅ 價格警報測試成功<br>警報 ID: ' + 
+                        data.data.alert.id + '<br>LINE 通知: ' + 
+                        (data.data.alert.notificationMethods.lineMessaging.enabled ? '已啟用' : '未啟用') + '</div>';
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP ${response.status}: ${errorData.message || '未知錯誤'}`);
+                }
+            } catch (error) {
+                document.getElementById('testStatus').innerHTML = 
+                    '<div class="status error">❌ 價格警報測試失敗: ' + error.message + '</div>';
+            }
+        }
+
+        // 返回主頁面
+        function goToHomepage() {
+            window.location.href = '/';
+        }
+
+        // 頁面載入時檢查當前狀態
+        window.onload = function() {
+            const token = localStorage.getItem('nexustrade_token');
+            const user = localStorage.getItem('nexustrade_user');
+            
+            if (token && user) {
+                document.getElementById('authStatus').innerHTML = 
+                    '<div class="status info">ℹ️ 檢測到現有認證資訊，可直接進行測試</div>';
+            } else {
+                document.getElementById('authStatus').innerHTML = 
+                    '<div class="status info">ℹ️ 未檢測到認證資訊，請先設定新認證資訊</div>';
+            }
+        };
+    </script>
+</body>
+</html>

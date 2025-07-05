@@ -28,11 +28,23 @@ const priceAlertSchema = new mongoose.Schema({
     }
   },
 
-  // 警報類型
+  // 警報類型 (擴展支援技術指標)
   alertType: {
     type: String,
     required: true,
-    enum: ['price_above', 'price_below', 'percent_change', 'volume_spike'],
+    enum: [
+      // 基礎價格警報 (免費會員)
+      'price_above', 'price_below', 'percent_change', 'volume_spike',
+      // 技術指標警報 (付費會員)
+      'rsi_above', 'rsi_below', 'rsi_overbought', 'rsi_oversold',
+      'macd_bullish_crossover', 'macd_bearish_crossover', 
+      'macd_above_zero', 'macd_below_zero',
+      'ma_cross_above', 'ma_cross_below', 'ma_golden_cross', 'ma_death_cross',
+      'ma_support_bounce', 'ma_resistance_reject',
+      'bb_upper_touch', 'bb_lower_touch', 'bb_squeeze', 'bb_expansion',
+      'bb_middle_cross', 'bb_bandwidth_alert',
+      'williams_overbought', 'williams_oversold', 'williams_above', 'williams_below'
+    ],
     default: 'price_above'
   },
 
@@ -64,6 +76,49 @@ const priceAlertSchema = new mongoose.Schema({
     min: 1
   },
 
+  // 技術指標配置 (付費會員功能)
+  technicalIndicatorConfig: {
+    // RSI 配置
+    rsi: {
+      period: { type: Number, default: 14, min: 2, max: 50 },
+      overboughtLevel: { type: Number, default: 70, min: 50, max: 95 },
+      oversoldLevel: { type: Number, default: 30, min: 5, max: 50 },
+      threshold: { type: Number, min: 0, max: 100 } // 自定義閾值
+    },
+    
+    // MACD 配置
+    macd: {
+      fastPeriod: { type: Number, default: 12, min: 2, max: 50 },
+      slowPeriod: { type: Number, default: 26, min: 2, max: 100 },
+      signalPeriod: { type: Number, default: 9, min: 2, max: 50 },
+      threshold: { type: Number, default: 0 } // 零軸或自定義閾值
+    },
+    
+    // 移動平均線配置
+    movingAverage: {
+      fastPeriod: { type: Number, default: 20, min: 2, max: 200 },
+      slowPeriod: { type: Number, default: 50, min: 2, max: 200 },
+      type: { type: String, enum: ['SMA', 'EMA'], default: 'SMA' },
+      priceType: { type: String, enum: ['close', 'open', 'high', 'low'], default: 'close' }
+    },
+    
+    // 布林通道配置
+    bollingerBands: {
+      period: { type: Number, default: 20, min: 2, max: 100 },
+      standardDeviations: { type: Number, default: 2, min: 0.5, max: 5 },
+      bandwidth: { type: Number, min: 0, max: 1 }, // 通道寬度警報閾值
+      squeeze: { type: Number, default: 0.1, min: 0.01, max: 0.5 } // 擠壓檢測閾值
+    },
+    
+    // Williams %R 配置
+    williamsR: {
+      period: { type: Number, default: 14, min: 2, max: 50 },
+      overboughtLevel: { type: Number, default: -20, min: -50, max: -10 },
+      oversoldLevel: { type: Number, default: -80, min: -95, max: -50 },
+      threshold: { type: Number, min: -100, max: 0 } // 自定義閾值
+    }
+  },
+
   // 警報狀態
   status: {
     type: String,
@@ -81,9 +136,9 @@ const priceAlertSchema = new mongoose.Schema({
 
   // 通知方式
   notificationMethods: {
-    lineNotify: {
+    lineMessaging: {
       enabled: { type: Boolean, default: false },
-      token: { type: String, select: false } // 不會在查詢中返回
+      userId: { type: String } // 儲存 LINE User ID
     },
     email: {
       enabled: { type: Boolean, default: false },
@@ -93,6 +148,18 @@ const priceAlertSchema = new mongoose.Schema({
       enabled: { type: Boolean, default: false },
       url: String
     }
+  },
+
+  // AI 分析訂閱
+  aiAnalysisSubscription: {
+    enabled: { type: Boolean, default: false },
+    frequency: { 
+      type: String, 
+      enum: ['daily'], 
+      default: 'daily' 
+    },
+    lastNotificationSent: Date,
+    subscribedAt: Date
   },
 
   // 觸發條件
@@ -244,22 +311,97 @@ priceAlertSchema.methods.canTrigger = function() {
 };
 
 // 靜態方法
-priceAlertSchema.statics.findActiveAlerts = function(symbol = null) {
-  const query = { 
-    status: 'active', 
-    enabled: true,
-    $or: [
-      { expiresAt: { $exists: false } },
-      { expiresAt: null },
-      { expiresAt: { $gt: new Date() } }
-    ]
-  };
-  
-  if (symbol) {
-    query.symbol = symbol.toUpperCase();
+priceAlertSchema.statics.findActiveAlerts = async function(symbol = null, options = {}) {
+  try {
+    // 建立基礎查詢條件
+    const query = { 
+      status: 'active', 
+      enabled: true
+    };
+    
+    if (symbol) {
+      query.symbol = symbol.toUpperCase();
+    }
+    
+    // 使用原生 MongoDB 查詢避開 Mongoose 8.x 的序列化問題
+    const collection = this.collection;
+    const pipeline = [
+      { $match: query },
+      { 
+        $match: {
+          $or: [
+            { expiresAt: { $exists: false } },
+            { expiresAt: null },
+            { expiresAt: { $gt: new Date() } }
+          ]
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ];
+    
+    // 添加可選的限制
+    if (options.limit) {
+      pipeline.push({ $limit: options.limit });
+    }
+    
+    if (options.skip) {
+      pipeline.push({ $skip: options.skip });
+    }
+    
+    // 添加字段選擇
+    if (options.select) {
+      const projection = {};
+      const fields = options.select.split(' ');
+      fields.forEach(field => {
+        if (field.trim()) {
+          projection[field.trim()] = 1;
+        }
+      });
+      pipeline.push({ $project: projection });
+    }
+    
+    // 執行聚合查詢
+    const results = await collection.aggregate(pipeline, {
+      maxTimeMS: options.timeout || 15000
+    }).toArray();
+    
+    // 如果不使用 lean，則轉換為 Mongoose 文檔
+    if (options.lean === false) {
+      return results.map(doc => new this(doc));
+    }
+    
+    return results;
+  } catch (error) {
+    // 如果聚合查詢失敗，回退到簡單查詢（不使用 expiresAt 條件）
+    console.warn('聚合查詢失敗，使用簡化查詢:', error.message);
+    
+    const simpleQuery = { 
+      status: 'active', 
+      enabled: true
+    };
+    
+    if (symbol) {
+      simpleQuery.symbol = symbol.toUpperCase();
+    }
+    
+    let queryBuilder = this.find(simpleQuery);
+    
+    if (options.select) {
+      queryBuilder = queryBuilder.select(options.select);
+    }
+    
+    if (options.lean !== false) {
+      queryBuilder = queryBuilder.lean();
+    }
+    
+    if (options.limit) {
+      queryBuilder = queryBuilder.limit(options.limit);
+    }
+    
+    queryBuilder = queryBuilder.sort({ createdAt: -1 });
+    
+    return await queryBuilder.exec();
   }
-  
-  return this.find(query);
 };
 
 priceAlertSchema.statics.findUserAlerts = function(userId, status = null) {
@@ -282,6 +424,14 @@ priceAlertSchema.statics.getAlertStats = function(userId = null) {
       }
     }
   ]);
+};
+
+priceAlertSchema.statics.getAISubscribedSymbols = function() {
+  return this.find({
+    'aiAnalysisSubscription.enabled': true,
+    'aiAnalysisSubscription.frequency': 'daily',
+    enabled: true
+  }).distinct('symbol');
 };
 
 // 中介軟體
@@ -311,12 +461,19 @@ class MockPriceAlert {
       targetPrice: data.targetPrice,
       percentChange: data.percentChange,
       volumeMultiplier: data.volumeMultiplier,
+      technicalIndicatorConfig: data.technicalIndicatorConfig || {},
       status: data.status || 'active',
       priority: data.priority || 'medium',
       notificationMethods: data.notificationMethods || {
-        lineNotify: { enabled: false },
+        lineMessaging: { enabled: false },
         email: { enabled: false },
         webhook: { enabled: false }
+      },
+      aiAnalysisSubscription: data.aiAnalysisSubscription || {
+        enabled: false,
+        frequency: 'daily',
+        lastNotificationSent: null,
+        subscribedAt: null
       },
       conditions: data.conditions || {
         onlyTradingHours: false,
@@ -423,6 +580,19 @@ class MockPriceAlert {
 
   static findById(id) {
     return Promise.resolve(MockPriceAlert.store.get(id) || null);
+  }
+
+  static getAISubscribedSymbols() {
+    const symbols = Array.from(MockPriceAlert.store.values())
+      .filter(alert => {
+        return alert.aiAnalysisSubscription?.enabled === true && 
+               alert.aiAnalysisSubscription?.frequency === 'daily' &&
+               alert.enabled;
+      })
+      .map(alert => alert.symbol);
+    
+    // 去重
+    return Promise.resolve([...new Set(symbols)]);
   }
 }
 

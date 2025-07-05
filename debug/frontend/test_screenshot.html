@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 分析組件截圖測試</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <style>
+    body {
+      background: #0a0e27;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .test-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .test-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #1a1f3a;
+      border-radius: 12px;
+    }
+    
+    .ai-component-container {
+      min-height: 600px;
+      background: #1a1f3a;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .status-bar {
+      background: #262a47;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    
+    .control-panel {
+      background: #262a47;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    
+    .btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    
+    .btn:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <div class="test-header">
+      <h1>🔧 AI 分析組件修復驗證</h1>
+      <p>測試 6 個技術指標顯示與 Williams %R 修復</p>
+    </div>
+    
+    <div class="control-panel">
+      <h3>測試控制</h3>
+      <button class="btn" onclick="loadBTCAnalysis()">載入 BTCUSDT AI 分析</button>
+      <button class="btn" onclick="loadETHAnalysis()">載入 ETHUSDT AI 分析</button>
+      <button class="btn" onclick="checkAPIStatus()">檢查 API 狀態</button>
+      <button class="btn" onclick="clearComponent()">清空組件</button>
+    </div>
+    
+    <div class="status-bar" id="status-display">
+      狀態: 等待測試開始...
+    </div>
+    
+    <div id="ai-analysis-container" class="ai-component-container">
+      <div style="text-align: center; padding: 50px; color: #9ca3af;">
+        🤖 點擊上方按鈕載入 AI 分析組件
+      </div>
+    </div>
+  </div>
+
+  <!-- 載入 AI 組件 -->
+  <script src="/js/components/AICurrencyAnalysis.js?v=20250625fix5"></script>
+  
+  <script>
+    let currentAIComponent = null;
+    const statusDisplay = document.getElementById('status-display');
+    
+    function updateStatus(message) {
+      const timestamp = new Date().toLocaleTimeString();
+      statusDisplay.textContent = `[${timestamp}] ${message}`;
+      console.log(message);
+    }
+    
+    async function checkAPIStatus() {
+      try {
+        updateStatus('檢查 AI 服務狀態...');
+        const response = await fetch('/api/ai/status');
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+          updateStatus(`✅ AI 服務正常: ${data.data.stats.model}`);
+        } else {
+          updateStatus('❌ AI 服務異常');
+        }
+      } catch (error) {
+        updateStatus(`❌ API 檢查失敗: ${error.message}`);
+      }
+    }
+    
+    function loadBTCAnalysis() {
+      loadAIComponent('BTCUSDT');
+    }
+    
+    function loadETHAnalysis() {
+      loadAIComponent('ETHUSDT');
+    }
+    
+    function loadAIComponent(symbol) {
+      try {
+        updateStatus(`載入 ${symbol} AI 分析組件...`);
+        
+        // 清理舊組件
+        if (currentAIComponent) {
+          currentAIComponent.destroy && currentAIComponent.destroy();
+        }
+        
+        // 創建新組件
+        currentAIComponent = new AICurrencyAnalysis('ai-analysis-container', symbol);
+        updateStatus(`✅ ${symbol} AI 組件已初始化`);
+        
+      } catch (error) {
+        updateStatus(`❌ ${symbol} AI 組件載入失敗: ${error.message}`);
+        console.error(error);
+      }
+    }
+    
+    function clearComponent() {
+      if (currentAIComponent) {
+        currentAIComponent.destroy && currentAIComponent.destroy();
+        currentAIComponent = null;
+      }
+      document.getElementById('ai-analysis-container').innerHTML = `
+        <div style="text-align: center; padding: 50px; color: #9ca3af;">
+          🤖 點擊上方按鈕載入 AI 分析組件
+        </div>
+      `;
+      updateStatus('組件已清空');
+    }
+    
+    // 頁面載入時自動檢查狀態
+    window.addEventListener('load', async () => {
+      updateStatus('頁面已載入，開始檢查系統狀態...');
+      await checkAPIStatus();
+      updateStatus('準備就緒，可以開始測試');
+    });
+    
+    // 監聽錯誤
+    window.addEventListener('error', (e) => {
+      updateStatus(`❌ 頁面錯誤: ${e.error.message}`);
+    });
+  </script>
+</body>
+</html>

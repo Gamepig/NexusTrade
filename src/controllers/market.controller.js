@@ -513,6 +513,83 @@ const get24hStats = async (req, res) => {
   }
 };
 
+/**
+ * 獲取單一貨幣詳細資訊
+ * GET /api/market/symbol-info/:symbol
+ */
+const getSymbolInfo = async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    
+    if (!symbol) {
+      return res.status(400).json({
+        success: false,
+        message: 'symbol 參數必須提供',
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    const upperSymbol = symbol.toUpperCase();
+    const binanceService = getBinanceService();
+    
+    // 獲取24小時統計數據
+    const ticker = await binanceService.get24hrTicker(upperSymbol);
+    
+    if (!ticker) {
+      return res.status(404).json({
+        success: false,
+        message: `找不到交易對: ${upperSymbol}`,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // 格式化數據
+    const symbolInfo = {
+      symbol: ticker.symbol,
+      baseAsset: upperSymbol.replace('USDT', ''),
+      quoteAsset: 'USDT',
+      price: {
+        symbol: ticker.symbol,
+        price: ticker.lastPrice,
+        priceChange: ticker.priceChange,
+        priceChangePercent: ticker.priceChangePercent,
+        highPrice: ticker.highPrice,
+        lowPrice: ticker.lowPrice,
+        volume: ticker.volume,
+        quoteVolume: ticker.quoteVolume,
+        openPrice: ticker.openPrice,
+        count: ticker.count,
+        lastUpdate: new Date().toISOString()
+      },
+      tradingInfo: {
+        status: 'TRADING',
+        baseAssetPrecision: 8,
+        quotePrecision: 8,
+        minQty: '0.00001000',
+        maxQty: '9000.00000000',
+        stepSize: '0.00001000',
+        minNotional: '10.00000000'
+      }
+    };
+    
+    res.status(200).json({
+      success: true,
+      message: `獲取 ${upperSymbol} 資訊成功`,
+      data: symbolInfo,
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('獲取單一貨幣資訊失敗:', error);
+    res.status(500).json({
+      success: false,
+      message: '獲取單一貨幣資訊失敗',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
+
 module.exports = {
   getTrendingPairs,
   getSymbolPrice,
@@ -526,5 +603,6 @@ module.exports = {
   searchSymbols,
   getCachedPrices,
   testConnection,
-  getMarketOverview
+  getMarketOverview,
+  getSymbolInfo
 };

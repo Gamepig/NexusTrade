@@ -14,7 +14,59 @@ NexusTrade 是對原有 MarketPro 專案的完全重構，從 React 微服務架
 - 🔔 **智慧通知系統** - 價格警報、LINE Messaging API 通知
 - 📊 **TradingView 整合** - 專業級圖表和技術分析
 - ⭐ **觀察清單管理** - 個人化資產追蹤 (規劃中)
-- 🤖 **AI 趨勢分析** - OpenRouter API 整合 (規劃中)
+- 🤖 **AI 趨勢分析** - OpenRouter + LM Studio 雙模式智慧分析
+
+## 🤖 AI 智慧分析系統
+
+### 📊 功能特色
+- **技術指標分析**: RSI、MACD、移動平均線、成交量分析
+- **市場情緒監控**: 新聞情緒分析，結合價格走勢判斷
+- **多時間框架**: 日線、週線、月線趨勢分析
+- **智慧信號分類**: 看漲(綠)、看跌(紅)、中性(黃)、持有(藍)
+
+### 🔄 雙模式 AI 架構
+1. **OpenRouter 雲端 AI** (主要)
+   - 模型: `meta-llama/llama-4-scout:free`
+   - 優勢: 高準確度、多樣化分析
+   - 需要: 有效的 API 金鑰
+
+2. **LM Studio 本地 AI** (備用)
+   - 模型: `qwen2.5-14b-instruct-mlx`
+   - 優勢: 無 API 成本、數據隱私
+   - 需要: 本地 LM Studio 服務運行
+
+### 📈 數據來源
+- **市場數據**: Binance API (10 大主流加密貨幣)
+- **新聞數據**: RSS Feed 自動收集和情緒分析
+- **技術指標**: AI 模型基於歷史數據計算
+- **快取機制**: MongoDB 每日結果快取，避免重複分析
+
+### 🎨 視覺化指標
+| 信號類型 | 顏色 | 含義 | 建議動作 |
+|---------|------|------|----------|
+| 🟢 看漲 | 綠色 | 技術面偏多 | 考慮買入 |
+| 🔴 看跌 | 紅色 | 技術面偏空 | 考慮賣出 |
+| 🟡 中性 | 黃色 | 方向不明確 | 觀望等待 |
+| 🟦 持有 | 藍色 | 穩健保守 | 維持部位 |
+
+### ⚙️ 配置指南
+1. **OpenRouter 設定** (推薦)
+   ```bash
+   OPENROUTER_API_KEY=sk-or-v1-your-key-here
+   ```
+
+2. **LM Studio 設定** (本地)
+   ```bash
+   LM_STUDIO_ENABLED=true
+   LM_STUDIO_BASE_URL=http://127.0.0.1:1234
+   ```
+   > 需要先安裝並運行 [LM Studio](https://lmstudio.ai/)
+
+### 🔍 使用方式
+- **首頁檢視**: 自動載入當日 AI 分析結果
+- **API 查詢**: `GET /api/ai/homepage-analysis`
+- **強制更新**: `POST /api/ai/homepage-analysis/refresh`
+- **狀態檢查**: `GET /api/ai/status`
 
 ## 🏗️ 技術架構
 
@@ -27,6 +79,7 @@ NexusTrade 是對原有 MarketPro 專案的完全重構，從 React 微服務架
 - **圖表**: TradingView Widgets
 - **通知**: LINE Messaging API (取代已停用的 LINE Notify)
 - **認證**: JWT + Passport.js (Google/LINE OAuth)
+- **AI 分析**: OpenRouter (雲端) + LM Studio (本地端)
 - **容器化**: Docker + Docker Compose
 - **CI/CD**: GitHub Actions
 - **進程管理**: PM2
@@ -305,7 +358,7 @@ TradingView 工具配置
 
 ## 📊 專案進度
 
-### ✅ 已完成 (95%)
+### ✅ 已完成 (98%)
 
 #### Phase 1: 基礎建設 ✅
 - [x] Task 1: 後端基礎架構 ✅
@@ -315,6 +368,7 @@ TradingView 工具配置
 - [x] Task 3: 使用者認證系統 ✅
 - [x] Task 4: 市場數據系統 ✅
 - [x] Task 5: 通知系統 ✅ (LINE Messaging API)
+- [x] Task 6: AI 智慧分析系統 ✅ (OpenRouter + LM Studio)
 
 #### Phase 4: 部署與測試 ✅
 - [x] Task 9: 容器化與部署 ✅
@@ -381,6 +435,11 @@ npm run docs:generate # 生成 API 文件
 - `GET /api/market/symbols` - 交易對列表
 - `GET /api/market/ticker` - 即時價格數據
 
+### AI 分析 API
+- `GET /api/ai/status` - AI 服務狀態檢查
+- `GET /api/ai/homepage-analysis` - 首頁大趨勢分析
+- `POST /api/ai/homepage-analysis/refresh` - 強制重新分析
+
 ### WebSocket
 - `ws://localhost:3000/ws` - 即時數據推送
 
@@ -417,8 +476,10 @@ LINE_MESSAGING_CHANNEL_SECRET=your-secret
 BINANCE_API_KEY=your-binance-key
 BINANCE_API_SECRET=your-binance-secret
 
-# OpenRouter AI (可選)
-OPENROUTER_API_KEY=your-openrouter-key
+# AI 分析服務
+OPENROUTER_API_KEY=your-openrouter-key  # OpenRouter 雲端 AI
+LM_STUDIO_ENABLED=true                   # 啟用本地 LM Studio
+LM_STUDIO_BASE_URL=http://127.0.0.1:1234  # LM Studio 服務地址
 ```
 
 ## 🐳 Docker 部署
@@ -478,3 +539,43 @@ docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/License-ISC-yellow)](./LICENSE)
+
+## 功能特點 (Features)
+
+### 🔍 關注清單 (Watchlist)
+
+#### 主要功能
+- 支持最多 30 個交易對的關注清單
+- 即時追蹤加密貨幣交易對
+- 靈活的優先級和分類管理
+
+#### API 端點
+- `GET /api/watchlist` - 取得關注清單（支援分頁）
+- `POST /api/watchlist` - 新增關注項目
+- `DELETE /api/watchlist/:symbol` - 移除關注項目
+- `GET /api/watchlist/status/:symbol` - 檢查關注狀態
+- `PUT /api/watchlist/:symbol` - 更新關注項目
+- `GET /api/watchlist/stats` - 取得統計資訊
+
+#### 使用範例
+
+```javascript
+// 新增關注清單項目
+await axios.post('/api/watchlist', {
+  symbol: 'BTCUSDT',
+  priority: 1,
+  category: 'Top Cryptocurrencies'
+});
+
+// 取得關注清單
+const watchlist = await axios.get('/api/watchlist');
+
+// 移除關注清單項目
+await axios.delete('/api/watchlist/BTCUSDT');
+```
+
+#### 限制與驗證
+- 每個用戶限制 30 個關注清單項目
+- 支持的交易對格式：USDT, BTC, ETH, BNB, BUSD, FDUSD
+- 即時價格資料整合
+- 完善的錯誤處理

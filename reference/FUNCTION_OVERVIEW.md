@@ -68,3 +68,109 @@ MarketPro 是一個加密貨幣市場分析與通知平台，旨在提供用戶�
 7.  **技術指標與分析 (已完成)**
     *   **支撐阻力位表格 (`SupportResistanceTable`)**: 在資產詳情頁顯示透過多種方法計算出的關鍵價格水平。
     *   **技術指標計算服務 (`technicalIndicators.js`)**: 前端服務，可能用於計算或格式化某些指標數據。 
+
+## Watchlist API 功能文檔
+
+### 1. 關注清單 API 端點
+
+#### 1.1 取得關注清單
+- **端點**: `GET /api/watchlist`
+- **說明**: 取得用戶的完整關注清單
+- **參數**:
+  - `page` (可選): 分頁參數，預設為 1
+  - `limit` (可選): 每頁顯示數量，預設為 10
+- **回應**:
+  ```json
+  {
+    "watchlist": [
+      {
+        "symbol": "BTCUSDT",
+        "priority": 1,
+        "category": "Top Cryptocurrencies",
+        "currentPrice": 50000.00,
+        "priceChange": "+2.5%"
+      }
+    ],
+    "total": 15,
+    "page": 1,
+    "totalPages": 2
+  }
+  ```
+
+#### 1.2 新增關注項目
+- **端點**: `POST /api/watchlist`
+- **說明**: 新增交易對到關注清單
+- **請求體**:
+  ```json
+  {
+    "symbol": "ETHUSDT",
+    "priority": 2,
+    "category": "Altcoins"
+  }
+  ```
+- **驗證規則**:
+  - 限制 30 個交易對
+  - 僅支持特定交易對格式
+  - 優先級範圍：1-5
+
+#### 1.3 移除關注項目
+- **端點**: `DELETE /api/watchlist/:symbol`
+- **說明**: 從關注清單移除特定交易對
+- **回應**:
+  ```json
+  {
+    "message": "Successfully removed ETHUSDT from watchlist"
+  }
+  ```
+
+#### 1.4 檢查關注狀態
+- **端點**: `GET /api/watchlist/status/:symbol`
+- **說明**: 檢查特定交易對是否在關注清單中
+- **回應**:
+  ```json
+  {
+    "isWatchlisted": true,
+    "details": {
+      "symbol": "BTCUSDT",
+      "priority": 1
+    }
+  }
+  ```
+
+#### 1.5 更新關注項目
+- **端點**: `PUT /api/watchlist/:symbol`
+- **說明**: 更新關注清單中的交易對
+- **請求體**:
+  ```json
+  {
+    "priority": 3,
+    "category": "Updated Category"
+  }
+  ```
+
+#### 1.6 關注清單統計
+- **端點**: `GET /api/watchlist/stats`
+- **說明**: 取得關注清單的統計資訊
+- **回應**:
+  ```json
+  {
+    "totalWatchlistItems": 15,
+    "topCategories": [
+      {"name": "Top Cryptocurrencies", "count": 5},
+      {"name": "Altcoins", "count": 10}
+    ],
+    "averagePriority": 2.5
+  }
+  ```
+
+### 2. 錯誤處理
+
+#### 常見錯誤碼
+- `400 BAD_REQUEST`: 無效的交易對或超過關注清單限制
+- `404 NOT_FOUND`: 找不到指定的關注清單項目
+- `409 CONFLICT`: 已達到關注清單上限
+
+### 3. 最佳實踐
+- 定期整理關注清單
+- 使用優先級功能管理重要交易對
+- 監控關注清單中的交易對變化 

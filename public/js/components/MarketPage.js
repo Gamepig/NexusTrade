@@ -98,90 +98,65 @@ class MarketPage {
    * 處理貨幣點擊事件
    */
   handleCoinClick(symbol) {
-    console.log(`🔍 點擊貨幣: ${symbol}`);
-    // TODO: 導航到技術分析頁面
-    // window.location.hash = `#/analysis/${symbol}`;
+    console.log(`📊 市場頁面點擊貨幣: ${symbol}，導航到詳情頁面`);
+    // 導航到貨幣詳情頁面
+    window.location.hash = `#/currency/${symbol}`;
   }
 
   /**
-   * 初始化 TradingView Widgets
+   * 初始化 TradingView 加密貨幣熱力圖
    */
   initializeTradingViewWidgets() {
-    console.log('📊 初始化 TradingView Widgets...');
+    console.log('📊 初始化 TradingView 加密貨幣熱力圖...');
     
-    const mainCryptos = [
-      { symbol: 'BTCUSDT', name: 'Bitcoin' },
-      { symbol: 'ETHUSDT', name: 'Ethereum' },
-      { symbol: 'BNBUSDT', name: 'BNB' },
-      { symbol: 'ADAUSDT', name: 'Cardano' }
-    ];
+    const container = document.getElementById('crypto-heatmap-widget');
     
-    mainCryptos.forEach((crypto, index) => {
-      const containerId = `tradingview-widget-${index}`;
-      const container = document.getElementById(containerId);
+    if (container) {
+      // 清空容器
+      container.innerHTML = '';
       
-      if (container) {
-        // 清空容器
-        container.innerHTML = '';
-        
-        // 延遲載入避免衝突
-        setTimeout(() => {
-          this.loadTradingViewWidget(container, crypto, index);
-        }, index * 1000); // 每個 widget 間隔 1 秒載入
-      } else {
-        console.warn(`⚠️ 找不到容器: ${containerId}`);
-      }
-    });
+      // 載入加密貨幣熱力圖
+      setTimeout(() => {
+        this.loadCryptoHeatmapWidget(container);
+      }, 500);
+    } else {
+      console.warn('⚠️ 找不到加密貨幣熱力圖容器');
+    }
   }
 
   /**
-   * 載入單個 TradingView Widget
+   * 載入 TradingView 加密貨幣熱力圖 Widget
    */
-  loadTradingViewWidget(container, crypto, index) {
+  loadCryptoHeatmapWidget(container) {
     try {
-      console.log(`🔧 載入 ${crypto.symbol} TradingView Widget...`);
+      console.log('🔧 載入加密貨幣熱力圖 Widget...');
       
       // 創建 Widget 容器
       const widgetContainer = document.createElement('div');
       widgetContainer.className = 'tradingview-widget';
-      widgetContainer.style.height = '400px';
+      widgetContainer.style.height = '500px';
+      widgetContainer.style.width = '100%';
       
       // 創建 TradingView Script
       const script = document.createElement('script');
       script.type = 'text/javascript';
-      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+      script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-crypto-coins-heatmap.js';
       script.async = true;
       
-      // 使用測試過的穩定配置
+      // 加密貨幣熱力圖配置
       const config = {
-        "symbols": [
-          [`BINANCE:${crypto.symbol}|1D`]
-        ],
-        "chartOnly": false,
-        "width": "100%",
-        "height": "400",
-        "locale": "en", // 使用英文確保穩定性
+        "dataSource": "Crypto",
+        "blockSize": "market_cap_calc",
+        "blockColor": "change",
+        "locale": "zh_TW",
+        "symbolUrl": "",
         "colorTheme": "dark",
-        "autosize": true,
-        "showVolume": true,
-        "showMA": false,
-        "hideDateRanges": false,
-        "hideMarketStatus": false,
-        "hideSymbolLogo": false,
-        "scalePosition": "right",
-        "scaleMode": "Normal",
-        "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-        "fontSize": "10",
-        "noTimeScale": false,
-        "valuesTracking": "1",
-        "changeMode": "price-and-percent",
-        "chartType": "area",
-        "backgroundColor": "rgba(19, 23, 34, 1)", // 非透明背景
-        "gridLineColor": "rgba(240, 243, 250, 0.06)",
-        "lineColor": "rgba(41, 98, 255, 1)",
-        "textColor": "rgba(255, 255, 255, 1)",
-        "underLineColor": "rgba(41, 98, 255, 0.12)",
-        "isTransparent": false // 避免透明度問題
+        "hasTopBar": false,
+        "isDataSetEnabled": false,
+        "isZoomEnabled": true,
+        "hasSymbolTooltip": true,
+        "width": "100%",
+        "height": "500"
       };
       
       script.innerHTML = JSON.stringify(config);
@@ -197,7 +172,7 @@ class MarketPage {
       loadingDiv.innerHTML = `
         <div class="loading-content">
           <div class="loading-spinner"></div>
-          <p>載入 ${crypto.name} 圖表中...</p>
+          <p>載入加密貨幣熱力圖中...</p>
         </div>
       `;
       widgetContainer.appendChild(loadingDiv);
@@ -207,29 +182,29 @@ class MarketPage {
         const scripts = widgetContainer.querySelectorAll('script');
         if (scripts.length === 1) {
           // 可能載入失敗，顯示錯誤
-          console.warn(`⚠️ ${crypto.symbol} Widget 可能載入失敗`);
-          this.showWidgetError(container, crypto, index);
+          console.warn('⚠️ 加密貨幣熱力圖 Widget 可能載入失敗');
+          this.showHeatmapError(container);
         }
       }, 10000); // 10秒超時
       
-      console.log(`✅ 已設定 ${crypto.symbol} (${crypto.name}) Widget`);
+      console.log('✅ 已設定加密貨幣熱力圖 Widget');
       
     } catch (error) {
-      console.error(`❌ 載入 ${crypto.symbol} Widget 失敗:`, error);
-      this.showWidgetError(container, crypto, index);
+      console.error('❌ 載入加密貨幣熱力圖 Widget 失敗:', error);
+      this.showHeatmapError(container);
     }
   }
 
   /**
-   * 顯示 Widget 載入錯誤
+   * 顯示加密貨幣熱力圖載入錯誤
    */
-  showWidgetError(container, crypto, index) {
+  showHeatmapError(container) {
     container.innerHTML = `
       <div class="widget-error">
-        <div class="error-icon">📊</div>
-        <h4>${crypto.name} (${crypto.symbol})</h4>
-        <p>圖表載入失敗</p>
-        <button class="retry-btn" onclick="window.marketPageInstance.loadTradingViewWidget(this.closest('.trading-widget-container'), ${JSON.stringify(crypto)}, ${index})">重試</button>
+        <div class="error-icon">🔥</div>
+        <h4>加密貨幣熱力圖</h4>
+        <p>載入失敗</p>
+        <button class="retry-btn" onclick="window.marketPageInstance.loadCryptoHeatmapWidget(document.getElementById('crypto-heatmap-widget'))">重試</button>
       </div>
     `;
   }

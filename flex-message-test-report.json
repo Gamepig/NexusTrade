@@ -1,0 +1,40 @@
+{
+  "timestamp": "2025-07-03T21:44:54.400Z",
+  "summary": {
+    "totalTests": 13,
+    "passed": 13,
+    "failed": 0,
+    "autoFixed": 0,
+    "errors": []
+  },
+  "templateValidation": {
+    "priceAlert": {
+      "isValid": true,
+      "errors": [],
+      "hasAutoFix": false
+    },
+    "marketSummary": {
+      "isValid": true,
+      "errors": [],
+      "hasAutoFix": false
+    },
+    "welcome": {
+      "isValid": true,
+      "errors": [],
+      "hasAutoFix": false
+    },
+    "cryptoPrice": {
+      "isValid": true,
+      "errors": [],
+      "hasAutoFix": false
+    },
+    "aiAnalysis": {
+      "isValid": true,
+      "errors": [],
+      "hasAutoFix": false
+    }
+  },
+  "recommendations": [
+    "所有測試通過，可以部署到生產環境"
+  ]
+}

@@ -452,11 +452,168 @@ const validateFileUpload = (options = {}) => {
   };
 };
 
+/**
+ * Express-validator 結果處理中介軟體
+ * 處理 express-validator 的驗證結果
+ */
+const validateRequest = (req, res, next) => {
+  const { validationResult } = require('express-validator');
+  const errors = validationResult(req);
+  
+  if (!errors.isEmpty()) {
+    const errorDetails = errors.array().map(error => ({
+      field: error.path || error.param,
+      message: error.msg,
+      value: error.value
+    }));
+    
+    logger.warn('請求驗證失敗', {
+      url: req.originalUrl,
+      method: req.method,
+      errors: errorDetails,
+      ip: req.ip
+    });
+    
+    return res.status(400).json({
+      status: 'error',
+      message: '輸入驗證失敗',
+      code: 'VALIDATION_ERROR',
+      errors: errorDetails,
+      timestamp: new Date().toISOString()
+    });
+  }
+  
+  next();
+};
+
+/**
+ * 價格警報驗證中介軟體
+ */
+const validatePriceAlert = (req, res, next) => {
+  const { symbol, alertType, targetPrice, aiAnalysisSubscription } = req.body;
+  const errors = [];
+
+  // 驗證 symbol
+  if (!symbol) {
+    errors.push({ field: 'symbol', message: '交易對符號為必填項目' });
+  } else if (!validationRules.symbol.pattern.test(symbol.toUpperCase())) {
+    errors.push({ field: 'symbol', message: validationRules.symbol.message });
+  }
+
+  // 驗證 alertType - 整合技術指標支援
+  const basicAlertTypes = ['price_above', 'price_below', 'percent_change', 'volume_spike'];
+  const technicalIndicatorTypes = [
+    'rsi_above', 'rsi_below', 'rsi_overbought', 'rsi_oversold',
+    'macd_bullish_crossover', 'macd_bearish_crossover', 'macd_above_zero', 'macd_below_zero',
+    'ma_cross_above', 'ma_cross_below', 'ma_golden_cross', 'ma_death_cross',
+    'ma_support_bounce', 'ma_resistance_reject',
+    'bb_upper_touch', 'bb_lower_touch', 'bb_squeeze', 'bb_expansion',
+    'bb_middle_cross', 'bb_bandwidth_alert',
+    'williams_overbought', 'williams_oversold', 'williams_above', 'williams_below'
+  ];
+  const validAlertTypes = [...basicAlertTypes, ...technicalIndicatorTypes];
+  
+  if (!alertType) {
+    errors.push({ field: 'alertType', message: '警報類型為必填項目' });
+  } else if (!validAlertTypes.includes(alertType)) {
+    errors.push({ field: 'alertType', message: '警報類型無效' });
+  }
+
+  // 驗證 targetPrice (針對價格警報)
+  if (alertType === 'price_above' || alertType === 'price_below') {
+    if (!targetPrice) {
+      errors.push({ field: 'targetPrice', message: '價格警報需要設定目標價格' });
+    } else if (typeof targetPrice !== 'number' || targetPrice <= 0) {
+      errors.push({ field: 'targetPrice', message: '目標價格必須是大於 0 的數字' });
+    }
+  }
+
+  // 驗證 AI 分析訂閱 (可選)
+  if (aiAnalysisSubscription && typeof aiAnalysisSubscription.enabled !== 'boolean') {
+    errors.push({ field: 'aiAnalysisSubscription.enabled', message: 'AI 分析訂閱設定必須是布林值' });
+  }
+
+  if (errors.length > 0) {
+    logger.warn('價格警報驗證失敗', {
+      url: req.originalUrl,
+      errors,
+      body: req.body
+    });
+
+    return res.status(400).json({
+      status: 'error',
+      message: '價格警報設定驗證失敗',
+      code: 'VALIDATION_ERROR',
+      errors,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  next();
+};
+
+/**
+ * 價格警報更新驗證中介軟體
+ */
+const validatePriceAlertUpdate = (req, res, next) => {
+  const allowedFields = ['targetPrice', 'aiAnalysisSubscription', 'notificationMethods', 'enabled', 'status'];
+  const updates = Object.keys(req.body);
+  const errors = [];
+
+  // 檢查是否有無效的欄位
+  const invalidFields = updates.filter(field => !allowedFields.includes(field));
+  if (invalidFields.length > 0) {
+    errors.push({ 
+      field: 'general', 
+      message: `不允許更新的欄位: ${invalidFields.join(', ')}` 
+    });
+  }
+
+  // 驗證 targetPrice
+  if (req.body.targetPrice !== undefined) {
+    if (typeof req.body.targetPrice !== 'number' || req.body.targetPrice <= 0) {
+      errors.push({ field: 'targetPrice', message: '目標價格必須是大於 0 的數字' });
+    }
+  }
+
+  // 驗證 enabled
+  if (req.body.enabled !== undefined && typeof req.body.enabled !== 'boolean') {
+    errors.push({ field: 'enabled', message: '啟用狀態必須是布林值' });
+  }
+
+  // 驗證 status
+  if (req.body.status !== undefined) {
+    const validStatuses = ['active', 'triggered', 'paused', 'expired'];
+    if (!validStatuses.includes(req.body.status)) {
+      errors.push({ field: 'status', message: '狀態值無效' });
+    }
+  }
+
+  if (errors.length > 0) {
+    logger.warn('價格警報更新驗證失敗', {
+      url: req.originalUrl,
+      errors,
+      body: req.body
+    });
+
+    return res.status(400).json({
+      status: 'error',
+      message: '價格警報更新驗證失敗',
+      code: 'VALIDATION_ERROR',
+      errors,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  next();
+};
+
 module.exports = {
   validate,
   validateField,
   validationRules,
   commonSchemas,
+  validateRequest,
   
   // 預設驗證中介軟體
   validateUserRegistration,
@@ -466,6 +623,10 @@ module.exports = {
   validateWatchlistAddition,
   validatePagination,
   validateObjectId,
+  
+  // 價格警報驗證
+  validatePriceAlert,
+  validatePriceAlertUpdate,
   
   // 工具函數
   sanitizeInput,

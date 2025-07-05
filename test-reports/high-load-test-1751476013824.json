@@ -1,0 +1,556 @@
+{
+  "summary": {
+    "totalDuration": "35.48s",
+    "memoryIncrease": "-3.89 MB",
+    "errorRate": 0
+  },
+  "performanceMetrics": {
+    "memoryUsage": [
+      {
+        "rss": 92127232,
+        "heapUsed": 27782624,
+        "heapTotal": 57982976,
+        "timestamp": 1751475978393
+      },
+      {
+        "rss": 107069440,
+        "heapUsed": 35099088,
+        "heapTotal": 57982976,
+        "timestamp": 1751475978415
+      },
+      {
+        "rss": 111542272,
+        "heapUsed": 24020088,
+        "heapTotal": 59293696,
+        "timestamp": 1751475978432
+      },
+      {
+        "rss": 113213440,
+        "heapUsed": 30112184,
+        "heapTotal": 59293696,
+        "timestamp": 1751475978447
+      },
+      {
+        "rss": 116047872,
+        "heapUsed": 34689576,
+        "heapTotal": 59293696,
+        "timestamp": 1751475978462
+      },
+      {
+        "rss": 117145600,
+        "heapUsed": 39028880,
+        "heapTotal": 60342272,
+        "timestamp": 1751475978475
+      },
+      {
+        "rss": 119373824,
+        "heapUsed": 26686152,
+        "heapTotal": 60604416,
+        "timestamp": 1751475978490
+      },
+      {
+        "rss": 121438208,
+        "heapUsed": 31924200,
+        "heapTotal": 60866560,
+        "timestamp": 1751475978503
+      },
+      {
+        "rss": 121651200,
+        "heapUsed": 35951088,
+        "heapTotal": 60866560,
+        "timestamp": 1751475978517
+      },
+      {
+        "rss": 122126336,
+        "heapUsed": 39786976,
+        "heapTotal": 62439424,
+        "timestamp": 1751475978530
+      },
+      {
+        "rss": 122519552,
+        "heapUsed": 43346312,
+        "heapTotal": 62439424,
+        "timestamp": 1751475978544
+      },
+      {
+        "rss": 123191296,
+        "heapUsed": 33780992,
+        "heapTotal": 62963712,
+        "timestamp": 1751475978663
+      },
+      {
+        "rss": 126812160,
+        "heapUsed": 37520408,
+        "heapTotal": 62963712,
+        "timestamp": 1751475978678
+      },
+      {
+        "rss": 130564096,
+        "heapUsed": 41243648,
+        "heapTotal": 63225856,
+        "timestamp": 1751475978693
+      },
+      {
+        "rss": 130891776,
+        "heapUsed": 44652192,
+        "heapTotal": 63750144,
+        "timestamp": 1751475978706
+      },
+      {
+        "rss": 131465216,
+        "heapUsed": 31655368,
+        "heapTotal": 64798720,
+        "timestamp": 1751475978720
+      },
+      {
+        "rss": 131743744,
+        "heapUsed": 35793528,
+        "heapTotal": 64798720,
+        "timestamp": 1751475978731
+      },
+      {
+        "rss": 132759552,
+        "heapUsed": 39457320,
+        "heapTotal": 64798720,
+        "timestamp": 1751475978743
+      },
+      {
+        "rss": 133169152,
+        "heapUsed": 43185304,
+        "heapTotal": 65323008,
+        "timestamp": 1751475978755
+      },
+      {
+        "rss": 133513216,
+        "heapUsed": 46403768,
+        "heapTotal": 65323008,
+        "timestamp": 1751475978767
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37250664,
+        "heapTotal": 67944448,
+        "timestamp": 1751475983791
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37257608,
+        "heapTotal": 67944448,
+        "timestamp": 1751475983792
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37294032,
+        "heapTotal": 67944448,
+        "timestamp": 1751475985792
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37328656,
+        "heapTotal": 67944448,
+        "timestamp": 1751475987794
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37363696,
+        "heapTotal": 67944448,
+        "timestamp": 1751475989796
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37393032,
+        "heapTotal": 67944448,
+        "timestamp": 1751475991797
+      },
+      {
+        "rss": 142540800,
+        "heapUsed": 37421216,
+        "heapTotal": 67944448,
+        "timestamp": 1751475993799
+      },
+      {
+        "rss": 101482496,
+        "heapUsed": 23194376,
+        "heapTotal": 26001408,
+        "timestamp": 1751475995800
+      },
+      {
+        "rss": 101515264,
+        "heapUsed": 23231328,
+        "heapTotal": 26001408,
+        "timestamp": 1751475997802
+      },
+      {
+        "rss": 101548032,
+        "heapUsed": 23260968,
+        "heapTotal": 26001408,
+        "timestamp": 1751475999803
+      },
+      {
+        "rss": 101580800,
+        "heapUsed": 23298408,
+        "heapTotal": 26001408,
+        "timestamp": 1751476001803
+      },
+      {
+        "rss": 101597184,
+        "heapUsed": 23330720,
+        "heapTotal": 26001408,
+        "timestamp": 1751476003804
+      },
+      {
+        "rss": 101646336,
+        "heapUsed": 23369608,
+        "heapTotal": 26001408,
+        "timestamp": 1751476005805
+      },
+      {
+        "rss": 101679104,
+        "heapUsed": 23399008,
+        "heapTotal": 26001408,
+        "timestamp": 1751476007808
+      },
+      {
+        "rss": 101924864,
+        "heapUsed": 23670128,
+        "heapTotal": 26001408,
+        "timestamp": 1751476009809
+      },
+      {
+        "rss": 101957632,
+        "heapUsed": 23701016,
+        "heapTotal": 26001408,
+        "timestamp": 1751476011810
+      }
+    ],
+    "responseTime": [],
+    "alertCount": [
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978393
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978415
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978432
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978447
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978462
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978475
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978490
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978503
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978517
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978530
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978544
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978663
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978678
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978693
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978706
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978720
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978731
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978743
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978755
+      },
+      {
+        "activeSymbols": 0,
+        "monitoringCount": 0,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475978767
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475983791
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475983792
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475985792
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475987794
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475989796
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475991797
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475993799
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475995800
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475997802
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751475999803
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751476001803
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751476003804
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751476005805
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751476007808
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751476009809
+      },
+      {
+        "activeSymbols": 8,
+        "monitoringCount": 8,
+        "cacheSize": {
+          "price": 0,
+          "technicalIndicator": 0
+        },
+        "timestamp": 1751476011810
+      }
+    ],
+    "errorRate": 0
+  },
+  "timestamp": "2025-07-02T17:06:53.824Z"
+}

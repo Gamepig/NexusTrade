@@ -178,7 +178,7 @@ class LineMessagingService {
           },
           {
             type: 'text',
-            text: `${direction} $${targetPrice}`,
+            text: `${direction} $${safeTargetPrice.toFixed(8)}`,
             size: 'md',
             color: '#666666',
             margin: 'sm'
@@ -203,7 +203,7 @@ class LineMessagingService {
                   },
                   {
                     type: 'text',
-                    text: `$${currentPrice}`,
+                    text: `$${safeCurrentPrice.toFixed(8)}`,
                     wrap: true,
                     color: '#666666',
                     size: 'sm',
@@ -225,9 +225,9 @@ class LineMessagingService {
                   },
                   {
                     type: 'text',
-                    text: `${changePercent > 0 ? '+' : ''}${changePercent.toFixed(2)}%`,
+                    text: `${safeChangePercent > 0 ? '+' : ''}${safeChangePercent.toFixed(2)}%`,
                     wrap: true,
-                    color: changePercent > 0 ? '#06C755' : '#FF334B',
+                    color: safeChangePercent > 0 ? '#06C755' : '#FF334B',
                     size: 'sm',
                     flex: 3,
                     weight: 'bold'
@@ -467,146 +467,16 @@ class LineMessagingService {
    */
   async handleWebhookEvent(event) {
     try {
-      logger.info('收到 LINE webhook 事件', {
-        type: event.type,
-        userId: event.source?.userId
-      });
-
-      switch (event.type) {
-        case 'message':
-          await this.handleMessageEvent(event);
-          break;
-        case 'follow':
-          await this.handleFollowEvent(event);
-          break;
-        case 'unfollow':
-          await this.handleUnfollowEvent(event);
-          break;
-        default:
-          logger.debug('未處理的 webhook 事件類型:', event.type);
-      }
+      // 委託給專門的 Webhook 控制器處理
+      const webhookController = require('../controllers/line-webhook.controller');
+      return await webhookController.handleSingleEvent(event);
     } catch (error) {
       logger.error('處理 webhook 事件失敗:', error);
+      throw error;
     }
   }
 
-  /**
-   * 處理使用者訊息事件
-   * @param {Object} event - 訊息事件
-   */
-  async handleMessageEvent(event) {
-    const { replyToken, message, source } = event;
-    const userId = source.userId;
-
-    if (message.type === 'text') {
-      const text = message.text.toLowerCase();
-      
-      // 簡單的命令處理
-      if (text.includes('幫助') || text.includes('help')) {
-        await this.replyHelpMessage(replyToken);
-      } else if (text.includes('價格') || text.includes('price')) {
-        await this.replyPriceInfo(replyToken);
-      } else {
-        await this.replyGenericMessage(replyToken);
-      }
-    }
-  }
-
-  /**
-   * 處理使用者關注事件
-   * @param {Object} event - 關注事件
-   */
-  async handleFollowEvent(event) {
-    const userId = event.source.userId;
-    logger.info('新用戶關注:', { userId: userId.substr(0, 8) + '...' });
-    
-    // 發送歡迎訊息
-    await this.sendTextMessage(userId, '歡迎使用 NexusTrade！\n\n發送 "幫助" 查看可用功能。');
-  }
-
-  /**
-   * 處理使用者取消關注事件
-   * @param {Object} event - 取消關注事件
-   */
-  async handleUnfollowEvent(event) {
-    const userId = event.source.userId;
-    logger.info('用戶取消關注:', { userId: userId.substr(0, 8) + '...' });
-    
-    // 可以在這裡更新用戶狀態或進行清理
-  }
-
-  /**
-   * 回覆幫助訊息
-   * @param {string} replyToken - 回覆 token
-   */
-  async replyHelpMessage(replyToken) {
-    const helpText = `🤖 NexusTrade 指令說明
-
-• 發送 "價格" 查看熱門加密貨幣價格
-• 發送 "BTC" 或其他幣種代號查看特定價格
-• 發送 "警報" 設定價格提醒
-• 發送 "狀態" 查看系統狀態
-
-更多功能請訪問: https://nexustrade.com`;
-
-    await this.replyMessage(replyToken, helpText);
-  }
-
-  /**
-   * 回覆價格資訊
-   * @param {string} replyToken - 回覆 token
-   */
-  async replyPriceInfo(replyToken) {
-    const priceText = `📊 熱門加密貨幣價格
-
-🚧 此功能正在開發中...
-請訪問網站查看即時價格：
-https://nexustrade.com/market`;
-
-    await this.replyMessage(replyToken, priceText);
-  }
-
-  /**
-   * 回覆一般訊息
-   * @param {string} replyToken - 回覆 token
-   */
-  async replyGenericMessage(replyToken) {
-    const responses = [
-      '感謝您的訊息！發送 "幫助" 查看可用功能。',
-      '我是 NexusTrade 機器人，很高興為您服務！',
-      '如需幫助，請發送 "幫助" 查看指令說明。'
-    ];
-    
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    await this.replyMessage(replyToken, randomResponse);
-  }
-
-  /**
-   * 回覆訊息
-   * @param {string} replyToken - 回覆 token
-   * @param {string} message - 訊息內容
-   */
-  async replyMessage(replyToken, message) {
-    try {
-      const payload = {
-        replyToken,
-        messages: [{
-          type: 'text',
-          text: message
-        }]
-      };
-
-      await axios.post(
-        `${this.apiUrl}/message/reply`,
-        payload,
-        { headers: this.defaultHeaders }
-      );
-
-      logger.info('LINE 回覆訊息成功');
-    } catch (error) {
-      logger.error('LINE 回覆訊息失敗:', error.message);
-    }
-  }
+  // 移除舊的事件處理方法，現在由 WebhookController 負責處理
 
   /**
    * 取得服務狀態

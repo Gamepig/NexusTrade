@@ -1,0 +1,87 @@
+{
+  "summary": {
+    "duration": "0.05s",
+    "total": 12,
+    "passed": 10,
+    "failed": 2,
+    "successRate": "83.3%"
+  },
+  "details": [
+    {
+      "testName": "1.1 MongoDB 連接狀態檢查",
+      "passed": true,
+      "details": "狀態: connected, 資料庫: nexustrade",
+      "timestamp": "2025-07-02T17:01:55.228Z"
+    },
+    {
+      "testName": "1.2 資料庫健康檢查",
+      "passed": true,
+      "details": "狀態: healthy",
+      "timestamp": "2025-07-02T17:01:55.232Z"
+    },
+    {
+      "testName": "1.3 資料庫統計資訊",
+      "passed": "nexustrade",
+      "details": "集合數: 5, 文檔數: 20",
+      "timestamp": "2025-07-02T17:01:55.234Z"
+    },
+    {
+      "testName": "2.1 建立基礎價格警報",
+      "passed": "68656603ef05ff211a7043e8",
+      "details": "警報 ID: 68656603ef05ff211a7043e8, 交易對: BTCUSDT",
+      "timestamp": "2025-07-02T17:01:55.240Z"
+    },
+    {
+      "testName": "2.2 建立技術指標警報",
+      "passed": "68656603ef05ff211a7043ee",
+      "details": "RSI 超買警報，閾值: 70",
+      "timestamp": "2025-07-02T17:01:55.246Z"
+    },
+    {
+      "testName": "2.3 查詢活躍警報",
+      "passed": false,
+      "details": null,
+      "error": "Cast to date failed for value \"{ '$gt': 2025-07-02T17:01:55.248Z }\" (type Object) at path \"expiresAt\" for model \"PriceAlert\"",
+      "timestamp": "2025-07-02T17:01:55.251Z"
+    },
+    {
+      "testName": "3.1 監控服務初始化",
+      "passed": true,
+      "details": "監控狀態: 未運行",
+      "timestamp": "2025-07-02T17:01:55.251Z"
+    },
+    {
+      "testName": "3.2 載入活躍警報",
+      "passed": false,
+      "details": null,
+      "error": "Cast to date failed for value \"{ '$gt': 2025-07-02T17:01:55.254Z }\" (type Object) at path \"expiresAt\" for model \"PriceAlert\"",
+      "timestamp": "2025-07-02T17:01:55.255Z"
+    },
+    {
+      "testName": "3.3 用戶活動追蹤",
+      "passed": true,
+      "details": "成功追蹤用戶活動並標記為活躍",
+      "timestamp": "2025-07-02T17:01:55.255Z"
+    },
+    {
+      "testName": "4.1 技術指標計算",
+      "passed": true,
+      "details": "RSI: 43.06, MACD: 382.042192",
+      "timestamp": "2025-07-02T17:01:55.256Z"
+    },
+    {
+      "testName": "5.1 價格警報觸發邏輯",
+      "passed": true,
+      "details": "目標價格: 40000, 當前價格: 45000",
+      "timestamp": "2025-07-02T17:01:55.257Z"
+    },
+    {
+      "testName": "5.2 技術指標警報觸發邏輯",
+      "passed": true,
+      "details": "RSI 超買閾值: 70, 當前 RSI: 75",
+      "timestamp": "2025-07-02T17:01:55.261Z"
+    }
+  ],
+  "timestamp": "2025-07-02T17:01:55.263Z",
+  "environment": "development"
+}

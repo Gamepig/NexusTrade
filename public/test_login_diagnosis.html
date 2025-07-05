@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入問題診斷 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .button:hover { background: #0056b3; }
+        .button.success { background: #28a745; }
+        .button.danger { background: #dc3545; }
+        .button.warning { background: #ffc107; color: #212529; }
+        
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.info { background: #d1ecf1; color: #0c5460; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        
+        h1 { color: #333; }
+        h2 { color: #555; border-bottom: 2px solid #007bff; padding-bottom: 5px; }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 登入問題診斷工具</h1>
+    <p><strong>問題描述</strong>: 點擊 Google 登入無反應，點擊 LINE 登入直接跳回首頁</p>
+    
+    <div class="grid">
+        <!-- 基本診斷 -->
+        <div class="section">
+            <h2>🔍 基本診斷</h2>
+            <button class="button" onclick="runBasicDiagnosis()">執行基本診斷</button>
+            <div id="basic-result" class="result">點擊執行基本診斷...</div>
+        </div>
+
+        <!-- 登入按鈕測試 -->
+        <div class="section">
+            <h2>🎯 登入按鈕測試</h2>
+            <button class="button" onclick="testLoginButton()">測試登入按鈕</button>
+            <button class="button warning" onclick="testModalShow()">測試模態框顯示</button>
+            <div id="login-test-result" class="result">點擊測試登入按鈕...</div>
+        </div>
+
+        <!-- OAuth 按鈕測試 -->
+        <div class="section">
+            <h2>🔐 OAuth 按鈕測試</h2>
+            <button class="button" onclick="testGoogleLogin()">測試 Google 登入</button>
+            <button class="button success" onclick="testLineLogin()">測試 LINE 登入</button>
+            <div id="oauth-test-result" class="result">點擊測試 OAuth 按鈕...</div>
+        </div>
+
+        <!-- OAuth 端點測試 -->
+        <div class="section">
+            <h2>🌐 OAuth 端點測試</h2>
+            <button class="button" onclick="testOAuthEndpoints()">測試 OAuth 端點</button>
+            <div id="endpoint-test-result" class="result">點擊測試 OAuth 端點...</div>
+        </div>
+
+        <!-- 實時錯誤監控 -->
+        <div class="section full-width">
+            <h2>🚨 實時錯誤監控</h2>
+            <button class="button danger" onclick="clearErrorLog()">清除錯誤日誌</button>
+            <div id="error-log" class="result">等待錯誤...</div>
+        </div>
+
+        <!-- 手動測試區域 -->
+        <div class="section full-width">
+            <h2>🧪 手動測試區域</h2>
+            <p>這裡複製主頁面的登入按鈕，用於隔離測試：</p>
+            <button class="button" id="test-login-btn">登入</button>
+            <div id="manual-test-result" class="result">手動測試結果...</div>
+        </div>
+    </div>
+
+    <!-- 載入必要的腳本 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/dom.js"></script>
+    <script src="/js/lib/router.js"></script>
+    <script src="/js/lib/auth-state-manager.js"></script>
+    <script src="/js/state/store.js"></script>
+    <script src="/js/components/Notification.js"></script>
+    <script src="/js/components/LoginModal.js"></script>
+
+    <script>
+        let errorCount = 0;
+        let diagnosticResults = {};
+
+        // 錯誤監控
+        const originalError = console.error;
+        const originalLog = console.log;
+        
+        console.error = function(...args) {
+            errorCount++;
+            const errorLog = document.getElementById('error-log');
+            const timestamp = new Date().toLocaleTimeString();
+            errorLog.textContent += `[${timestamp}] ERROR: ${args.join(' ')}\n`;
+            errorLog.scrollTop = errorLog.scrollHeight;
+            originalError.apply(console, args);
+        };
+
+        function clearErrorLog() {
+            document.getElementById('error-log').textContent = '等待錯誤...';
+            errorCount = 0;
+        }
+
+        // 基本診斷
+        function runBasicDiagnosis() {
+            const result = document.getElementById('basic-result');
+            let output = '';
+
+            // 1. 檢查全域變數
+            output += '=== 全域變數檢查 ===\n';
+            output += `window.app: ${typeof window.app !== 'undefined'}\n`;
+            output += `window.loginModal: ${typeof window.loginModal !== 'undefined'}\n`;
+            output += `LoginModal 類別: ${typeof LoginModal !== 'undefined'}\n`;
+
+            // 2. 檢查 DOM 元素
+            output += '\n=== DOM 元素檢查 ===\n';
+            const loginBtn = document.getElementById('login-btn');
+            const loginModal = document.getElementById('login-modal');
+            
+            output += `login-btn 元素: ${!!loginBtn}\n`;
+            output += `login-modal 元素: ${!!loginModal}\n`;
+            
+            if (loginBtn) {
+                output += `login-btn 可見: ${loginBtn.offsetParent !== null}\n`;
+                output += `login-btn 內容: "${loginBtn.textContent}"\n`;
+            }
+
+            // 3. 檢查 LoginModal 實例
+            output += '\n=== LoginModal 實例檢查 ===\n';
+            if (typeof LoginModal !== 'undefined') {
+                try {
+                    const testModal = new LoginModal();
+                    output += `LoginModal 實例化: 成功\n`;
+                    output += `testModal.modal 存在: ${!!testModal.modal}\n`;
+                } catch (error) {
+                    output += `LoginModal 實例化: 失敗 - ${error.message}\n`;
+                }
+            }
+
+            // 4. 檢查腳本載入
+            output += '\n=== 腳本載入檢查 ===\n';
+            const scripts = Array.from(document.querySelectorAll('script')).map(s => s.src);
+            const relevantScripts = scripts.filter(src => 
+                src.includes('LoginModal') || 
+                src.includes('nexus-app-fixed') ||
+                src.includes('auth-state-manager')
+            );
+            
+            output += `相關腳本載入: ${relevantScripts.length} 個\n`;
+            relevantScripts.forEach(script => {
+                output += `  - ${script.split('/').pop()}\n`;
+            });
+
+            result.textContent = output;
+            diagnosticResults.basic = { success: true, output };
+        }
+
+        // 測試登入按鈕
+        function testLoginButton() {
+            const result = document.getElementById('login-test-result');
+            let output = '';
+
+            const loginBtn = document.getElementById('login-btn');
+            
+            if (!loginBtn) {
+                output = '❌ 找不到 login-btn 元素';
+                result.textContent = output;
+                return;
+            }
+
+            output += '=== 登入按鈕測試 ===\n';
+            output += '1. 觸發點擊事件...\n';
+
+            // 創建點擊事件
+            const clickEvent = new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            });
+
+            // 記錄點擊前狀態
+            const modalBefore = document.getElementById('login-modal');
+            const modalVisibleBefore = modalBefore ? window.getComputedStyle(modalBefore).display !== 'none' : false;
+            output += `點擊前模態框顯示: ${modalVisibleBefore}\n`;
+
+            // 派發點擊事件
+            const dispatched = loginBtn.dispatchEvent(clickEvent);
+            output += `點擊事件派發: ${dispatched}\n`;
+
+            // 檢查點擊後狀態
+            setTimeout(() => {
+                const modalAfter = document.getElementById('login-modal');
+                const modalVisibleAfter = modalAfter ? window.getComputedStyle(modalAfter).display !== 'none' : false;
+                output += `點擊後模態框顯示: ${modalVisibleAfter}\n`;
+                
+                if (modalVisibleAfter && !modalVisibleBefore) {
+                    output += '✅ 登入按鈕功能正常\n';
+                } else {
+                    output += '❌ 登入按鈕可能無反應\n';
+                }
+                
+                result.textContent = output;
+                diagnosticResults.loginButton = { success: modalVisibleAfter && !modalVisibleBefore };
+            }, 200);
+        }
+
+        // 測試模態框顯示
+        function testModalShow() {
+            const result = document.getElementById('login-test-result');
+            let output = '=== 模態框顯示測試 ===\n';
+
+            // 嘗試不同的方式顯示模態框
+            if (window.loginModal && typeof window.loginModal.show === 'function') {
+                try {
+                    window.loginModal.show();
+                    output += '✅ window.loginModal.show() 執行成功\n';
+                } catch (error) {
+                    output += `❌ window.loginModal.show() 失敗: ${error.message}\n`;
+                }
+            } else if (window.app && window.app.loginModal) {
+                try {
+                    window.app.loginModal.show();
+                    output += '✅ window.app.loginModal.show() 執行成功\n';
+                } catch (error) {
+                    output += `❌ window.app.loginModal.show() 失敗: ${error.message}\n`;
+                }
+            } else {
+                output += '❌ 找不到任何 loginModal 實例\n';
+                
+                // 嘗試創建新實例
+                if (typeof LoginModal !== 'undefined') {
+                    try {
+                        const newModal = new LoginModal();
+                        newModal.show();
+                        output += '✅ 新建 LoginModal 實例並顯示成功\n';
+                    } catch (error) {
+                        output += `❌ 新建 LoginModal 實例失敗: ${error.message}\n`;
+                    }
+                }
+            }
+
+            result.textContent = output;
+        }
+
+        // 測試 Google 登入
+        function testGoogleLogin() {
+            const result = document.getElementById('oauth-test-result');
+            result.textContent = '=== Google 登入測試 ===\n正在執行...';
+            
+            // 先顯示模態框
+            testModalShow();
+            
+            setTimeout(() => {
+                const googleBtn = document.getElementById('google-login-btn');
+                let output = result.textContent;
+                
+                if (googleBtn) {
+                    output += '\n找到 Google 登入按鈕\n';
+                    output += '觸發點擊事件...\n';
+                    
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    
+                    googleBtn.dispatchEvent(clickEvent);
+                    output += '✅ Google 登入按鈕點擊事件已觸發\n';
+                } else {
+                    output += '\n❌ 找不到 Google 登入按鈕\n';
+                }
+                
+                result.textContent = output;
+            }, 500);
+        }
+
+        // 測試 LINE 登入
+        function testLineLogin() {
+            const result = document.getElementById('oauth-test-result');
+            result.textContent = '=== LINE 登入測試 ===\n正在執行...';
+            
+            // 先顯示模態框
+            testModalShow();
+            
+            setTimeout(() => {
+                const lineBtn = document.getElementById('line-login-btn');
+                let output = result.textContent;
+                
+                if (lineBtn) {
+                    output += '\n找到 LINE 登入按鈕\n';
+                    output += '觸發點擊事件...\n';
+                    
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    
+                    lineBtn.dispatchEvent(clickEvent);
+                    output += '✅ LINE 登入按鈕點擊事件已觸發\n';
+                } else {
+                    output += '\n❌ 找不到 LINE 登入按鈕\n';
+                }
+                
+                result.textContent = output;
+            }, 500);
+        }
+
+        // 測試 OAuth 端點
+        async function testOAuthEndpoints() {
+            const result = document.getElementById('endpoint-test-result');
+            result.textContent = '=== OAuth 端點測試 ===\n正在測試...';
+            
+            let output = '';
+            
+            try {
+                // 測試 Google OAuth
+                output += '\n測試 Google OAuth 端點...\n';
+                const googleResponse = await fetch('/auth/google', { redirect: 'manual' });
+                output += `Google 回應: status=${googleResponse.status}, type=${googleResponse.type}\n`;
+                
+                // 測試 LINE OAuth
+                output += '\n測試 LINE OAuth 端點...\n';
+                const lineResponse = await fetch('/auth/line', { redirect: 'manual' });
+                output += `LINE 回應: status=${lineResponse.status}, type=${lineResponse.type}\n`;
+                
+                // 分析結果
+                if (googleResponse.type === 'opaqueredirect') {
+                    output += '\n✅ Google OAuth 端點正常 (重定向)\n';
+                } else {
+                    output += '\n❌ Google OAuth 端點可能有問題\n';
+                }
+                
+                if (lineResponse.type === 'opaqueredirect') {
+                    output += '✅ LINE OAuth 端點正常 (重定向)\n';
+                } else {
+                    output += '❌ LINE OAuth 端點可能有問題\n';
+                }
+                
+            } catch (error) {
+                output += `\n❌ OAuth 端點測試失敗: ${error.message}\n`;
+            }
+            
+            result.textContent = output;
+        }
+
+        // 頁面載入後自動執行基本診斷
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 登入問題診斷頁面已載入');
+            
+            // 延遲執行，確保所有腳本都載入完成
+            setTimeout(() => {
+                runBasicDiagnosis();
+            }, 1000);
+        });
+
+        // 手動測試按鈕
+        document.addEventListener('DOMContentLoaded', function() {
+            const testBtn = document.getElementById('test-login-btn');
+            const result = document.getElementById('manual-test-result');
+            
+            if (testBtn) {
+                testBtn.addEventListener('click', function() {
+                    result.textContent = '手動登入按鈕被點擊！\n時間: ' + new Date().toLocaleTimeString();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

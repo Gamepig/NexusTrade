@@ -10,6 +10,7 @@
 
 class ApiClient {
   constructor() {
+    // 使用當前 origin，因為現在直接使用主服務器 (port 3000)
     this.baseURL = window.location.origin;
     this.defaultHeaders = {
       'Content-Type': 'application/json',

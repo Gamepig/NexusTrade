@@ -1,0 +1,202 @@
+{
+  "pageTitle": "單一貨幣詳情頁面佈局配置",
+  "description": "基於 TradingView 官方設計的專業佈局",
+  "layout": {
+    "container": {
+      "maxWidth": "1400px",
+      "padding": "20px",
+      "background": "#131722",
+      "color": "#D1D4DC"
+    },
+    "header": {
+      "breadcrumb": {
+        "enabled": true,
+        "items": ["首頁", "市場", "貨幣詳情"]
+      },
+      "symbolInfo": {
+        "order": 1,
+        "position": "top-full-width",
+        "height": "120px",
+        "background": "#1E222D",
+        "components": ["symbol", "price", "change", "volume", "marketCap"]
+      },
+      "actionButtons": {
+        "height": "60px",
+        "buttons": [
+          {
+            "id": "watchlist-btn",
+            "text": "關注",
+            "icon": "⭐",
+            "style": "primary"
+          },
+          {
+            "id": "alert-btn", 
+            "text": "設定通知",
+            "icon": "🔔",
+            "style": "secondary"
+          }
+        ],
+        "layout": "horizontal",
+        "gap": "12px"
+      }
+    },
+    "mainContent": {
+      "layout": "grid",
+      "desktop": {
+        "columns": "70% 30%",
+        "gap": "20px"
+      },
+      "tablet": {
+        "columns": "100%",
+        "layout": "vertical"
+      },
+      "leftColumn": {
+        "widgets": [
+          {
+            "order": 2,
+            "id": "advanced-chart",
+            "type": "TradingView",
+            "widget": "advanced-chart",
+            "height": "500px",
+            "config": {
+              "symbol": "BINANCE:BTCUSDT",
+              "theme": "dark",
+              "locale": "zh_TW",
+              "autosize": true,
+              "interval": "D"
+            }
+          },
+          {
+            "order": 4,
+            "id": "ai-analysis",
+            "type": "Custom",
+            "component": "AICurrencyAnalysis",
+            "height": "auto",
+            "fullWidth": true,
+            "background": "#1E222D"
+          },
+          {
+            "order": 5,
+            "id": "technical-analysis",
+            "type": "TradingView",
+            "widget": "technical-analysis",
+            "height": "450px",
+            "config": {
+              "symbol": "BINANCE:BTCUSDT",
+              "theme": "dark",
+              "locale": "zh_TW",
+              "width": "100%"
+            }
+          }
+        ]
+      },
+      "rightColumn": {
+        "widgets": [
+          {
+            "order": 3,
+            "id": "company-profile",
+            "type": "TradingView",
+            "widget": "symbol-profile",
+            "height": "400px",
+            "config": {
+              "symbol": "BINANCE:BTCUSDT",
+              "theme": "dark",
+              "locale": "zh_TW",
+              "width": "100%"
+            }
+          },
+          {
+            "order": 6,
+            "id": "top-stories",
+            "type": "TradingView", 
+            "widget": "timeline",
+            "height": "400px",
+            "config": {
+              "symbol": "BINANCE:BTCUSDT",
+              "theme": "dark",
+              "locale": "zh_TW",
+              "width": "100%"
+            }
+          }
+        ]
+      }
+    },
+    "bottomWidgets": {
+      "fullWidth": true,
+      "layout": "grid",
+      "desktop": {
+        "columns": "50% 50%",
+        "gap": "20px"
+      },
+      "widgets": [
+        {
+          "order": 7,
+          "id": "crypto-heatmap",
+          "type": "TradingView",
+          "widget": "crypto-coins-heatmap", 
+          "height": "400px",
+          "config": {
+            "theme": "dark",
+            "locale": "zh_TW",
+            "width": "100%",
+            "dataSource": "Crypto",
+            "blockSize": "market_cap_calc",
+            "blockColor": "change"
+          }
+        },
+        {
+          "order": 8,
+          "id": "crypto-market",
+          "type": "TradingView",
+          "widget": "cryptocurrency-market",
+          "height": "400px", 
+          "config": {
+            "theme": "dark",
+            "locale": "zh_TW",
+            "width": "100%",
+            "defaultColumn": "overview",
+            "screener_type": "crypto_mkt"
+          }
+        }
+      ]
+    }
+  },
+  "responsive": {
+    "breakpoints": {
+      "mobile": "768px",
+      "tablet": "1024px",
+      "desktop": "1200px"
+    },
+    "mobile": {
+      "layout": "single-column",
+      "widgetOrder": [1, 2, 3, 4, 5, 6, 7, 8],
+      "spacing": "reduced"
+    },
+    "tablet": {
+      "layout": "single-column", 
+      "widgetOrder": [1, 2, 3, 4, 5, 6, 7, 8],
+      "spacing": "normal"
+    }
+  },
+  "styling": {
+    "colors": {
+      "background": "#131722",
+      "surface": "#1E222D", 
+      "border": "#2A2E39",
+      "text": "#D1D4DC",
+      "accent": "#2962FF",
+      "success": "#4CAF50",
+      "warning": "#FF9800",
+      "error": "#F44336"
+    },
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px", 
+      "md": "16px",
+      "lg": "24px",
+      "xl": "32px"
+    },
+    "borderRadius": "8px",
+    "boxShadow": "0 2px 8px rgba(0, 0, 0, 0.15)"
+  }
+}

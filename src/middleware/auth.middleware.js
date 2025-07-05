@@ -5,8 +5,8 @@
  */
 
 const jwt = require('jsonwebtoken');
-// 在開發階段使用 Mock 使用者 (因為 MongoDB 未安裝)
-const { MockUser } = require('../controllers/auth.controller.mock');
+// 使用正式的 User 模型
+const User = require('../models/User.model');
 const { ApiErrorFactory, BusinessErrorFactory } = require('../utils/ApiError');
 const logger = require('../utils/logger');
 
@@ -27,7 +27,7 @@ const authenticateToken = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // 查找使用者
-    const user = await MockUser.findById(decoded.userId);
+    const user = await User.findById(decoded.userId);
     if (!user) {
       throw BusinessErrorFactory.userNotFound(decoded.userId);
     }
@@ -84,7 +84,7 @@ const optionalAuth = async (req, res, next) => {
 
     // 有 Token，嘗試驗證
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await MockUser.findById(decoded.userId);
+    const user = await User.findById(decoded.userId);
     
     if (user && user.status === 'active') {
       req.user = user;

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>手動設置登入狀態測試</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        .info { background: #d1ecf1; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 手動設置登入狀態測試</h1>
+    
+    <div class="section">
+        <h3>測試步驟</h3>
+        <button onclick="setLoginData()">1. 設置登入數據</button>
+        <button onclick="refreshAuthTokens()">2. 重新載入 authTokens</button>
+        <button onclick="forceUpdateUI()">3. 強制更新 UI</button>
+        <button onclick="clearAll()">4. 清除所有</button>
+    </div>
+    
+    <div class="section">
+        <h3>檢查結果</h3>
+        <button onclick="checkState()">檢查當前狀態</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `section ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            console.log(`[${type}] ${message}`);
+        }
+
+        function setLoginData() {
+            log('🔧 設置完整的登入數據...', 'info');
+            
+            const tokenData = {
+                token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LXVzZXItaWQiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE2NDA5OTUyMDB9.test_signature',
+                refreshToken: 'test_refresh_token_12345'
+            };
+            
+            const userData = {
+                id: 'test-user-id',
+                name: 'Test User',
+                email: 'test@example.com',
+                avatar: 'https://via.placeholder.com/40',
+                provider: 'google',
+                profile: {
+                    displayName: 'Test User',
+                    picture: 'https://via.placeholder.com/40'
+                }
+            };
+            
+            try {
+                localStorage.setItem('nexustrade_token', tokenData.token);
+                localStorage.setItem('nexustrade_refresh_token', tokenData.refreshToken);
+                localStorage.setItem('nexustrade_user', JSON.stringify(userData));
+                
+                log('✅ 數據已設置到 localStorage', 'success');
+                log(`Token: ${tokenData.token.substring(0, 50)}...`, 'info');
+                log(`User: ${userData.name} (${userData.email})`, 'info');
+                
+            } catch (error) {
+                log(`❌ 設置失敗: ${error.message}`, 'error');
+            }
+        }
+
+        function refreshAuthTokens() {
+            if (window.loginModal) {
+                log('🔄 重新載入 authTokens...', 'info');
+                
+                // 手動調用 loadTokensFromStorage
+                const newTokens = window.loginModal.loadTokensFromStorage();
+                window.loginModal.authTokens = newTokens;
+                
+                log(`<pre>新的 authTokens:\n${JSON.stringify(newTokens, null, 2)}</pre>`, 'info');
+                
+                // 檢查是否有 user 數據並觸發自動登入
+                if (newTokens.user) {
+                    log('✅ 發現 user 數據，調用 handleAutoLogin', 'success');
+                    window.loginModal.handleAutoLogin();
+                } else {
+                    log('❌ 沒有 user 數據', 'error');
+                }
+                
+            } else {
+                log('❌ LoginModal 實例不存在', 'error');
+            }
+        }
+
+        function forceUpdateUI() {
+            if (window.loginModal && window.loginModal.authTokens.user) {
+                log('🎨 強制更新 UI...', 'info');
+                window.loginModal.updateUIForLoggedInUser(window.loginModal.authTokens.user);
+                log('✅ UI 更新完成', 'success');
+            } else {
+                log('❌ 無法更新 UI：沒有 LoginModal 或 user 數據', 'error');
+            }
+        }
+
+        function checkState() {
+            log('<h3>📊 當前狀態檢查</h3>', 'info');
+            
+            // localStorage 檢查
+            const token = localStorage.getItem('nexustrade_token');
+            const user = localStorage.getItem('nexustrade_user');
+            log(`localStorage Token: ${token ? 'exists' : 'missing'}`, token ? 'success' : 'error');
+            log(`localStorage User: ${user ? 'exists' : 'missing'}`, user ? 'success' : 'error');
+            
+            // LoginModal 檢查
+            if (window.loginModal) {
+                const authTokens = window.loginModal.authTokens;
+                log(`<pre>authTokens:\n${JSON.stringify(authTokens, null, 2)}</pre>`, 'info');
+            } else {
+                log('❌ LoginModal 不存在', 'error');
+            }
+            
+            // DOM 檢查
+            const loginBtn = document.getElementById('login-btn');
+            const userMenu = document.querySelector('.user-menu');
+            log(`Login Button: ${loginBtn ? 'exists' : 'missing'}`, loginBtn ? 'info' : 'error');
+            log(`User Menu: ${userMenu ? 'exists' : 'missing'}`, userMenu ? 'success' : 'error');
+        }
+
+        function clearAll() {
+            localStorage.clear();
+            log('🧹 已清除 localStorage', 'success');
+            if (window.loginModal) {
+                window.loginModal.authTokens = {token: null, refreshToken: null, user: null};
+                window.loginModal.updateUIForLoggedOutUser();
+            }
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // 頁面載入時檢查
+        window.addEventListener('load', function() {
+            setTimeout(checkState, 1000);
+        });
+    </script>
+</body>
+</html>

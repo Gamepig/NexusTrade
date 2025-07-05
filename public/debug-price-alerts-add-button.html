@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 價格警報新增按鈕診斷工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 價格警報新增按鈕診斷工具</h1>
+        <p>檢查價格警報頁面的新增按鈕無法使用的問題</p>
+
+        <!-- 第一步：認證設置 -->
+        <div class="test-section">
+            <h3>第一步：設置認證狀態</h3>
+            <button onclick="setupAuth()">🔐 設置測試認證</button>
+            <button onclick="checkAuthStatus()">✅ 檢查認證狀態</button>
+            <div id="auth-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- 第二步：檢查 PriceAlertsPage 組件 -->
+        <div class="test-section">
+            <h3>第二步：檢查 PriceAlertsPage 組件</h3>
+            <button onclick="checkPriceAlertsPage()">📊 檢查組件狀態</button>
+            <button onclick="initializePriceAlertsPage()">🚀 初始化組件</button>
+            <button onclick="renderPriceAlertsPage()">🎨 渲染組件</button>
+            <div id="component-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- 第三步：檢查 DOM 元素 -->
+        <div class="test-section">
+            <h3>第三步：檢查 DOM 元素</h3>
+            <button onclick="checkDOMElements()">🔍 檢查必要元素</button>
+            <button onclick="checkModalExists()">📋 檢查模態框</button>
+            <button onclick="testAddButtonClick()">🖱️ 測試新增按鈕</button>
+            <div id="dom-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- 第四步：手動測試新增功能 -->
+        <div class="test-section">
+            <h3>第四步：手動測試新增功能</h3>
+            <button onclick="manualShowCreateModal()">🔔 手動顯示創建模態框</button>
+            <button onclick="createTestAlert()">➕ 創建測試警報</button>
+            <div id="manual-result" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- 即時控制台輸出 -->
+        <div class="test-section">
+            <h3>即時控制台輸出</h3>
+            <button onclick="clearConsole()">🧹 清空控制台</button>
+            <div id="console-output" class="console-output"></div>
+        </div>
+
+        <!-- 測試容器 -->
+        <div class="test-section">
+            <h3>測試容器</h3>
+            <div id="test-container" style="border: 1px solid #ccc; min-height: 200px; padding: 20px;">
+                <p>這裡將顯示 PriceAlertsPage 的渲染結果</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入必要的組件 -->
+    <script src="/js/components/PriceAlertsPage.js"></script>
+
+    <script>
+        let consoleOutput = document.getElementById('console-output');
+        let originalConsole = { ...console };
+        let priceAlertsPageInstance = null;
+
+        // 劫持 console 輸出
+        function interceptConsole() {
+            ['log', 'error', 'warn', 'info'].forEach(method => {
+                console[method] = function(...args) {
+                    originalConsole[method].apply(console, args);
+                    appendToConsole(`[${method.toUpperCase()}] ${args.join(' ')}`);
+                };
+            });
+        }
+
+        function appendToConsole(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            interceptConsole();
+            appendToConsole('價格警報新增按鈕診斷工具已準備就緒');
+        });
+
+        // 認證相關功能
+        function setupAuth() {
+            const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3YmM4NTJiODMxNmUwZDRiN2YyY2EiLCJlbWFpbCI6ImxpbmVfdWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiQGV4YW1wbGUuY29tIiwibGluZUlkIjoiVWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiIiwibGluZVVzZXJJZCI6IlVlNWNjMTg4ZTFkMmNkYmFjNWNmZGEyYWJiNmY2YTM0YiIsImdvb2dsZUlkIjpudWxsLCJwcm92aWRlciI6ImxpbmUiLCJtZW1iZXJzaGlwIjoiZnJlZSIsImlhdCI6MTc1MTY0Njg0NiwiZXhwIjoxNzUyMjUxNjQ2fQ.QEUm4SeOwkrXPikpyTQmqQbaHHXr_m50wug0Ri9iFng';
+            const mockUser = {
+                _id: '6867bc852b8316e0d4b7f2ca',
+                email: 'line_ue5cc188e1d2cdbac5cfda2abb6f6a34b@example.com',
+                googleId: null,
+                lineId: 'Ue5cc188e1d2cdbac5cfda2abb6f6a34b',
+                lineUserId: 'Ue5cc188e1d2cdbac5cfda2abb6f6a34b',
+                provider: 'line',
+                membership: 'free',
+                status: 'active'
+            };
+
+            localStorage.setItem('nexustrade_token', mockToken);
+            localStorage.setItem('nexustrade_user', JSON.stringify(mockUser));
+
+            document.getElementById('auth-result').style.display = 'block';
+            document.getElementById('auth-result').innerHTML = `✅ 認證設置成功：
+User ID: ${mockUser._id}
+Provider: ${mockUser.provider}
+Membership: ${mockUser.membership}`;
+
+            appendToConsole('🔐 認證狀態已設置');
+        }
+
+        function checkAuthStatus() {
+            const token = localStorage.getItem('nexustrade_token');
+            const user = localStorage.getItem('nexustrade_user');
+
+            document.getElementById('auth-result').style.display = 'block';
+            document.getElementById('auth-result').innerHTML = `認證狀態檢查：
+Token 存在: ${!!token}
+User 存在: ${!!user}
+Token: ${token ? token.substring(0, 50) + '...' : '無'}
+User: ${user ? JSON.parse(user).email : '無'}`;
+
+            appendToConsole(`🔍 認證狀態 - Token: ${!!token}, User: ${!!user}`);
+        }
+
+        // 檢查 PriceAlertsPage 組件
+        function checkPriceAlertsPage() {
+            appendToConsole('📊 檢查 PriceAlertsPage 組件...');
+
+            const results = [];
+
+            // 檢查組件類別是否存在
+            if (typeof window.PriceAlertsPage !== 'undefined') {
+                results.push('✅ PriceAlertsPage 類別已載入');
+            } else {
+                results.push('❌ PriceAlertsPage 類別未載入');
+            }
+
+            // 檢查實例是否存在
+            if (window.priceAlertsPage) {
+                results.push('✅ priceAlertsPage 實例存在');
+                results.push(`實例類型: ${typeof window.priceAlertsPage}`);
+            } else {
+                results.push('❌ priceAlertsPage 實例不存在');
+            }
+
+            document.getElementById('component-result').style.display = 'block';
+            document.getElementById('component-result').innerHTML = results.join('\n');
+
+            appendToConsole('📊 PriceAlertsPage 組件檢查完成');
+        }
+
+        function initializePriceAlertsPage() {
+            appendToConsole('🚀 初始化 PriceAlertsPage...');
+
+            try {
+                if (typeof window.PriceAlertsPage === 'undefined') {
+                    throw new Error('PriceAlertsPage 類別未載入');
+                }
+
+                // 創建實例
+                priceAlertsPageInstance = new window.PriceAlertsPage();
+                window.priceAlertsPage = priceAlertsPageInstance;
+
+                // 設置容器
+                let container = document.getElementById('price-alerts-content');
+                if (!container) {
+                    container = document.createElement('div');
+                    container.id = 'price-alerts-content';
+                    document.getElementById('test-container').appendChild(container);
+                    appendToConsole('📦 創建了 price-alerts-content 容器');
+                }
+
+                // 初始化
+                priceAlertsPageInstance.init();
+
+                document.getElementById('component-result').style.display = 'block';
+                document.getElementById('component-result').innerHTML = `✅ PriceAlertsPage 初始化成功
+實例: ${typeof priceAlertsPageInstance}
+容器: ${container ? '存在' : '不存在'}
+警報數量: ${priceAlertsPageInstance.alerts.length}`;
+
+                appendToConsole('🚀 PriceAlertsPage 初始化完成');
+            } catch (error) {
+                appendToConsole(`❌ 初始化失敗: ${error.message}`);
+                document.getElementById('component-result').style.display = 'block';
+                document.getElementById('component-result').innerHTML = `❌ 初始化失敗: ${error.message}`;
+            }
+        }
+
+        function renderPriceAlertsPage() {
+            appendToConsole('🎨 渲染 PriceAlertsPage...');
+
+            try {
+                if (!priceAlertsPageInstance) {
+                    throw new Error('請先初始化 PriceAlertsPage');
+                }
+
+                priceAlertsPageInstance.render();
+
+                document.getElementById('component-result').style.display = 'block';
+                document.getElementById('component-result').innerHTML = `✅ PriceAlertsPage 渲染完成
+容器內容長度: ${document.getElementById('price-alerts-content')?.innerHTML.length || 0}`;
+
+                appendToConsole('🎨 PriceAlertsPage 渲染完成');
+            } catch (error) {
+                appendToConsole(`❌ 渲染失敗: ${error.message}`);
+                document.getElementById('component-result').style.display = 'block';
+                document.getElementById('component-result').innerHTML = `❌ 渲染失敗: ${error.message}`;
+            }
+        }
+
+        // 檢查 DOM 元素
+        function checkDOMElements() {
+            appendToConsole('🔍 檢查必要的 DOM 元素...');
+
+            const elements = [
+                'price-alerts-content',
+                'add-alert-btn',
+                'create-alert-modal',
+                'create-alert-form'
+            ];
+
+            const results = [];
+
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    results.push(`✅ ${id}: 存在`);
+                    if (id === 'add-alert-btn') {
+                        results.push(`   - 按鈕文字: "${element.textContent.trim()}"`);
+                        results.push(`   - 按鈕可見: ${element.offsetWidth > 0 && element.offsetHeight > 0}`);
+                    }
+                } else {
+                    results.push(`❌ ${id}: 不存在`);
+                }
+            });
+
+            document.getElementById('dom-result').style.display = 'block';
+            document.getElementById('dom-result').innerHTML = results.join('\n');
+
+            appendToConsole('🔍 DOM 元素檢查完成');
+        }
+
+        function checkModalExists() {
+            appendToConsole('📋 檢查模態框是否存在...');
+
+            const modal = document.getElementById('create-alert-modal');
+            const results = [];
+
+            if (modal) {
+                results.push('✅ create-alert-modal 存在');
+                results.push(`   - 顯示狀態: ${modal.style.display}`);
+                results.push(`   - 類別: ${modal.className}`);
+                results.push(`   - HTML 長度: ${modal.innerHTML.length}`);
+
+                // 檢查表單
+                const form = modal.querySelector('#create-alert-form');
+                if (form) {
+                    results.push('✅ 表單存在');
+                    results.push(`   - 表單欄位數: ${form.querySelectorAll('input, select, textarea').length}`);
+                } else {
+                    results.push('❌ 表單不存在');
+                }
+            } else {
+                results.push('❌ create-alert-modal 不存在');
+            }
+
+            document.getElementById('dom-result').style.display = 'block';
+            document.getElementById('dom-result').innerHTML = results.join('\n');
+
+            appendToConsole('📋 模態框檢查完成');
+        }
+
+        function testAddButtonClick() {
+            appendToConsole('🖱️ 測試新增按鈕點擊...');
+
+            const button = document.getElementById('add-alert-btn');
+            if (!button) {
+                appendToConsole('❌ 新增按鈕不存在');
+                document.getElementById('dom-result').style.display = 'block';
+                document.getElementById('dom-result').innerHTML = '❌ add-alert-btn 不存在，無法測試';
+                return;
+            }
+
+            // 模擬點擊事件
+            const clickEvent = new Event('click', { bubbles: true });
+            button.dispatchEvent(clickEvent);
+
+            // 檢查模態框是否顯示
+            setTimeout(() => {
+                const modal = document.getElementById('create-alert-modal');
+                const isVisible = modal && (modal.style.display === 'flex' || modal.style.display === 'block');
+
+                document.getElementById('dom-result').style.display = 'block';
+                document.getElementById('dom-result').innerHTML = `按鈕點擊測試結果:
+✅ 點擊事件已觸發
+模態框顯示: ${isVisible ? '是' : '否'}
+模態框顯示樣式: ${modal ? modal.style.display : 'N/A'}`;
+
+                appendToConsole(`🖱️ 按鈕點擊測試完成 - 模態框顯示: ${isVisible}`);
+            }, 100);
+        }
+
+        // 手動測試功能
+        function manualShowCreateModal() {
+            appendToConsole('🔔 手動顯示創建模態框...');
+
+            try {
+                if (priceAlertsPageInstance && typeof priceAlertsPageInstance.showCreateAlertModal === 'function') {
+                    priceAlertsPageInstance.showCreateAlertModal();
+                    appendToConsole('✅ 通過實例方法顯示模態框');
+                } else {
+                    // 直接操作 DOM
+                    const modal = document.getElementById('create-alert-modal');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        appendToConsole('✅ 通過 DOM 操作顯示模態框');
+                    } else {
+                        appendToConsole('❌ 模態框不存在，無法顯示');
+                    }
+                }
+
+                document.getElementById('manual-result').style.display = 'block';
+                document.getElementById('manual-result').innerHTML = `手動顯示模態框結果:
+實例方法: ${priceAlertsPageInstance && typeof priceAlertsPageInstance.showCreateAlertModal === 'function' ? '可用' : '不可用'}
+模態框元素: ${document.getElementById('create-alert-modal') ? '存在' : '不存在'}`;
+
+            } catch (error) {
+                appendToConsole(`❌ 手動顯示失敗: ${error.message}`);
+                document.getElementById('manual-result').style.display = 'block';
+                document.getElementById('manual-result').innerHTML = `❌ 手動顯示失敗: ${error.message}`;
+            }
+        }
+
+        function createTestAlert() {
+            appendToConsole('➕ 創建測試警報...');
+
+            if (!priceAlertsPageInstance) {
+                appendToConsole('❌ PriceAlertsPage 實例不存在');
+                return;
+            }
+
+            const testAlertData = {
+                symbol: 'TESTUSDT',
+                alertType: 'price_above',
+                targetPrice: 100,
+                priority: 'medium',
+                note: '測試警報',
+                notificationMethods: {
+                    lineNotify: { enabled: true }
+                }
+            };
+
+            priceAlertsPageInstance.createAlert(testAlertData)
+                .then(success => {
+                    if (success) {
+                        appendToConsole('✅ 測試警報創建成功');
+                        document.getElementById('manual-result').style.display = 'block';
+                        document.getElementById('manual-result').innerHTML = '✅ 測試警報創建成功';
+                    } else {
+                        appendToConsole('❌ 測試警報創建失敗');
+                        document.getElementById('manual-result').style.display = 'block';
+                        document.getElementById('manual-result').innerHTML = '❌ 測試警報創建失敗';
+                    }
+                })
+                .catch(error => {
+                    appendToConsole(`❌ 創建測試警報錯誤: ${error.message}`);
+                    document.getElementById('manual-result').style.display = 'block';
+                    document.getElementById('manual-result').innerHTML = `❌ 創建錯誤: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>

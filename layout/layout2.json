@@ -1,0 +1,125 @@
+{
+  "layout": {
+    "theme": "dark",
+    "header": {
+      "backButton": {
+        "label": "Back to Solutions",
+        "position": "top-left"
+      },
+      "title": "Bitcoin (BTCUSD)",
+      "style": {
+        "fontSize": "24px",
+        "fontWeight": "bold",
+        "color": "#ffffff"
+      }
+    },
+    "sections": [
+      {
+        "id": "technical-analysis",
+        "title": "Technical Analysis for BTCUSD",
+        "tabs": ["1 minute", "5 minutes", "15 minutes"],
+        "selectedTab": "15 minutes",
+        "content": {
+          "type": "gauge-meter",
+          "value": "Buy",
+          "scale": ["Strong sell", "Sell", "Neutral", "Buy", "Strong buy"],
+          "score": {
+            "Sell": 4,
+            "Neutral": 9,
+            "Buy": 13
+          },
+          "style": {
+            "color": {
+              "Sell": "#f44336",
+              "Neutral": "#cccccc",
+              "Buy": "#2196f3"
+            }
+          }
+        }
+      },
+      {
+        "id": "news-feed",
+        "title": "BTCUSD Top Stories",
+        "articles": [
+          {
+            "date": "yesterday",
+            "title": "BTC/USD: Bitcoin Rebounds as Traders Scoop It Up After Weekend Dip Takes Prices Below $100,000"
+          },
+          {
+            "date": "Jun 15",
+            "title": "BTC/USD: Bitcoin Stays Firm Despite Fed’s Rate Hold, Inflation Projections. Thank the GENIUS Bill."
+          },
+          {
+            "date": "Jun 13",
+            "title": "BTC/USD: Bitcoin Wipes Out 5% as Risk-Off Moves Dominate Markets amid War Tremors"
+          },
+          {
+            "date": "Jun 12",
+            "title": "BTC/USD: Bitcoin Prices Slide Third Day in a Row as Crypto Bros Need Jumpstart Events"
+          },
+          {
+            "date": "Jun 2",
+            "title": "BTC/USD: Bitcoin Prices Cool to Start June Trading Near $105,000 After Logging Historical May"
+          },
+          {
+            "date": "May 31",
+            "title": "BTC/USD: Bitcoin ETFs Keep Crushing Records with $9"
+          }
+        ],
+        "style": {
+          "fontSize": "14px",
+          "color": "#e0e0e0"
+        }
+      },
+      {
+        "id": "heatmap",
+        "title": "Crypto Heatmap",
+        "layout": "grid",
+        "assets": [
+          {
+            "name": "Bitcoin",
+            "symbol": "BTC",
+            "change": "+3.88%",
+            "size": "large",
+            "color": "#2e7d32"
+          },
+          {
+            "name": "Ethereum",
+            "symbol": "ETH",
+            "change": "+7.05%",
+            "size": "medium",
+            "color": "#388e3c"
+          },
+          {
+            "name": "XRP",
+            "symbol": "XRP",
+            "change": "+8.66%",
+            "size": "medium",
+            "color": "#43a047"
+          },
+          {
+            "name": "BNB",
+            "symbol": "BNB",
+            "change": "+4.30%",
+            "size": "medium",
+            "color": "#4caf50"
+          },
+          {
+            "name": "Tether USDT",
+            "symbol": "USDT",
+            "change": "+0.03%",
+            "size": "small",
+            "color": "#bdbdbd"
+          },
+          {
+            "name": "Solana",
+            "symbol": "SOL",
+            "change": "+x.xx%",
+            "size": "small",
+            "color": "#26a69a"
+          }
+        ]
+      }
+    ]
+  }
+}

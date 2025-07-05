@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>單一貨幣 AI 分析測試</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+
+        .test-container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .test-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 24px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .symbol-selector {
+            margin-bottom: 20px;
+        }
+
+        .symbol-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin-right: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .symbol-btn:hover {
+            background: #2980b9;
+        }
+
+        .symbol-btn.active {
+            background: #e74c3c;
+        }
+
+        #ai-analysis-container {
+            min-height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #fdf2f2;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .status-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .log-container {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .log-entry.info { color: #3498db; }
+        .log-entry.success { color: #2ecc71; }
+        .log-entry.error { color: #e74c3c; }
+        .log-entry.warn { color: #f39c12; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="test-title">🤖 單一貨幣 AI 分析測試</h1>
+        
+        <div class="status-info">
+            <strong>測試說明：</strong>選擇貨幣後自動載入AI分析，首次分析會檢查資料庫快取，沒有則調用AI進行新分析。
+        </div>
+
+        <div class="symbol-selector">
+            <h3>選擇貨幣：</h3>
+            <button class="symbol-btn" data-symbol="BTCUSDT">BTC/USDT</button>
+            <button class="symbol-btn" data-symbol="ETHUSDT">ETH/USDT</button>
+            <button class="symbol-btn" data-symbol="BNBUSDT">BNB/USDT</button>
+            <button class="symbol-btn" data-symbol="XRPUSDT">XRP/USDT</button>
+            <button class="symbol-btn" data-symbol="ADAUSDT">ADA/USDT</button>
+        </div>
+
+        <div id="ai-analysis-container">
+            <p class="loading">請選擇一個貨幣開始測試...</p>
+        </div>
+
+        <div class="log-container" id="log-container">
+            <div class="log-entry info">系統初始化完成，準備測試...</div>
+        </div>
+    </div>
+
+    <!-- 載入 AI 分析組件 -->
+    <script src="/js/components/AICurrencyAnalysis.js"></script>
+    <script>
+        let currentAnalysis = null;
+        let logContainer = document.getElementById('log-container');
+
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 綁定貨幣選擇按鈕
+        document.querySelectorAll('.symbol-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const symbol = e.target.dataset.symbol;
+                
+                // 更新按鈕狀態
+                document.querySelectorAll('.symbol-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                addLog(`開始載入 ${symbol} AI 分析...`, 'info');
+                
+                // 清理前一個分析
+                if (currentAnalysis) {
+                    currentAnalysis.destroy();
+                }
+                
+                // 創建新的分析組件
+                currentAnalysis = new AICurrencyAnalysis('ai-analysis-container', symbol);
+            });
+        });
+
+        // 監聽組件事件
+        window.addEventListener('load', () => {
+            addLog('頁面載入完成，AI分析組件已就緒', 'success');
+        });
+
+        // 測試 API 連接
+        async function testAPIConnection() {
+            try {
+                addLog('測試 AI 服務狀態...', 'info');
+                const response = await fetch('/api/ai/status');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    addLog(`✅ AI 服務正常 - 模型: ${data.data.stats.model}`, 'success');
+                } else {
+                    addLog(`⚠️ AI 服務狀態異常: ${data.message}`, 'warn');
+                }
+            } catch (error) {
+                addLog(`❌ AI 服務連接失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 頁面載入後測試連接
+        setTimeout(testAPIConnection, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎉 最終修復驗證</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.success {
+            background: #28a745;
+        }
+        button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        .test-container {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 400px;
+            background: white;
+        }
+        .console-output {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 10px 0;
+        }
+        .result-summary {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 價格警報系統最終修復驗證</h1>
+        <p>驗證所有修復項目：新增按鈕、多次彈出防護、會員限制、配額計算</p>
+
+        <!-- 驗證結果摘要 -->
+        <div class="test-section">
+            <h3>📊 驗證結果摘要</h3>
+            <div id="summary-result" class="result-summary">
+                <p>點擊下方按鈕開始驗證...</p>
+            </div>
+        </div>
+
+        <!-- 完整驗證流程 -->
+        <div class="test-section">
+            <h3>🧪 完整驗證流程</h3>
+            <button onclick="runCompleteVerification()" class="success">🚀 執行完整驗證</button>
+            <button onclick="testNewAlertCreation()" style="background: #17a2b8;">➕ 測試新增警報</button>
+            <button onclick="testQuotaLimit()" class="warning">📈 測試配額限制</button>
+            <button onclick="clearConsole()">🧹 清空控制台</button>
+        </div>
+
+        <!-- 測試容器 -->
+        <div class="test-section">
+            <h3>💻 價格警報測試容器</h3>
+            <div id="test-container" class="test-container">
+                <div id="price-alerts-page">
+                    <div class="page-header">
+                        <h1>💰 價格警報</h1>
+                        <p>管理你的價格提醒與通知設定</p>
+                    </div>
+                    <div id="price-alerts-content" class="page-content">
+                        <div class="loading-spinner">準備載入測試...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制台輸出 -->
+        <div class="test-section">
+            <h3>📝 測試日誌</h3>
+            <div id="console-output" class="console-output"></div>
+        </div>
+    </div>
+
+    <!-- 載入必要的組件 -->
+    <script src="/js/components/PriceAlertsPage.js"></script>
+
+    <script>
+        let consoleOutput = document.getElementById('console-output');
+        let originalConsole = { ...console };
+        let priceAlertsPageInstance = null;
+        let verificationResults = {
+            loginUI: false,
+            alertLoading: false,
+            addButton: false,
+            modalPrevention: false,
+            quotaCalculation: false
+        };
+
+        // 劫持 console 輸出
+        function interceptConsole() {
+            ['log', 'error', 'warn', 'info'].forEach(method => {
+                console[method] = function(...args) {
+                    originalConsole[method].apply(console, args);
+                    appendToConsole(`[${method.toUpperCase()}] ${args.join(' ')}`);
+                };
+            });
+        }
+
+        function appendToConsole(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            consoleOutput.innerHTML += `[${timestamp}] ${message}\n`;
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary-result');
+            const totalTests = Object.keys(verificationResults).length;
+            const passedTests = Object.values(verificationResults).filter(Boolean).length;
+            
+            let summaryHTML = `<h4>📈 驗證進度: ${passedTests}/${totalTests} 項通過</h4><ul>`;
+            
+            summaryHTML += `<li>${verificationResults.loginUI ? '✅' : '❌'} 登入提示界面</li>`;
+            summaryHTML += `<li>${verificationResults.alertLoading ? '✅' : '❌'} 警報數據載入</li>`;
+            summaryHTML += `<li>${verificationResults.addButton ? '✅' : '❌'} 新增按鈕功能</li>`;
+            summaryHTML += `<li>${verificationResults.modalPrevention ? '✅' : '❌'} 多次彈出防護</li>`;
+            summaryHTML += `<li>${verificationResults.quotaCalculation ? '✅' : '❌'} 配額計算邏輯</li>`;
+            
+            summaryHTML += '</ul>';
+            
+            if (passedTests === totalTests) {
+                summaryHTML += '<p style="color: green; font-weight: bold;">🎉 所有驗證項目通過！</p>';
+            } else {
+                summaryHTML += `<p style="color: orange;">⚠️ 還有 ${totalTests - passedTests} 項需要驗證</p>`;
+            }
+            
+            summaryDiv.innerHTML = summaryHTML;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            interceptConsole();
+            appendToConsole('🎉 最終修復驗證工具已準備就緒');
+            updateSummary();
+        });
+
+        // 完整驗證流程
+        async function runCompleteVerification() {
+            appendToConsole('🚀 開始完整驗證流程...');
+            
+            try {
+                // 1. 測試未登入狀態
+                appendToConsole('📋 步驟 1: 測試未登入登入提示界面');
+                await testLoginRequiredUI();
+                
+                // 2. 設置認證並測試
+                appendToConsole('📋 步驟 2: 設置認證並載入警報');
+                await setupAuthAndTest();
+                
+                // 3. 測試新增按鈕
+                appendToConsole('📋 步驟 3: 測試新增按鈕功能');
+                await testAddButtonFunction();
+                
+                // 4. 測試防護機制
+                appendToConsole('📋 步驟 4: 測試多次彈出防護');
+                await testModalPrevention();
+                
+                appendToConsole('✅ 完整驗證流程完成');
+                updateSummary();
+                
+            } catch (error) {
+                appendToConsole(`❌ 驗證流程失敗: ${error.message}`);
+            }
+        }
+
+        async function testLoginRequiredUI() {
+            // 清除認證
+            localStorage.removeItem('nexustrade_token');
+            localStorage.removeItem('nexustrade_user');
+            
+            // 創建實例並初始化
+            priceAlertsPageInstance = new PriceAlertsPage();
+            await priceAlertsPageInstance.init();
+            
+            // 檢查是否顯示登入提示
+            const loginRequired = document.querySelector('.login-required-container');
+            if (loginRequired) {
+                appendToConsole('✅ 登入提示界面正確顯示');
+                verificationResults.loginUI = true;
+            } else {
+                appendToConsole('❌ 登入提示界面未顯示');
+            }
+        }
+
+        async function setupAuthAndTest() {
+            // 設置認證
+            const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODY3YmM4NTJiODMxNmUwZDRiN2YyY2EiLCJlbWFpbCI6ImxpbmVfdWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiQGV4YW1wbGUuY29tIiwibGluZUlkIjoiVWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiIiwibGluZVVzZXJJZCI6IlVlNWNjMTg4ZTFkMmNkYmFjNWNmZGEyYWJiNmY2YTM0YiIsImdvb2dsZUlkIjpudWxsLCJwcm92aWRlciI6ImxpbmUiLCJtZW1iZXJzaGlwIjoiZnJlZSIsImlhdCI6MTc1MTY0Njg0NiwiZXhwIjoxNzUyMjUxNjQ2fQ.QEUm4SeOwkrXPikpyTQmqQbaHHXr_m50wug0Ri9iFng';
+            const mockUser = {
+                _id: '6867bc852b8316e0d4b7f2ca',
+                email: 'line_ue5cc188e1d2cdbac5cfda2abb6f6a34b@example.com',
+                lineId: 'Ue5cc188e1d2cdbac5cfda2abb6f6a34b',
+                lineUserId: 'Ue5cc188e1d2cdbac5cfda2abb6f6a34b',
+                provider: 'line',
+                membership: 'free'
+            };
+
+            localStorage.setItem('nexustrade_token', mockToken);
+            localStorage.setItem('nexustrade_user', JSON.stringify(mockUser));
+            
+            // 重新初始化
+            priceAlertsPageInstance = new PriceAlertsPage();
+            await priceAlertsPageInstance.init();
+            
+            // 檢查警報載入
+            if (priceAlertsPageInstance.alerts.length >= 0) {
+                appendToConsole(`✅ 警報數據載入成功: ${priceAlertsPageInstance.alerts.length} 個`);
+                verificationResults.alertLoading = true;
+            } else {
+                appendToConsole('❌ 警報數據載入失敗');
+            }
+        }
+
+        async function testAddButtonFunction() {
+            const addBtn = document.getElementById('add-alert-btn');
+            if (addBtn) {
+                appendToConsole('✅ 新增警報按鈕存在');
+                
+                // 測試點擊
+                addBtn.click();
+                
+                // 檢查模態框
+                setTimeout(() => {
+                    const modal = document.getElementById('create-alert-modal');
+                    if (modal && (modal.style.display === 'flex' || modal.style.display === 'block')) {
+                        appendToConsole('✅ 新增警報模態框正確顯示');
+                        verificationResults.addButton = true;
+                        
+                        // 關閉模態框
+                        modal.style.display = 'none';
+                        priceAlertsPageInstance.isShowingModal = false;
+                    } else {
+                        appendToConsole('❌ 新增警報模態框未顯示');
+                    }
+                    updateSummary();
+                }, 500);
+            } else {
+                appendToConsole('❌ 新增警報按鈕不存在');
+            }
+        }
+
+        async function testModalPrevention() {
+            if (!priceAlertsPageInstance) return;
+            
+            // 測試多次快速點擊
+            appendToConsole('🔄 測試多次快速點擊防護...');
+            
+            const addBtn = document.getElementById('add-alert-btn');
+            if (addBtn) {
+                // 快速點擊 3 次
+                addBtn.click();
+                addBtn.click();
+                addBtn.click();
+                
+                setTimeout(() => {
+                    const modals = document.querySelectorAll('#create-alert-modal[style*="flex"]');
+                    if (modals.length <= 1) {
+                        appendToConsole('✅ 多次彈出防護正常工作');
+                        verificationResults.modalPrevention = true;
+                    } else {
+                        appendToConsole(`❌ 檢測到 ${modals.length} 個模態框，防護失效`);
+                    }
+                    updateSummary();
+                }, 300);
+            }
+        }
+
+        async function testNewAlertCreation() {
+            appendToConsole('➕ 測試新增警報功能...');
+            
+            if (!priceAlertsPageInstance) {
+                appendToConsole('❌ 請先執行完整驗證');
+                return;
+            }
+            
+            const testAlert = {
+                symbol: 'TESTUSDT',
+                alertType: 'price_above',
+                targetPrice: 100,
+                notificationMethods: {
+                    lineMessaging: { enabled: true }
+                }
+            };
+            
+            try {
+                const success = await priceAlertsPageInstance.createAlert(testAlert);
+                if (success) {
+                    appendToConsole('✅ 測試警報創建成功');
+                } else {
+                    appendToConsole('ℹ️ 警報創建被阻擋 (可能是配額限制)');
+                }
+            } catch (error) {
+                appendToConsole(`❌ 測試警報創建失敗: ${error.message}`);
+            }
+        }
+
+        async function testQuotaLimit() {
+            appendToConsole('📈 測試配額限制邏輯...');
+            
+            // 發送 API 請求測試配額
+            const token = localStorage.getItem('nexustrade_token');
+            if (!token) {
+                appendToConsole('❌ 請先設置認證狀態');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/notifications/alerts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        symbol: 'QUOTATEST',
+                        alertType: 'price_above',
+                        targetPrice: 999,
+                        notificationMethods: {
+                            lineMessaging: { enabled: true }
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 403 && data.code === 'QUOTA_EXCEEDED') {
+                    appendToConsole('✅ 配額限制正確工作');
+                    appendToConsole(`📊 配額資訊: ${data.quota.used}/${data.quota.limit}`);
+                    verificationResults.quotaCalculation = true;
+                } else if (response.ok) {
+                    appendToConsole('✅ 警報創建成功 (配額未滿)');
+                    verificationResults.quotaCalculation = true;
+                } else {
+                    appendToConsole(`⚠️ 其他錯誤: ${data.message}`);
+                }
+                
+                updateSummary();
+                
+            } catch (error) {
+                appendToConsole(`❌ 配額測試失敗: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

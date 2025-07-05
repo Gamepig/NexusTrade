@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 分析修復驗證</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0e27;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .test-section {
+      background: #1a1f3a;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #2d3748;
+    }
+    
+    .test-title {
+      color: #4ade80;
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .api-test {
+      background: #262a47;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    
+    .status-loading { background: #fbbf24; }
+    .status-success { background: #10b981; }
+    .status-error { background: #ef4444; }
+    
+    .response-data {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    
+    .test-button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      font-size: 14px;
+    }
+    
+    .test-button:hover {
+      background: #2563eb;
+    }
+    
+    .ai-analysis-container {
+      min-height: 300px;
+      background: #1a1f3a;
+      border-radius: 8px;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🔧 AI 分析系統修復驗證</h1>
+    
+    <!-- API 狀態測試 -->
+    <div class="test-section">
+      <div class="test-title">
+        🔍 API 狀態檢查
+      </div>
+      
+      <div class="api-test">
+        <div id="ai-status-test">
+          <span class="status-indicator status-loading"></span>
+          正在檢查 AI 服務狀態...
+        </div>
+        <div class="response-data" id="ai-status-response"></div>
+      </div>
+      
+      <div class="api-test">
+        <div id="currency-analysis-test">
+          <span class="status-indicator status-loading"></span>
+          正在測試 BTCUSDT 分析端點...
+        </div>
+        <div class="response-data" id="currency-analysis-response"></div>
+      </div>
+    </div>
+    
+    <!-- 前端組件測試 -->
+    <div class="test-section">
+      <div class="test-title">
+        🎨 前端組件測試
+      </div>
+      
+      <button class="test-button" onclick="testAIComponent('BTCUSDT')">測試 BTCUSDT AI 分析</button>
+      <button class="test-button" onclick="testAIComponent('ETHUSDT')">測試 ETHUSDT AI 分析</button>
+      <button class="test-button" onclick="clearComponent()">清空組件</button>
+      
+      <div id="ai-analysis-container" class="ai-analysis-container">
+        <!-- AI 分析組件將在這裡載入 -->
+      </div>
+    </div>
+    
+    <!-- 詳細診斷 -->
+    <div class="test-section">
+      <div class="test-title">
+        🔬 詳細診斷
+      </div>
+      <div id="diagnostic-log" class="response-data" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <!-- 載入 AI 分析組件 -->
+  <script src="/js/components/AICurrencyAnalysis.js"></script>
+
+  <script>
+    let currentAIComponent = null;
+    const diagnosticLog = document.getElementById('diagnostic-log');
+    
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+      diagnosticLog.textContent += logEntry;
+      diagnosticLog.scrollTop = diagnosticLog.scrollHeight;
+      console.log(logEntry);
+    }
+    
+    // 測試 AI 服務狀態
+    async function testAIStatus() {
+      try {
+        const response = await fetch('/api/ai/status');
+        const data = await response.json();
+        
+        const statusElement = document.getElementById('ai-status-test');
+        const responseElement = document.getElementById('ai-status-response');
+        
+        if (data.status === 'success') {
+          statusElement.innerHTML = '<span class="status-indicator status-success"></span>✅ AI 服務正常運行';
+          responseElement.textContent = JSON.stringify(data, null, 2);
+          log('AI 服務狀態檢查成功', 'success');
+        } else {
+          throw new Error('AI 服務狀態異常');
+        }
+      } catch (error) {
+        const statusElement = document.getElementById('ai-status-test');
+        statusElement.innerHTML = '<span class="status-indicator status-error"></span>❌ AI 服務檢查失敗';
+        document.getElementById('ai-status-response').textContent = error.message;
+        log(`AI 服務狀態檢查失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 測試貨幣分析端點
+    async function testCurrencyAnalysis() {
+      try {
+        const response = await fetch('/api/ai/currency-analysis/BTCUSDT');
+        const data = await response.json();
+        
+        const statusElement = document.getElementById('currency-analysis-test');
+        const responseElement = document.getElementById('currency-analysis-response');
+        
+        if (data.status === 'success' && data.data.analysis) {
+          statusElement.innerHTML = '<span class="status-indicator status-success"></span>✅ BTCUSDT 分析端點正常';
+          responseElement.textContent = JSON.stringify({
+            trend: data.data.analysis.trend,
+            model: data.data.dataSources?.analysisModel,
+            processingTime: data.data.qualityMetrics?.processingTime,
+            isFromCache: data.data.isFromCache
+          }, null, 2);
+          log('BTCUSDT 分析端點測試成功', 'success');
+        } else {
+          throw new Error('分析端點返回數據異常');
+        }
+      } catch (error) {
+        const statusElement = document.getElementById('currency-analysis-test');
+        statusElement.innerHTML = '<span class="status-indicator status-error"></span>❌ 分析端點測試失敗';
+        document.getElementById('currency-analysis-response').textContent = error.message;
+        log(`貨幣分析端點測試失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 測試前端 AI 組件
+    function testAIComponent(symbol) {
+      try {
+        log(`開始測試 ${symbol} AI 組件`, 'info');
+        
+        // 清理舊組件
+        if (currentAIComponent) {
+          currentAIComponent.destroy && currentAIComponent.destroy();
+        }
+        
+        // 創建新組件
+        currentAIComponent = new AICurrencyAnalysis('ai-analysis-container', symbol);
+        
+        log(`${symbol} AI 組件初始化完成`, 'success');
+        
+      } catch (error) {
+        log(`${symbol} AI 組件測試失敗: ${error.message}`, 'error');
+      }
+    }
+    
+    // 清空組件
+    function clearComponent() {
+      if (currentAIComponent) {
+        currentAIComponent.destroy && currentAIComponent.destroy();
+        currentAIComponent = null;
+      }
+      document.getElementById('ai-analysis-container').innerHTML = '';
+      log('組件已清空', 'info');
+    }
+    
+    // 頁面載入時自動執行測試
+    window.addEventListener('load', async () => {
+      log('開始 AI 分析系統診斷', 'info');
+      await testAIStatus();
+      await testCurrencyAnalysis();
+      log('初始診斷完成', 'info');
+    });
+  </script>
+</body>
+</html>

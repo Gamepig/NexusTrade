@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusTrade 即時認證狀態診斷</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .debug-section {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        .debug-section h2 {
+            color: #4CAF50;
+            margin-top: 0;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #444;
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-label {
+            font-weight: bold;
+            color: #64B5F6;
+        }
+        .status-value {
+            font-family: monospace;
+            color: #FFB74D;
+        }
+        .status-success {
+            color: #4CAF50;
+        }
+        .status-error {
+            color: #F44336;
+        }
+        .status-warning {
+            color: #FF9800;
+        }
+        .btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #1976D2;
+        }
+        .btn-danger {
+            background: #F44336;
+        }
+        .btn-danger:hover {
+            background: #D32F2F;
+        }
+        .btn-success {
+            background: #4CAF50;
+        }
+        .btn-success:hover {
+            background: #388E3C;
+        }
+        .json-display {
+            background: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .test-success {
+            background: rgba(76, 175, 80, 0.1);
+            border-left-color: #4CAF50;
+        }
+        .test-error {
+            background: rgba(244, 67, 54, 0.1);
+            border-left-color: #F44336;
+        }
+        .test-warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left-color: #FF9800;
+        }
+        .real-time {
+            border: 2px solid #4CAF50;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 NexusTrade 即時認證狀態診斷</h1>
+    <p><strong>目的</strong>：診斷為什麼已登入使用者 "Vic Huang" 點擊「設定通知」仍顯示登入提示</p>
+
+    <div class="debug-section real-time">
+        <h2>⚡ 即時認證狀態監控</h2>
+        <div id="realtime-status">
+            <div class="status-item">
+                <span class="status-label">監控狀態：</span>
+                <span class="status-value">載入中...</span>
+            </div>
+        </div>
+        <button class="btn" onclick="toggleRealTimeMonitoring()">🔄 切換即時監控</button>
+        <button class="btn btn-success" onclick="diagnoseAuthIssue()">🔬 診斷認證問題</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>🎯 PriceAlertModal 模擬測試</h2>
+        <div id="modal-test-results"></div>
+        <button class="btn" onclick="simulateModalShow()">🧪 模擬設定通知點擊</button>
+        <button class="btn" onclick="testAuthLogic()">🔍 測試認證邏輯</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>📊 詳細認證狀態</h2>
+        <div id="detailed-auth-status"></div>
+        <button class="btn" onclick="refreshAuthStatus()">🔄 重新整理狀態</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>🛠️ 問題修復工具</h2>
+        <div id="fix-results"></div>
+        <button class="btn btn-success" onclick="attemptAuthFix()">🔧 嘗試修復認證狀態</button>
+        <button class="btn" onclick="forceStateSync()">⚡ 強制狀態同步</button>
+    </div>
+
+    <script>
+        let realTimeMonitoring = false;
+        let monitoringInterval = null;
+
+        /**
+         * 切換即時監控
+         */
+        function toggleRealTimeMonitoring() {
+            realTimeMonitoring = !realTimeMonitoring;
+            
+            if (realTimeMonitoring) {
+                console.log('🚀 開始即時監控');
+                monitoringInterval = setInterval(updateRealTimeStatus, 2000);
+                updateRealTimeStatus();
+            } else {
+                console.log('⏹️ 停止即時監控');
+                if (monitoringInterval) {
+                    clearInterval(monitoringInterval);
+                    monitoringInterval = null;
+                }
+            }
+        }
+
+        /**
+         * 更新即時狀態
+         */
+        function updateRealTimeStatus() {
+            const statusDiv = document.getElementById('realtime-status');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            try {
+                const authStatus = getCurrentAuthStatus();
+                const lineStatus = checkLineConnectionSync();
+                
+                statusDiv.innerHTML = `
+                    <div class="status-item">
+                        <span class="status-label">更新時間：</span>
+                        <span class="status-value">${timestamp}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">認證狀態：</span>
+                        <span class="status-value ${authStatus.isAuthenticated ? 'status-success' : 'status-error'}">
+                            ${authStatus.isAuthenticated ? '✅ 已認證' : '❌ 未認證'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">使用者：</span>
+                        <span class="status-value ${authStatus.user ? 'status-success' : 'status-error'}">
+                            ${authStatus.user ? authStatus.user.name || authStatus.user.email : '❌ 無使用者'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">LINE 狀態：</span>
+                        <span class="status-value ${lineStatus.isConnected ? 'status-success' : 'status-warning'}">
+                            ${lineStatus.isConnected ? '✅ 已連接' : '⚠️ 未連接'}
+                        </span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">預期行為：</span>
+                        <span class="status-value ${authStatus.isAuthenticated ? 'status-success' : 'status-error'}">
+                            ${!authStatus.isAuthenticated ? '顯示登入提示' : 
+                              !lineStatus.isConnected ? '顯示 LINE 連接選項' : '顯示完整表單'}
+                        </span>
+                    </div>
+                `;
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="test-error">
+                        ❌ 即時監控錯誤: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 取得當前認證狀態（模擬 PriceAlertModal 邏輯）
+         */
+        function getCurrentAuthStatus() {
+            // 模擬 PriceAlertModal.getCurrentUser() 方法
+            let currentUser = null;
+            
+            if (window.currentUser) {
+                currentUser = window.currentUser;
+            } else {
+                try {
+                    const userStr = localStorage.getItem('nexustrade_user') || sessionStorage.getItem('nexustrade_user');
+                    currentUser = userStr ? JSON.parse(userStr) : null;
+                } catch (error) {
+                    console.error('❌ 解析使用者資料失敗:', error);
+                    currentUser = null;
+                }
+            }
+            
+            // 模擬 PriceAlertModal 的認證檢查邏輯
+            const token = localStorage.getItem('nexustrade_token') || sessionStorage.getItem('nexustrade_token');
+            const isAuthenticated = !!(token && currentUser);
+            
+            return {
+                isAuthenticated,
+                user: currentUser,
+                token: !!token,
+                source: window.currentUser ? 'window.currentUser' : 
+                       localStorage.getItem('nexustrade_user') ? 'localStorage' : 
+                       sessionStorage.getItem('nexustrade_user') ? 'sessionStorage' : 'none'
+            };
+        }
+
+        /**
+         * 檢查 LINE 連接狀態（同步版本）
+         */
+        function checkLineConnectionSync() {
+            const authStatus = getCurrentAuthStatus();
+            
+            if (!authStatus.user) {
+                return { isConnected: false, reason: 'no_user' };
+            }
+            
+            // 檢查多種可能的 LINE ID 欄位
+            const lineId = authStatus.user.lineUserId || 
+                          authStatus.user.lineId || 
+                          authStatus.user.line_user_id;
+            
+            return {
+                isConnected: !!lineId,
+                lineId: lineId,
+                reason: lineId ? 'connected' : 'no_line_id'
+            };
+        }
+
+        /**
+         * 診斷認證問題
+         */
+        function diagnoseAuthIssue() {
+            const resultsDiv = document.getElementById('modal-test-results');
+            resultsDiv.innerHTML = '<div class="test-warning">🔬 正在診斷認證問題...</div>';
+            
+            setTimeout(() => {
+                let diagnostics = [];
+                
+                // 1. 檢查認證狀態
+                const authStatus = getCurrentAuthStatus();
+                diagnostics.push({
+                    test: '1. 基本認證檢查',
+                    result: authStatus.isAuthenticated,
+                    details: `使用者: ${authStatus.user?.name || '無'}, Token: ${authStatus.token ? '存在' : '不存在'}, 來源: ${authStatus.source}`
+                });
+                
+                // 2. 檢查 LINE 狀態
+                const lineStatus = checkLineConnectionSync();
+                diagnostics.push({
+                    test: '2. LINE 連接檢查',
+                    result: lineStatus.isConnected,
+                    details: `LINE ID: ${lineStatus.lineId || '無'}, 原因: ${lineStatus.reason}`
+                });
+                
+                // 3. 檢查 AuthStateManager
+                const hasAuthManager = typeof window.authStateManager !== 'undefined';
+                diagnostics.push({
+                    test: '3. AuthStateManager 可用性',
+                    result: hasAuthManager,
+                    details: hasAuthManager ? '可用' : '不可用'
+                });
+                
+                // 4. 檢查 PriceAlertModal
+                const hasPriceModal = typeof window.PriceAlertModal !== 'undefined';
+                const hasModalInstance = typeof window.priceAlertModal !== 'undefined';
+                diagnostics.push({
+                    test: '4. PriceAlertModal 狀態',
+                    result: hasPriceModal && hasModalInstance,
+                    details: `類別: ${hasPriceModal ? '已載入' : '未載入'}, 實例: ${hasModalInstance ? '存在' : '不存在'}`
+                });
+                
+                // 生成診斷報告
+                let html = '<h3>🔬 認證問題診斷報告</h3>';
+                diagnostics.forEach(diag => {
+                    const className = diag.result ? 'test-success' : 'test-error';
+                    const icon = diag.result ? '✅' : '❌';
+                    html += `
+                        <div class="${className}">
+                            ${icon} ${diag.test}: ${diag.details}
+                        </div>
+                    `;
+                });
+                
+                // 提供解決建議
+                if (!authStatus.isAuthenticated) {
+                    html += `
+                        <div class="test-error">
+                            <strong>🚨 問題發現</strong>: 認證狀態檢查失敗<br>
+                            <strong>建議</strong>: 檢查 localStorage/sessionStorage 中的認證資料格式
+                        </div>
+                    `;
+                } else if (!lineStatus.isConnected) {
+                    html += `
+                        <div class="test-warning">
+                            <strong>⚠️ 部分問題</strong>: LINE 未連接<br>
+                            <strong>預期行為</strong>: 應該顯示 LINE 連接選項，而不是登入提示
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="test-success">
+                            <strong>✅ 認證狀態正常</strong><br>
+                            <strong>預期行為</strong>: 應該直接顯示完整警報設定表單
+                        </div>
+                    `;
+                }
+                
+                resultsDiv.innerHTML = html;
+            }, 1000);
+        }
+
+        /**
+         * 模擬 Modal 顯示
+         */
+        function simulateModalShow() {
+            const resultsDiv = document.getElementById('modal-test-results');
+            
+            try {
+                // 模擬 PriceAlertModal.renderAlertForm() 的邏輯
+                const currentUser = getCurrentAuthStatus().user;
+                const token = localStorage.getItem('nexustrade_token') || sessionStorage.getItem('nexustrade_token');
+                const isAuthenticated = !!(token && currentUser);
+                
+                let expectedBehavior = '';
+                
+                if (!isAuthenticated) {
+                    expectedBehavior = '🔐 顯示「需要登入」訊息';
+                } else {
+                    const lineStatus = checkLineConnectionSync();
+                    if (!lineStatus.isConnected) {
+                        expectedBehavior = '📱 顯示「連結 LINE」選項和「直接設定警報」按鈕';
+                    } else {
+                        expectedBehavior = '✅ 顯示完整警報設定表單';
+                    }
+                }
+                
+                resultsDiv.innerHTML = `
+                    <div class="test-result test-success">
+                        <strong>🎯 模擬結果</strong><br>
+                        認證狀態: ${isAuthenticated ? '已認證' : '未認證'}<br>
+                        預期行為: ${expectedBehavior}
+                    </div>
+                `;
+                
+                // 如果實際 PriceAlertModal 存在，也測試它
+                if (window.priceAlertModal && typeof window.priceAlertModal.renderAlertForm === 'function') {
+                    // 這是私有方法，無法直接呼叫，但可以檢查狀態
+                    resultsDiv.innerHTML += `
+                        <div class="test-result test-warning">
+                            <strong>⚠️ 實際 PriceAlertModal 存在</strong><br>
+                            建議在瀏覽器開發者工具中執行: window.priceAlertModal.show('BTCUSDT')
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-error">
+                        ❌ 模擬測試失敗: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 測試認證邏輯
+         */
+        function testAuthLogic() {
+            const resultsDiv = document.getElementById('modal-test-results');
+            
+            resultsDiv.innerHTML = '<div class="test-warning">🧪 測試認證邏輯...</div>';
+            
+            setTimeout(() => {
+                const authStatus = getCurrentAuthStatus();
+                
+                let html = '<h4>🧪 認證邏輯測試結果</h4>';
+                
+                // 測試各種情境
+                const scenarios = [
+                    {
+                        name: '情境 1: 完全未登入',
+                        condition: !authStatus.token && !authStatus.user,
+                        expected: '顯示登入提示'
+                    },
+                    {
+                        name: '情境 2: 有 Token 但無使用者',
+                        condition: authStatus.token && !authStatus.user,
+                        expected: '顯示登入提示（資料不完整）'
+                    },
+                    {
+                        name: '情境 3: 有使用者但無 Token',
+                        condition: !authStatus.token && authStatus.user,
+                        expected: '顯示登入提示（Token 遺失）'
+                    },
+                    {
+                        name: '情境 4: 已認證但未連結 LINE',
+                        condition: authStatus.isAuthenticated && !checkLineConnectionSync().isConnected,
+                        expected: '顯示 LINE 連接選項'
+                    },
+                    {
+                        name: '情境 5: 已認證且已連結 LINE',
+                        condition: authStatus.isAuthenticated && checkLineConnectionSync().isConnected,
+                        expected: '顯示完整警報表單'
+                    }
+                ];
+                
+                scenarios.forEach(scenario => {
+                    const isCurrentScenario = scenario.condition;
+                    const className = isCurrentScenario ? 'test-success' : 'test-warning';
+                    const icon = isCurrentScenario ? '✅ 當前情境' : '⚪ 非當前情境';
+                    
+                    html += `
+                        <div class="${className}">
+                            ${icon} ${scenario.name}<br>
+                            預期行為: ${scenario.expected}
+                        </div>
+                    `;
+                });
+                
+                resultsDiv.innerHTML = html;
+            }, 500);
+        }
+
+        /**
+         * 重新整理認證狀態
+         */
+        function refreshAuthStatus() {
+            const statusDiv = document.getElementById('detailed-auth-status');
+            
+            try {
+                const authStatus = getCurrentAuthStatus();
+                const lineStatus = checkLineConnectionSync();
+                
+                // 顯示詳細的認證資料
+                const localUser = localStorage.getItem('nexustrade_user');
+                const sessionUser = sessionStorage.getItem('nexustrade_user');
+                
+                statusDiv.innerHTML = `
+                    <div class="status-item">
+                        <span class="status-label">window.currentUser：</span>
+                        <span class="status-value">${window.currentUser ? '存在' : '不存在'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">localStorage Token：</span>
+                        <span class="status-value">${localStorage.getItem('nexustrade_token') ? '存在' : '不存在'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">sessionStorage Token：</span>
+                        <span class="status-value">${sessionStorage.getItem('nexustrade_token') ? '存在' : '不存在'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">localStorage User：</span>
+                        <span class="status-value">${localUser ? '存在' : '不存在'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">sessionStorage User：</span>
+                        <span class="status-value">${sessionUser ? '存在' : '不存在'}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">使用者來源：</span>
+                        <span class="status-value">${authStatus.source}</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">LINE 欄位：</span>
+                        <span class="status-value">${JSON.stringify({
+                            lineUserId: authStatus.user?.lineUserId,
+                            lineId: authStatus.user?.lineId,
+                            line_user_id: authStatus.user?.line_user_id
+                        })}</span>
+                    </div>
+                `;
+                
+                // 如果有使用者資料，顯示完整結構
+                if (authStatus.user) {
+                    statusDiv.innerHTML += `
+                        <div style="margin-top: 10px;">
+                            <strong>完整使用者資料：</strong>
+                            <div class="json-display">${JSON.stringify(authStatus.user, null, 2)}</div>
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="test-error">
+                        ❌ 重新整理狀態失敗: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        /**
+         * 嘗試修復認證狀態
+         */
+        function attemptAuthFix() {
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '<div class="test-warning">🔧 嘗試修復認證狀態...</div>';
+            
+            setTimeout(() => {
+                let fixes = [];
+                
+                try {
+                    // 檢查並修復常見問題
+                    const token = localStorage.getItem('nexustrade_token') || sessionStorage.getItem('nexustrade_token');
+                    const userStr = localStorage.getItem('nexustrade_user') || sessionStorage.getItem('nexustrade_user');
+                    
+                    if (token && userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            
+                            // 確保 window.currentUser 設定正確
+                            if (!window.currentUser) {
+                                window.currentUser = user;
+                                fixes.push('✅ 設定 window.currentUser');
+                            }
+                            
+                            // 確保資料在 localStorage 中
+                            if (!localStorage.getItem('nexustrade_token') && sessionStorage.getItem('nexustrade_token')) {
+                                localStorage.setItem('nexustrade_token', sessionStorage.getItem('nexustrade_token'));
+                                fixes.push('✅ 將 token 複製到 localStorage');
+                            }
+                            
+                            if (!localStorage.getItem('nexustrade_user') && sessionStorage.getItem('nexustrade_user')) {
+                                localStorage.setItem('nexustrade_user', sessionStorage.getItem('nexustrade_user'));
+                                fixes.push('✅ 將使用者資料複製到 localStorage');
+                            }
+                            
+                            fixes.push('✅ 認證狀態檢查完成');
+                            
+                        } catch (error) {
+                            fixes.push('❌ 使用者資料格式錯誤，需要重新登入');
+                        }
+                    } else {
+                        fixes.push('❌ 缺少必要認證資料，需要重新登入');
+                    }
+                    
+                } catch (error) {
+                    fixes.push(`❌ 修復過程發生錯誤: ${error.message}`);
+                }
+                
+                resultsDiv.innerHTML = `
+                    <h4>🔧 修復結果</h4>
+                    ${fixes.map(fix => `<div class="test-result ${fix.startsWith('✅') ? 'test-success' : 'test-error'}">${fix}</div>`).join('')}
+                `;
+                
+                // 修復後重新檢查
+                setTimeout(() => {
+                    diagnoseAuthIssue();
+                }, 1000);
+                
+            }, 1000);
+        }
+
+        /**
+         * 強制狀態同步
+         */
+        function forceStateSync() {
+            const resultsDiv = document.getElementById('fix-results');
+            
+            if (window.authStateManager && typeof window.authStateManager.forceAuthStateRefresh === 'function') {
+                resultsDiv.innerHTML = '<div class="test-warning">⚡ 正在執行強制狀態同步...</div>';
+                
+                window.authStateManager.forceAuthStateRefresh()
+                    .then(result => {
+                        if (result) {
+                            resultsDiv.innerHTML = '<div class="test-success">✅ 狀態同步成功</div>';
+                        } else {
+                            resultsDiv.innerHTML = '<div class="test-error">❌ 狀態同步失敗</div>';
+                        }
+                        
+                        // 同步後重新檢查
+                        setTimeout(() => {
+                            diagnoseAuthIssue();
+                            updateRealTimeStatus();
+                        }, 1000);
+                    })
+                    .catch(error => {
+                        resultsDiv.innerHTML = `<div class="test-error">❌ 狀態同步錯誤: ${error.message}</div>`;
+                    });
+            } else {
+                resultsDiv.innerHTML = '<div class="test-warning">⚠️ AuthStateManager 不可用，無法執行強制同步</div>';
+            }
+        }
+
+        // 頁面載入完成後自動執行初始檢查
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                refreshAuthStatus();
+                diagnoseAuthIssue();
+                console.log('🔍 即時認證狀態診斷工具已載入');
+                
+                // 自動開始即時監控
+                toggleRealTimeMonitoring();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

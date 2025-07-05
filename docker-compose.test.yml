@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  mongodb_test:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=nexustrade_test
+    volumes:
+      - mongodb_test_data:/data/db
+
+  redis_test:
+    image: redis:alpine
+    ports:
+      - "6380:6379"
+
+  nexustrade_test:
+    build: 
+      context: .
+      dockerfile: Dockerfile.test
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=test
+      - MONGODB_URI=mongodb://mongodb_test:27017/nexustrade_test
+      - REDIS_URI=redis://redis_test:6379
+    depends_on:
+      - mongodb_test
+      - redis_test
+
+volumes:
+  mongodb_test_data: 

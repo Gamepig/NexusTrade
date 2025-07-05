@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>後端連接診斷</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .result { background: #f5f5f5; padding: 10px; margin: 10px 0; white-space: pre-wrap; }
+        .error { background: #ffe6e6; }
+        .success { background: #e6ffe6; }
+    </style>
+</head>
+<body>
+    <h1>🔧 後端連接診斷</h1>
+    
+    <button onclick="testHealthEndpoint()">測試 /health 端點</button>
+    <button onclick="testGoogleAuth()">測試 /auth/google 端點</button>
+    <button onclick="testDirectNavigation()">測試直接導航</button>
+    
+    <div id="result" class="result">點擊按鈕開始測試...</div>
+
+    <script>
+        function log(message, isError = false) {
+            const result = document.getElementById('result');
+            const timestamp = new Date().toLocaleTimeString();
+            result.className = `result ${isError ? 'error' : 'success'}`;
+            result.textContent += `[${timestamp}] ${message}\n`;
+        }
+
+        async function testHealthEndpoint() {
+            log('=== 測試 /health 端點 ===');
+            
+            try {
+                log('發送請求到 /health...');
+                const response = await fetch('/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`回應狀態: ${response.status} ${response.statusText}`);
+                log(`回應 URL: ${response.url}`);
+                log(`Content-Type: ${response.headers.get('Content-Type')}`);
+                
+                if (response.ok) {
+                    const text = await response.text();
+                    log(`回應內容 (前100字): ${text.substring(0, 100)}`);
+                    
+                    try {
+                        const data = JSON.parse(text);
+                        log('✅ JSON 解析成功');
+                        log(`系統狀態: ${data.status}`);
+                    } catch (jsonError) {
+                        log(`❌ JSON 解析失敗: ${jsonError.message}`, true);
+                        log(`實際內容: ${text}`, true);
+                    }
+                } else {
+                    const text = await response.text();
+                    log(`❌ 請求失敗: ${text}`, true);
+                }
+                
+            } catch (error) {
+                log(`❌ 請求錯誤: ${error.message}`, true);
+            }
+        }
+
+        async function testGoogleAuth() {
+            log('\n=== 測試 /auth/google 端點 ===');
+            
+            try {
+                log('發送請求到 /auth/google (redirect: manual)...');
+                const response = await fetch('/auth/google', {
+                    method: 'GET',
+                    redirect: 'manual'
+                });
+                
+                log(`回應狀態: ${response.status}`);
+                log(`回應類型: ${response.type}`);
+                log(`回應 URL: ${response.url}`);
+                
+                if (response.type === 'opaqueredirect') {
+                    log('✅ 正確返回重定向');
+                } else {
+                    const text = await response.text();
+                    log(`❌ 非預期回應: ${text.substring(0, 100)}`, true);
+                }
+                
+            } catch (error) {
+                log(`❌ 請求錯誤: ${error.message}`, true);
+            }
+        }
+
+        function testDirectNavigation() {
+            log('\n=== 測試直接導航 ===');
+            log('將在 3 秒後重定向到 /auth/google...');
+            
+            setTimeout(() => {
+                log('執行重定向...');
+                window.location.href = '/auth/google';
+            }, 3000);
+        }
+
+        // 檢查當前 URL 和連接
+        document.addEventListener('DOMContentLoaded', function() {
+            log('=== 基本資訊 ===');
+            log(`當前 URL: ${window.location.href}`);
+            log(`當前 Origin: ${window.location.origin}`);
+            log(`User Agent: ${navigator.userAgent.split(' ').slice(-2).join(' ')}`);
+            
+            // 自動測試 health 端點
+            setTimeout(testHealthEndpoint, 1000);
+        });
+    </script>
+</body>
+</html>

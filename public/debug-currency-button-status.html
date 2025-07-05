@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG - 貨幣頁面按鈕狀態檢查</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .step {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .btn.danger {
+            background: #dc3545;
+        }
+        .log {
+            background: #333;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>🔍 貨幣頁面按鈕狀態 DEBUG</h1>
+        <p>診斷為什麼 ETHUSDT 頁面沒有顯示「已設定通知」狀態</p>
+        
+        <div class="step">
+            <h3>第一步：檢查當前認證狀態</h3>
+            <button class="btn" onclick="checkAuthStatus()">🔐 檢查認證狀態</button>
+            <div id="auth-status" class="status"></div>
+        </div>
+
+        <div class="step">
+            <h3>第二步：檢查 ETHUSDT 警報狀態</h3>
+            <button class="btn" onclick="checkAlertStatus('ETHUSDT')">🔔 檢查 ETHUSDT 警報</button>
+            <div id="alert-status" class="status"></div>
+        </div>
+
+        <div class="step">
+            <h3>第三步：模擬 CurrencyDetailPage 按鈕更新</h3>
+            <button class="btn" onclick="simulateButtonUpdate()">🔄 模擬按鈕更新</button>
+            <div id="button-simulation" class="status"></div>
+        </div>
+
+        <div class="step">
+            <h3>第四步：直接 API 測試</h3>
+            <button class="btn" onclick="testDirectAPI()">🧪 直接測試 API</button>
+            <div id="api-test" class="status"></div>
+        </div>
+
+        <div class="step">
+            <h3>第五步：修復認證問題</h3>
+            <button class="btn danger" onclick="attemptAuthFix()">🔧 嘗試修復認證</button>
+            <div id="auth-fix" class="status"></div>
+        </div>
+
+        <div class="step">
+            <h3>系統診斷日誌</h3>
+            <div id="log" class="log">等待診斷操作...</div>
+            <button class="btn" onclick="clearLog()">清除日誌</button>
+        </div>
+    </div>
+
+    <!-- 載入必要的腳本 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/auth/AuthManager.js"></script>
+    <script src="/js/components/CurrencyDetailPage.js"></script>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const typeIcon = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logElement.textContent += `[${timestamp}] ${typeIcon} ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('log').textContent = '日誌已清除...\n';
+        }
+
+        function updateStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${type}`;
+        }
+
+        async function checkAuthStatus() {
+            try {
+                log('檢查認證狀態...');
+                
+                // 檢查 localStorage
+                const token = localStorage.getItem('nexustrade_token');
+                const userStr = localStorage.getItem('nexustrade_user');
+                const user = userStr ? JSON.parse(userStr) : null;
+                
+                log(`Token 存在: ${!!token}`, token ? 'success' : 'error');
+                log(`User 資料存在: ${!!user}`, user ? 'success' : 'error');
+                
+                if (user) {
+                    log(`User Name: ${user.name}`);
+                    log(`User Provider: ${user.provider}`);
+                    log(`User LineUserId: ${user.lineUserId || '無'}`);
+                }
+                
+                // 檢查 AuthManager
+                if (window.authManager) {
+                    const isAuth = window.authManager.isAuthenticated();
+                    const authToken = window.authManager.getToken();
+                    const authUser = window.authManager.getUser();
+                    
+                    log(`AuthManager 認證狀態: ${isAuth}`, isAuth ? 'success' : 'error');
+                    log(`AuthManager Token: ${!!authToken}`, authToken ? 'success' : 'error');
+                    log(`AuthManager User: ${authUser?.name || '無'}`);
+                } else {
+                    log('AuthManager 未載入', 'warning');
+                }
+                
+                updateStatus('auth-status', 
+                    `認證狀態: ${token && user ? '已登入' : '未登入'} | AuthManager: ${window.authManager ? '已載入' : '未載入'}`, 
+                    token && user ? 'success' : 'error'
+                );
+                
+            } catch (error) {
+                log(`檢查認證狀態失敗: ${error.message}`, 'error');
+                updateStatus('auth-status', `認證檢查失敗: ${error.message}`, 'error');
+            }
+        }
+
+        async function checkAlertStatus(symbol) {
+            try {
+                log(`檢查 ${symbol} 警報狀態...`);
+                
+                const token = localStorage.getItem('nexustrade_token') || 
+                             (window.authManager && window.authManager.getToken());
+                
+                if (!token) {
+                    log('沒有有效的認證 token', 'error');
+                    updateStatus('alert-status', '❌ 無有效認證 token', 'error');
+                    return;
+                }
+                
+                log(`使用 token: ${token.substring(0, 20)}...`);
+                
+                const response = await fetch(`/api/notifications/alerts/${symbol}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`API 回應狀態: ${response.status}`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    log(`API 錯誤: ${response.status} - ${errorText}`, 'error');
+                    updateStatus('alert-status', `❌ API 錯誤: ${response.status}`, 'error');
+                    return;
+                }
+                
+                const result = await response.json();
+                log(`API 回應: ${JSON.stringify(result, null, 2)}`);
+                
+                const alerts = result.data?.alerts || [];
+                const alertCount = alerts.length;
+                
+                log(`找到 ${alertCount} 個警報`, alertCount > 0 ? 'success' : 'warning');
+                
+                if (alertCount > 0) {
+                    alerts.forEach((alert, index) => {
+                        log(`警報 ${index + 1}: ${alert.alertType} - ${alert.targetPrice || 'N/A'}`);
+                    });
+                }
+                
+                updateStatus('alert-status', 
+                    `${symbol} 警報數量: ${alertCount}`, 
+                    alertCount > 0 ? 'success' : 'warning'
+                );
+                
+            } catch (error) {
+                log(`檢查警報狀態失敗: ${error.message}`, 'error');
+                updateStatus('alert-status', `❌ 檢查失敗: ${error.message}`, 'error');
+            }
+        }
+
+        async function simulateButtonUpdate() {
+            try {
+                log('模擬 CurrencyDetailPage 按鈕更新...');
+                
+                // 創建 CurrencyDetailPage 實例
+                const currencyPage = new CurrencyDetailPage();
+                currencyPage.currentSymbol = 'ETHUSDT';
+                
+                log('創建 CurrencyDetailPage 實例');
+                
+                // 檢查按鈕狀態更新方法
+                if (typeof currencyPage.updateButtonStates === 'function') {
+                    log('找到 updateButtonStates 方法，執行中...');
+                    await currencyPage.updateButtonStates();
+                    log('按鈕狀態更新完成', 'success');
+                    updateStatus('button-simulation', '✅ 按鈕狀態更新成功', 'success');
+                } else {
+                    log('updateButtonStates 方法不存在', 'error');
+                    updateStatus('button-simulation', '❌ updateButtonStates 方法不存在', 'error');
+                }
+                
+            } catch (error) {
+                log(`模擬按鈕更新失敗: ${error.message}`, 'error');
+                updateStatus('button-simulation', `❌ 模擬失敗: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDirectAPI() {
+            try {
+                log('直接測試 API...');
+                
+                // 測試不同的認證方式
+                const tokens = [
+                    localStorage.getItem('nexustrade_token'),
+                    window.authManager && window.authManager.getToken(),
+                    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0X3VzZXJfMDAxIiwibmFtZSI6IlRlc3QgVXNlciIsImV4cCI6OTk5OTk5OTk5OX0.test'
+                ].filter(Boolean);
+                
+                log(`測試 ${tokens.length} 個可能的 token...`);
+                
+                for (let i = 0; i < tokens.length; i++) {
+                    const token = tokens[i];
+                    log(`\n測試 token ${i + 1}: ${token.substring(0, 30)}...`);
+                    
+                    try {
+                        const response = await fetch('/api/notifications/alerts/ETHUSDT', {
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        log(`回應狀態: ${response.status}`);
+                        
+                        if (response.ok) {
+                            const result = await response.json();
+                            log(`成功！回應: ${JSON.stringify(result, null, 2)}`, 'success');
+                            updateStatus('api-test', `✅ Token ${i + 1} 成功`, 'success');
+                            return;
+                        } else {
+                            const errorText = await response.text();
+                            log(`失敗: ${errorText}`, 'error');
+                        }
+                    } catch (error) {
+                        log(`Token ${i + 1} 測試失敗: ${error.message}`, 'error');
+                    }
+                }
+                
+                updateStatus('api-test', '❌ 所有 token 都失敗', 'error');
+                
+            } catch (error) {
+                log(`直接 API 測試失敗: ${error.message}`, 'error');
+                updateStatus('api-test', `❌ 測試失敗: ${error.message}`, 'error');
+            }
+        }
+
+        async function attemptAuthFix() {
+            try {
+                log('嘗試修復認證問題...');
+                
+                // 清除舊的認證資料
+                localStorage.removeItem('nexustrade_token');
+                localStorage.removeItem('nexustrade_user');
+                log('清除舊的 localStorage 認證資料');
+                
+                // 檢查 URL 是否有認證參數
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.has('token')) {
+                    const token = urlParams.get('token');
+                    const userName = urlParams.get('userName') || 'Test User';
+                    const userEmail = urlParams.get('userEmail') || 'test@example.com';
+                    
+                    log('發現 URL 認證參數，正在設定...');
+                    
+                    const user = {
+                        name: userName,
+                        email: userEmail,
+                        provider: 'google'
+                    };
+                    
+                    localStorage.setItem('nexustrade_token', token);
+                    localStorage.setItem('nexustrade_user', JSON.stringify(user));
+                    
+                    if (window.authManager) {
+                        window.authManager.setAuthState(token, user);
+                    }
+                    
+                    log('認證資料已設定', 'success');
+                    updateStatus('auth-fix', '✅ 認證修復成功', 'success');
+                    
+                } else {
+                    // 設定測試認證
+                    log('設定測試認證資料...');
+                    
+                    const testToken = 'test_token_' + Date.now();
+                    const testUser = {
+                        id: 'test_user_001',
+                        name: 'Vic Huang',
+                        email: 'test@example.com',
+                        provider: 'line',
+                        lineUserId: 'ue5cc188e1d2cdbac5cfda2abb6f6a34b'
+                    };
+                    
+                    localStorage.setItem('nexustrade_token', testToken);
+                    localStorage.setItem('nexustrade_user', JSON.stringify(testUser));
+                    
+                    if (window.authManager) {
+                        window.authManager.setAuthState(testToken, testUser);
+                    }
+                    
+                    log('測試認證資料已設定', 'success');
+                    updateStatus('auth-fix', '✅ 測試認證設定完成', 'success');
+                }
+                
+            } catch (error) {
+                log(`認證修復失敗: ${error.message}`, 'error');
+                updateStatus('auth-fix', `❌ 修復失敗: ${error.message}`, 'error');
+            }
+        }
+
+        // 頁面載入時自動檢查
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🔍 貨幣頁面按鈕狀態診斷工具已載入', 'success');
+            setTimeout(() => {
+                checkAuthStatus();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

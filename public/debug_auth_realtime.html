@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即時認證診斷 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 4px; 
+            font-weight: bold; 
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover { background: #0056b3; }
+        .button.google { background: #db4437; }
+        .button.test { background: #28a745; }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+        
+        /* 模擬主頁面 header */
+        .header-actions {
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            border-radius: 4px;
+        }
+        
+        #login-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-profile-btn {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+        
+        .user-name {
+            margin-right: 8px;
+            font-weight: 500;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 即時認證診斷工具</h1>
+    
+    <div class="status info">
+        <strong>功能：</strong>即時監控登入狀態變化，診斷持久性問題
+    </div>
+    
+    <!-- 模擬主頁面 header -->
+    <div class="header-actions">
+        <button id="login-btn">登入</button>
+    </div>
+    
+    <div class="grid">
+        <div class="section">
+            <h3>🔧 測試操作</h3>
+            <button class="button test" onclick="setMockLoginState()">設置模擬登入</button>
+            <button class="button" onclick="clearAllState()">清除所有狀態</button>
+            <button class="button google" onclick="testGoogleOAuth()">Google OAuth</button>
+            <button class="button" onclick="location.reload()">重新載入</button>
+        </div>
+        
+        <div class="section">
+            <h3>📊 即時狀態</h3>
+            <div id="real-time-status"></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>📝 詳細日誌</h3>
+        <div id="detailed-log" class="result">等待事件...</div>
+    </div>
+
+    <!-- 載入腳本 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/dom.js"></script>
+    <script src="/js/lib/router.js"></script>
+    <script src="/js/lib/auth-state-manager.js"></script>
+    <script src="/js/state/store.js"></script>
+    <script src="/js/components/Notification.js"></script>
+    <script src="/js/components/LoginModal.js"></script>
+
+    <script>
+        let logCounter = 0;
+        let loginModal = null;
+
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('detailed-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            logCounter++;
+            logElement.textContent += `[${logCounter}] [${timestamp}] ${prefix} ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            
+            updateRealTimeStatus();
+        }
+
+        function updateRealTimeStatus() {
+            const statusEl = document.getElementById('real-time-status');
+            
+            // 檢查狀態
+            const token = localStorage.getItem('nexustrade_token');
+            const user = localStorage.getItem('nexustrade_user');
+            const loginBtn = document.getElementById('login-btn');
+            const userMenu = document.querySelector('.user-menu');
+            
+            statusEl.innerHTML = `
+                <div><strong>Token:</strong> ${token ? '✅ 存在' : '❌ 無'}</div>
+                <div><strong>User:</strong> ${user ? '✅ 存在' : '❌ 無'}</div>
+                <div><strong>登入按鈕:</strong> ${loginBtn ? (loginBtn.style.display === 'none' ? '隱藏' : '顯示') : '不存在'}</div>
+                <div><strong>使用者選單:</strong> ${userMenu ? '✅ 存在' : '❌ 無'}</div>
+                <div><strong>LoginModal:</strong> ${loginModal ? '✅ 已載入' : '❌ 未載入'}</div>
+            `;
+        }
+
+        // 設置模擬登入狀態
+        function setMockLoginState() {
+            log('設置模擬登入狀態...', 'info');
+            
+            const mockToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgVXNlciIsImV4cCI6OTk5OTk5OTk5OX0.test';
+            const mockUser = {
+                id: 'test123',
+                name: 'Test User',
+                email: 'test@example.com',
+                profile: {
+                    displayName: 'Test User',
+                    picture: 'https://via.placeholder.com/40'
+                }
+            };
+            
+            localStorage.setItem('nexustrade_token', mockToken);
+            localStorage.setItem('nexustrade_user', JSON.stringify(mockUser));
+            
+            log(`Token 已設置: ${mockToken.substring(0, 30)}...`, 'success');
+            log(`User 已設置: ${mockUser.name}`, 'success');
+            
+            // 手動觸發 UI 更新
+            if (loginModal) {
+                log('手動觸發 UI 更新...', 'info');
+                loginModal.updateUIForLoggedInUser(mockUser);
+            } else {
+                log('LoginModal 未載入，無法觸發 UI 更新', 'error');
+            }
+        }
+
+        // 清除所有狀態
+        function clearAllState() {
+            log('清除所有認證狀態...', 'info');
+            
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            log('所有存儲已清除', 'success');
+            
+            // 手動觸發 UI 更新
+            if (loginModal) {
+                log('手動觸發登出 UI 更新...', 'info');
+                loginModal.updateUIForLoggedOutUser();
+            }
+        }
+
+        // 測試 Google OAuth
+        function testGoogleOAuth() {
+            log('開始 Google OAuth 測試...', 'info');
+            log('3秒後將重定向到 Google OAuth...', 'warning');
+            
+            setTimeout(() => {
+                window.location.href = '/auth/google';
+            }, 3000);
+        }
+
+        // 監控 localStorage 變化
+        window.addEventListener('storage', function(e) {
+            log(`Storage 變化: ${e.key} = ${e.newValue ? '有值' : '無'}`, 'info');
+        });
+
+        // 監控 URL 參數變化
+        function checkURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('token') || params.has('oauth') || params.has('error')) {
+                log('檢測到 URL 參數變化:', 'warning');
+                for (const [key, value] of params) {
+                    log(`  ${key}: ${value}`, 'info');
+                }
+            }
+        }
+
+        // 頁面載入初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('頁面載入完成', 'success');
+            
+            // 檢查 URL 參數
+            checkURLParams();
+            
+            // 延遲初始化 LoginModal
+            setTimeout(() => {
+                if (typeof LoginModal !== 'undefined') {
+                    loginModal = new LoginModal();
+                    log('LoginModal 已初始化', 'success');
+                    
+                    // 監控狀態檢查
+                    const originalCheck = loginModal.checkAndUpdateUIState;
+                    loginModal.checkAndUpdateUIState = async function() {
+                        log('執行 checkAndUpdateUIState...', 'info');
+                        const result = await originalCheck.call(this);
+                        log(`checkAndUpdateUIState 完成: ${result}`, result ? 'success' : 'warning');
+                        return result;
+                    };
+                    
+                    // 監控 UI 更新
+                    const originalUpdateLoggedIn = loginModal.updateUIForLoggedInUser;
+                    loginModal.updateUIForLoggedInUser = function(user) {
+                        log(`更新登入 UI: ${user?.name || '未知使用者'}`, 'info');
+                        return originalUpdateLoggedIn.call(this, user);
+                    };
+                    
+                    const originalUpdateLoggedOut = loginModal.updateUIForLoggedOutUser;
+                    loginModal.updateUIForLoggedOutUser = function() {
+                        log('更新登出 UI', 'info');
+                        return originalUpdateLoggedOut.call(this);
+                    };
+                    
+                } else {
+                    log('LoginModal 類別未載入', 'error');
+                }
+            }, 500);
+            
+            // 定期更新狀態顯示
+            setInterval(updateRealTimeStatus, 2000);
+            updateRealTimeStatus();
+        });
+
+        // 監聽錯誤
+        window.addEventListener('error', function(event) {
+            log(`JavaScript 錯誤: ${event.error?.message || event.message}`, 'error');
+        });
+
+        // 監聽未捕獲的 Promise 拒絕
+        window.addEventListener('unhandledrejection', function(event) {
+            log(`Promise 拒絕: ${event.reason}`, 'error');
+        });
+    </script>
+</body>
+</html>

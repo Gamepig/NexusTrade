@@ -10,7 +10,7 @@ const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../
 const logger = require('../utils/logger');
 
 // 記憶體中的使用者存儲 (開發用)
-let mockUsers = new Map();
+const mockUsers = new Map();
 
 // 模擬使用者模型
 class MockUser {
@@ -31,6 +31,29 @@ class MockUser {
     // OAuth 欄位
     this.googleId = data.googleId || null;
     this.lineId = data.lineId || null;
+    this.lineUserId = data.lineUserId || null; // 添加 lineUserId 欄位
+    
+    // 會員制度欄位
+    this.membershipLevel = data.membershipLevel || 'free';
+    this.membershipExpiry = data.membershipExpiry || null;
+    this.alertQuota = {
+      used: data.alertQuota?.used || 0,
+      limit: this.getMembershipLimit(data.membershipLevel || 'free')
+    };
+    this.premiumFeatures = {
+      technicalIndicators: (data.membershipLevel || 'free') !== 'free',
+      unlimitedAlerts: (data.membershipLevel || 'free') !== 'free',
+      prioritySupport: (data.membershipLevel || 'free') === 'enterprise'
+    };
+  }
+
+  getMembershipLimit(level) {
+    switch (level) {
+      case 'free': return 1;
+      case 'premium': return 50;
+      case 'enterprise': return -1; // 無限制
+      default: return 1;
+    }
   }
 
   generateId() {
@@ -43,11 +66,54 @@ class MockUser {
       this.password = await bcrypt.hash(this.password, 12);
     }
     
+    // 保存到記憶體存儲
     mockUsers.set(this._id, this);
+    
+    // 同步到 MongoDB（如果連接可用）
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) { // 確保 MongoDB 已連接
+        const userDoc = {
+          _id: this._id,
+          email: this.email,
+          password: this.password,
+          username: this.username,
+          profile: this.profile,
+          emailVerified: this.emailVerified,
+          status: this.status,
+          settings: this.settings,
+          createdAt: this.createdAt,
+          lastLoginAt: this.lastLoginAt,
+          lastLoginIP: this.lastLoginIP,
+          passwordChangedAt: this.passwordChangedAt,
+          googleId: this.googleId,
+          lineId: this.lineId,
+          lineUserId: this.lineUserId, // 同步 lineUserId 到 MongoDB
+          membershipLevel: this.membershipLevel,
+          membershipExpiry: this.membershipExpiry,
+          alertQuota: this.alertQuota,
+          premiumFeatures: this.premiumFeatures
+        };
+        
+        // 使用 upsert 來插入或更新
+        await mongoose.connection.db.collection('users').replaceOne(
+          { _id: this._id }, 
+          userDoc, 
+          { upsert: true }
+        );
+        
+        console.log('✅ 使用者已同步到 MongoDB:', this._id);
+      }
+    } catch (error) {
+      console.warn('⚠️ 同步使用者到 MongoDB 失敗:', error.message);
+      // 不拋出錯誤，允許記憶體存儲繼續工作
+    }
+    
     return this;
   }
 
   static async findOne(query) {
+    // 先檢查記憶體存儲
     for (const user of mockUsers.values()) {
       if (query.email && user.email === query.email.toLowerCase()) {
         return user;
@@ -65,11 +131,121 @@ class MockUser {
         return user;
       }
     }
+    
+    // 如果記憶體中沒有，嘗試從 MongoDB 查詢
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) { // 確保 MongoDB 已連接
+        const mongoQuery = {};
+        
+        if (query.email) {
+          mongoQuery.email = query.email.toLowerCase();
+        }
+        if (query.username) {
+          mongoQuery.username = query.username;
+        }
+        if (query._id) {
+          // 檢查 ID 格式：如果是 24 字元的十六進制字符串，使用 ObjectId；否則直接使用字符串
+          if (query._id && typeof query._id === 'string' && query._id.match(/^[0-9a-fA-F]{24}$/)) {
+            mongoQuery._id = new mongoose.Types.ObjectId(query._id);
+          } else {
+            mongoQuery._id = query._id;
+          }
+        }
+        if (query.googleId) {
+          mongoQuery.googleId = query.googleId;
+        }
+        if (query.lineId) {
+          mongoQuery.lineId = query.lineId;
+        }
+        
+        const user = await mongoose.connection.db.collection('users').findOne(mongoQuery);
+        
+        if (user) {
+          // 將 MongoDB 使用者轉換為 MockUser 實例並快取
+          const mockUser = new MockUser({
+            _id: user._id.toString(),
+            email: user.email,
+            password: user.password || '',
+            username: user.username,
+            profile: user.profile || {},
+            emailVerified: user.emailVerified,
+            status: user.status || 'active',
+            settings: user.settings || {},
+            createdAt: user.createdAt,
+            lastLoginAt: user.lastLoginAt,
+            lastLoginIP: user.lastLoginIP,
+            passwordChangedAt: user.passwordChangedAt,
+            googleId: user.googleId,
+            lineId: user.lineId,
+            lineUserId: user.lineUserId  // 修復：添加 lineUserId 欄位
+          });
+          
+          // 快取到記憶體存儲
+          mockUsers.set(user._id.toString(), mockUser);
+          return mockUser;
+        }
+      }
+    } catch (error) {
+      console.warn('從 MongoDB 查詢使用者失敗:', error.message);
+    }
+    
     return null;
   }
 
   static async findById(id) {
-    return mockUsers.get(id) || null;
+    // 先檢查記憶體存儲
+    if (mockUsers.has(id)) {
+      return mockUsers.get(id);
+    }
+    
+    // 如果記憶體中沒有，嘗試從 MongoDB 查詢
+    try {
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState === 1) { // 確保 MongoDB 已連接
+        let mongoQuery;
+        
+        // 檢查 ID 格式：如果是 24 字元的十六進制字符串，使用 ObjectId；否則直接使用字符串
+        if (id && typeof id === 'string' && id.match(/^[0-9a-fA-F]{24}$/)) {
+          // 標準 MongoDB ObjectId 格式
+          mongoQuery = { _id: new mongoose.Types.ObjectId(id) };
+        } else {
+          // 自定義 ID 格式（如 MockUser 生成的 ID）
+          mongoQuery = { _id: id };
+        }
+        
+        const user = await mongoose.connection.db.collection('users').findOne(mongoQuery);
+        
+        if (user) {
+          // 將 MongoDB 使用者轉換為 MockUser 實例並快取
+          const mockUser = new MockUser({
+            _id: user._id.toString(),
+            email: user.email,
+            password: user.password || '',
+            username: user.username,
+            profile: user.profile || {},
+            emailVerified: user.emailVerified,
+            status: user.status || 'active',
+            settings: user.settings || {},
+            createdAt: user.createdAt,
+            lastLoginAt: user.lastLoginAt,
+            lastLoginIP: user.lastLoginIP,
+            passwordChangedAt: user.passwordChangedAt,
+            googleId: user.googleId,
+            lineId: user.lineId,
+            lineUserId: user.lineUserId  // 修復：添加 lineUserId 欄位
+          });
+          
+          // 快取到記憶體存儲
+          mockUsers.set(id, mockUser);
+          return mockUser;
+        }
+      }
+    } catch (error) {
+      console.warn('從 MongoDB 查詢使用者失敗:', error.message);
+    }
+    
+    return null;
   }
 
   select(fields) {
@@ -373,7 +549,12 @@ const verify = async (req, res) => {
       profile: user.profile,
       emailVerified: user.emailVerified,
       status: user.status,
-      lastLoginAt: user.lastLoginAt
+      lastLoginAt: user.lastLoginAt,
+      // 添加 OAuth 相關欄位
+      googleId: user.googleId,
+      lineId: user.lineId,
+      lineUserId: user.lineUserId,
+      provider: user.profile?.provider || (user.googleId ? 'google' : user.lineId ? 'line' : null)
     };
 
     res.status(200).json({
@@ -416,6 +597,15 @@ const getMe = async (req, res) => {
       settings: user.settings,
       createdAt: user.createdAt,
       lastLoginAt: user.lastLoginAt,
+      membershipLevel: user.membershipLevel,
+      membershipExpiry: user.membershipExpiry,
+      alertQuota: user.alertQuota,
+      premiumFeatures: user.premiumFeatures,
+      // 添加 OAuth 相關欄位
+      googleId: user.googleId,
+      lineId: user.lineId,
+      lineUserId: user.lineUserId,
+      provider: user.profile?.provider || (user.googleId ? 'google' : user.lineId ? 'line' : null),
       accountStats: {
         notificationRulesCount: 0,
         watchlistCount: 0

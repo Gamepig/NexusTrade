@@ -182,6 +182,44 @@ const userSchema = new mongoose.Schema({
     default: null
   },
 
+  // 會員制度
+  membershipLevel: {
+    type: String,
+    enum: ['free', 'premium', 'enterprise'],
+    default: 'free'
+  },
+
+  membershipExpiry: {
+    type: Date,
+    default: null
+  },
+
+  alertQuota: {
+    used: {
+      type: Number,
+      default: 0
+    },
+    limit: {
+      type: Number,
+      default: 1 // 免費會員預設限制
+    }
+  },
+
+  premiumFeatures: {
+    technicalIndicators: {
+      type: Boolean,
+      default: false
+    },
+    unlimitedAlerts: {
+      type: Boolean,
+      default: false
+    },
+    prioritySupport: {
+      type: Boolean,
+      default: false
+    }
+  },
+
   // 系統欄位
   createdAt: {
     type: Date,

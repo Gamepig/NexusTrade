@@ -10,6 +10,7 @@ export default [
       ecmaVersion: 2021,
       sourceType: 'module',
       globals: {
+        // Node.js 全域變數
         console: 'readonly',
         process: 'readonly',
         Buffer: 'readonly',
@@ -18,7 +19,48 @@ export default [
         global: 'readonly',
         module: 'readonly',
         require: 'readonly',
-        exports: 'readonly'
+        exports: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        clearImmediate: 'readonly',
+        URLSearchParams: 'readonly',
+        URL: 'readonly',
+        
+        // 瀏覽器全域變數
+        window: 'readonly',
+        document: 'readonly',
+        navigator: 'readonly',
+        location: 'readonly',
+        history: 'readonly',
+        localStorage: 'readonly',
+        sessionStorage: 'readonly',
+        fetch: 'readonly',
+        alert: 'readonly',
+        confirm: 'readonly',
+        prompt: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+        FormData: 'readonly',
+        CustomEvent: 'readonly',
+        AbortController: 'readonly',
+        ResizeObserver: 'readonly',
+        performance: 'readonly',
+        atob: 'readonly',
+        btoa: 'readonly',
+        
+        // 測試環境全域變數
+        describe: 'readonly',
+        test: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly'
       }
     },
     rules: {
@@ -37,7 +79,27 @@ export default [
       '.pm2/**',
       'docker/**',
       'tmp/**',
-      '*.config.js'
+      '*.config.js',
+      'debug/**',
+      'tests/**',
+      'test/**',
+      'test-*.js',
+      'diagnose-*.js',
+      'fix-*.js',
+      'emergency-*.js',
+      'organize-*.js',
+      'simple-*.js',
+      '**/test_*.js',
+      '**/debug_*.js',
+      '**/diagnose_*.js',
+      '**/emergency_*.js',
+      'public/test_*.html',
+      'public/debug_*.html',
+      'public/manual_*.html',
+      'public/oauth_*.html',
+      'public/simple*.html',
+      'public/check_*.js',
+      'openrouter-rate-limit-monitor/**'
     ]
   }
 ];

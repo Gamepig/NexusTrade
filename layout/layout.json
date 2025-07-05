@@ -1,0 +1,95 @@
+{
+  "layout": {
+    "header": {
+      "title": "BITCOIN",
+      "tabs": [
+        {
+          "name": "Technical Analysis for BTCUSD",
+          "type": "chart",
+          "content": {
+            "timeframes": ["1 minute", "5 minutes", "15 minutes", "1 hour", "4 hours", "1 day"],
+            "indicator": {
+              "type": "gauge",
+              "values": ["Strong sell", "Sell", "Neutral", "Buy", "Strong buy"],
+              "current": "Buy"
+            }
+          }
+        },
+        {
+          "name": "BTCUSD Top Stories",
+          "type": "news",
+          "content": [
+            {
+              "date": "yesterday",
+              "title": "After Weekend Dip Takes Prices Below $100,000"
+            },
+            {
+              "date": "5 days ago",
+              "title": "BTC/USD: Bitcoin Stays Firm Despite Fed's Rate Hold, Inflation Projections. Thank the GENIUS Bill"
+            },
+            {
+              "date": "June 13",
+              "title": "Bitcoin Wipes Out 5% as Risk-Off Moves Hit Markets amid War Tremors"
+            },
+            {
+              "date": "June 2",
+              "title": "BTC/USD: Bitcoin Prices Slide Third Day in a Row as Crypto Bros Need Jumpstart Events"
+            },
+            {
+              "date": "May 31",
+              "title": "Bitcoin Prices Cool to Start June Trading Near $105,000 After Logging Historical May"
+            },
+            {
+              "date": "May 31",
+              "title": "Bitcoin ETFs Keep Crushing Records with $9"
+            }
+          ]
+        }
+      ]
+    },
+    "main": {
+      "sections": [
+        {
+          "type": "market",
+          "content": {
+            "bitcoin": {
+              "symbol": "₿",
+              "change": "+3.9%"
+            },
+            "other_currencies": [
+              {
+                "name": "Ethereum",
+                "symbol": "Ξ",
+                "change": "+7.0%"
+              },
+              {
+                "name": "Tether USDt",
+                "symbol": "₮",
+                "change": "+0.02%"
+              },
+              {
+                "name": "SMART",
+                "change": "+12.65%"
+              },
+              {
+                "name": "TRON",
+                "change": "+7.80%"
+              },
+              {
+                "name": "XRP",
+                "change": "+8.6%"
+              },
+              {
+                "name": "BNB",
+                "change": "-3.3%"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "navigation": {
+      "backButton": "Back to Solutions"
+    }
+  }
+}

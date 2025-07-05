@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>響應式測試 - NexusTrade</title>
+    <link rel="stylesheet" href="/css/main.css?v=20250624a">
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .test-header {
+            background: #2a2a2a;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #00d4aa;
+        }
+        .viewport-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .test-controls {
+            background: #333;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .viewport-btn {
+            padding: 8px 16px;
+            background: #00d4aa;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .viewport-btn:hover {
+            background: #00b894;
+        }
+        .test-iframe {
+            width: 100%;
+            height: calc(100vh - 120px);
+            border: none;
+            background: white;
+            transition: width 0.3s ease;
+        }
+        .breakpoint-label {
+            text-align: center;
+            padding: 10px;
+            background: #444;
+            color: #00d4aa;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>📱 響應式佈局測試</h1>
+        <p>測試單一貨幣詳情頁面在不同螢幕尺寸下的顯示效果</p>
+    </div>
+
+    <div class="viewport-info" id="viewport-info">
+        視窗大小: <span id="viewport-size">-</span><br>
+        斷點: <span id="breakpoint">-</span>
+    </div>
+
+    <div class="test-controls">
+        <button class="viewport-btn" onclick="setViewport(320)">手機 (320px)</button>
+        <button class="viewport-btn" onclick="setViewport(375)">iPhone (375px)</button>
+        <button class="viewport-btn" onclick="setViewport(768)">平板 (768px)</button>
+        <button class="viewport-btn" onclick="setViewport(1024)">iPad (1024px)</button>
+        <button class="viewport-btn" onclick="setViewport(1200)">小桌面 (1200px)</button>
+        <button class="viewport-btn" onclick="setViewport(1440)">大桌面 (1440px)</button>
+        <button class="viewport-btn" onclick="setViewport('100%')">全螢幕</button>
+    </div>
+
+    <div class="breakpoint-label" id="breakpoint-label">
+        當前斷點: 載入中...
+    </div>
+
+    <iframe 
+        id="test-iframe" 
+        class="test-iframe"
+        src="http://localhost:3000/#/currency/BTCUSDT"
+        title="貨幣詳情頁面響應式測試">
+    </iframe>
+
+    <script>
+        function updateViewportInfo() {
+            const iframe = document.getElementById('test-iframe');
+            const width = iframe.offsetWidth;
+            const height = iframe.offsetHeight;
+            
+            document.getElementById('viewport-size').textContent = `${width} × ${height}`;
+            
+            let breakpoint = '';
+            let label = '';
+            
+            if (width >= 1200) {
+                breakpoint = '桌面版 (>1200px)';
+                label = '✅ 2欄 Grid 佈局 - Advanced Chart (70%) + 側邊欄 (30%)';
+            } else if (width >= 768) {
+                breakpoint = '平板版 (768-1200px)';
+                label = '📱 單欄佈局 - 組件垂直排列';
+            } else {
+                breakpoint = '手機版 (<768px)';
+                label = '📱 簡化版佈局 - 收合展示';
+            }
+            
+            document.getElementById('breakpoint').textContent = breakpoint;
+            document.getElementById('breakpoint-label').textContent = `當前斷點: ${label}`;
+        }
+
+        function setViewport(width) {
+            const iframe = document.getElementById('test-iframe');
+            
+            if (width === '100%') {
+                iframe.style.width = '100%';
+            } else {
+                iframe.style.width = width + 'px';
+            }
+            
+            setTimeout(updateViewportInfo, 300);
+        }
+
+        // 監聽視窗大小變化
+        window.addEventListener('resize', updateViewportInfo);
+        
+        // 監聽 iframe 載入完成
+        document.getElementById('test-iframe').addEventListener('load', () => {
+            setTimeout(updateViewportInfo, 500);
+        });
+
+        // 初始化
+        setTimeout(updateViewportInfo, 1000);
+
+        // 每秒更新一次視窗資訊
+        setInterval(updateViewportInfo, 1000);
+    </script>
+
+    <div style="background: #2a2a2a; padding: 20px; margin-top: 20px;">
+        <h3>📋 測試檢查清單</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 15px;">
+            <div style="background: #333; padding: 15px; border-radius: 8px;">
+                <h4 style="color: #00d4aa; margin: 0 0 10px 0;">🖥️ 桌面版 (>1200px)</h4>
+                <ul style="margin: 0; color: #b0b0b0; font-size: 14px;">
+                    <li>2欄 Grid 佈局正常</li>
+                    <li>Advanced Chart 占 70%</li>
+                    <li>側邊欄 Company Profile 占 30%</li>
+                    <li>AI 分析跨欄展示</li>
+                    <li>底部 Widget 全寬度</li>
+                    <li>所有 Widget 正常載入</li>
+                </ul>
+            </div>
+            
+            <div style="background: #333; padding: 15px; border-radius: 8px;">
+                <h4 style="color: #ffa502; margin: 0 0 10px 0;">📱 平板版 (768-1200px)</h4>
+                <ul style="margin: 0; color: #b0b0b0; font-size: 14px;">
+                    <li>單欄佈局</li>
+                    <li>組件垂直排列</li>
+                    <li>Widget 自動調整寬度</li>
+                    <li>操作按鈕響應式排列</li>
+                    <li>圖表控制按鈕適配</li>
+                    <li>文字大小適中</li>
+                </ul>
+            </div>
+            
+            <div style="background: #333; padding: 15px; border-radius: 8px;">
+                <h4 style="color: #ff4757; margin: 0 0 10px 0;">📱 手機版 (<768px)</h4>
+                <ul style="margin: 0; color: #b0b0b0; font-size: 14px;">
+                    <li>簡化版佈局</li>
+                    <li>Widget 標題收合</li>
+                    <li>操作按鈕換行排列</li>
+                    <li>時間框架按鈕換行</li>
+                    <li>AI 分析內容簡化</li>
+                    <li>觸控友好的按鈕尺寸</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

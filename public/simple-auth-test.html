@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡單認證測試</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .section { background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { padding: 12px 24px; margin: 8px; border: none; border-radius: 4px; cursor: pointer; background: #007bff; color: white; }
+        button:hover { background: #0056b3; }
+        pre { background: #e9ecef; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 簡單認證測試</h1>
+    
+    <div class="section">
+        <h2>📋 說明</h2>
+        <p>這個頁面用來診斷 Google 登入和 Token 保存問題。</p>
+        <ol>
+            <li>點擊「Google 登入測試」進行登入</li>
+            <li>登入成功後，檢查是否有 Token</li>
+            <li>重新整理頁面，檢查 Token 是否仍然存在</li>
+        </ol>
+    </div>
+    
+    <div class="section">
+        <h2>🔐 認證測試</h2>
+        <button onclick="testGoogleLogin()">🔐 Google 登入測試</button>
+        <button onclick="checkStatus()">🔍 檢查狀態</button>
+        <button onclick="clearAll()">🗑️ 清除所有</button>
+        <div id="status"></div>
+    </div>
+    
+    <div class="section">
+        <h2>📊 當前狀態</h2>
+        <div id="current-info"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            console.log(message);
+            const statusDiv = document.getElementById('status');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'warning';
+            statusDiv.innerHTML = '<div class="status ' + className + '">' + message + '</div>';
+        }
+        
+        function testGoogleLogin() {
+            log('🔐 正在重定向到 Google 登入...', 'info');
+            window.location.href = '/auth/google';
+        }
+        
+        function checkStatus() {
+            const token = localStorage.getItem('nexustrade_token');
+            const user = localStorage.getItem('nexustrade_user');
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            let info = '<h3>📊 狀態報告</h3>';
+            
+            // URL 檢查
+            if (urlParams.toString()) {
+                info += '<h4>🔗 URL 參數:</h4><pre>';
+                urlParams.forEach((value, key) => {
+                    info += key + ': ' + (key === 'token' ? value.substring(0, 50) + '...' : value) + '\n';
+                });
+                info += '</pre>';
+                
+                // 如果有 token 參數，自動保存
+                const urlToken = urlParams.get('token');
+                if (urlToken) {
+                    localStorage.setItem('nexustrade_token', urlToken);
+                    
+                    // 嘗試從 URL 構建使用者資料
+                    const userEmail = urlParams.get('userEmail');
+                    const userName = urlParams.get('userName');
+                    if (userEmail || userName) {
+                        const userData = {
+                            email: userEmail || 'unknown@example.com',
+                            name: userName || userEmail || 'Unknown User'
+                        };
+                        localStorage.setItem('nexustrade_user', JSON.stringify(userData));
+                    }
+                    
+                    log('✅ Token 已從 URL 保存到 localStorage', 'success');
+                    
+                    // 清除 URL 參數
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } else {
+                info += '<p>🔗 無 URL 參數</p>';
+            }
+            
+            // localStorage 檢查
+            info += '<h4>💾 本地儲存:</h4><pre>';
+            info += 'Token: ' + (token ? token.substring(0, 50) + '... (長度: ' + token.length + ')' : '無') + '\n';
+            info += 'User: ' + (user || '無') + '\n';
+            
+            if (token) {
+                try {
+                    const parts = token.split('.');
+                    if (parts.length === 3) {
+                        const payload = JSON.parse(atob(parts[1]));
+                        const isExpired = payload.exp * 1000 <= Date.now();
+                        info += '\nToken 詳情:\n';
+                        info += 'User ID: ' + payload.userId + '\n';
+                        info += 'Email: ' + payload.email + '\n';
+                        info += '過期狀態: ' + (isExpired ? '已過期' : '有效') + '\n';
+                        info += '過期時間: ' + new Date(payload.exp * 1000).toLocaleString() + '\n';
+                        
+                        if (!isExpired) {
+                            log('✅ 發現有效的認證 Token', 'success');
+                        } else {
+                            log('⚠️ Token 已過期', 'warning');
+                        }
+                    } else {
+                        info += 'Token 格式錯誤\n';
+                        log('❌ Token 格式錯誤', 'error');
+                    }
+                } catch (error) {
+                    info += 'Token 解析錯誤: ' + error.message + '\n';
+                    log('❌ Token 解析錯誤: ' + error.message, 'error');
+                }
+            } else {
+                log('⚠️ 沒有找到 Token', 'warning');
+            }
+            
+            info += '</pre>';
+            document.getElementById('current-info').innerHTML = info;
+        }
+        
+        function clearAll() {
+            localStorage.removeItem('nexustrade_token');
+            localStorage.removeItem('nexustrade_user');
+            localStorage.removeItem('nexustrade_refresh_token');
+            localStorage.removeItem('nexustrade_line_bound');
+            
+            log('🗑️ 所有認證資料已清除', 'success');
+            setTimeout(checkStatus, 100);
+        }
+        
+        // 頁面載入時自動檢查
+        window.onload = function() {
+            checkStatus();
+        };
+    </script>
+</body>
+</html>

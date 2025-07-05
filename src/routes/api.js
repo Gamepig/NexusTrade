@@ -23,6 +23,20 @@ router.get('/', (req, res) => {
     version: '1.0.0',
     documentation: '/api/docs',
     modules: {
+      auth: {
+        description: '認證與授權 API',
+        endpoints: [
+          'POST /api/auth/register - 用戶註冊',
+          'POST /api/auth/login - 用戶登入',
+          'POST /api/auth/logout - 用戶登出',
+          'POST /api/auth/refresh - 刷新 Token',
+          'GET /api/auth/verify - 驗證 Token',
+          'GET /api/auth/me - 取得當前使用者資訊',
+          'GET /api/auth/oauth/status - 取得 OAuth 狀態',
+          'POST /api/auth/link/:provider - 連結 OAuth 帳戶',
+          'DELETE /api/auth/link/:provider - 取消連結 OAuth 帳戶'
+        ]
+      },
       market: {
         description: '市場數據相關 API',
         endpoints: [
@@ -36,10 +50,20 @@ router.get('/', (req, res) => {
         description: '使用者管理 API',
         endpoints: [
           'GET /api/users/profile - 取得使用者資料',
-          'PUT /api/users/profile - 更新使用者資料',
-          'GET /api/users/watchlist - 取得關注清單',
-          'POST /api/users/watchlist - 新增關注項目',
-          'DELETE /api/users/watchlist/:symbol - 移除關注項目'
+          'PUT /api/users/profile - 更新使用者資料'
+        ]
+      },
+      watchlist: {
+        description: '關注清單管理 API（v2.0）',
+        endpoints: [
+          'GET /api/watchlist - 取得關注清單（支援分頁）',
+          'POST /api/watchlist - 新增關注項目',
+          'DELETE /api/watchlist/:symbol - 移除關注項目',
+          'GET /api/watchlist/status/:symbol - 檢查關注狀態',
+          'PUT /api/watchlist/:symbol - 更新關注項目',
+          'GET /api/watchlist/stats - 取得統計資訊',
+          'POST /api/watchlist/batch - 批量操作（最多10個）',
+          'GET /api/watchlist/health - 服務健康檢查'
         ]
       },
       notifications: {
@@ -65,11 +89,20 @@ router.get('/', (req, res) => {
         ]
       },
       ai: {
-        description: 'AI 分析 API',
+        description: 'AI 分析 API (OpenRouter 整合)',
         endpoints: [
-          'POST /api/ai/analyze - 市場分析',
-          'GET /api/ai/insights - 取得 AI 洞察',
-          'POST /api/ai/chat - AI 聊天功能'
+          'GET /api/ai/status - 取得 AI 服務狀態',
+          'POST /api/ai/trend-analysis - 趨勢分析',
+          'POST /api/ai/technical-analysis - 技術指標分析',
+          'POST /api/ai/investment-advice - 投資建議生成',
+          'POST /api/ai/risk-assessment - 風險評估',
+          'POST /api/ai/comprehensive-analysis - 綜合分析報告',
+          'POST /api/ai/batch-analysis - 批量分析',
+          'DELETE /api/ai/cache - 清理分析快取',
+          'GET /api/ai/homepage-analysis - 獲取首頁大趨勢分析',
+          'POST /api/ai/homepage-analysis/refresh - 強制重新分析首頁',
+          'GET /api/ai/currency-analysis/:symbol - 獲取單一貨幣分析',
+          'POST /api/ai/currency-analysis/:symbol/refresh - 強制重新分析單一貨幣'
         ]
       }
     },
@@ -93,6 +126,21 @@ router.use('/notifications', require('./notifications'));
  * 新聞系統模組路由
  */
 router.use('/news', require('./news'));
+
+/**
+ * 認證系統模組路由 (OAuth 和基本認證)
+ */
+router.use('/auth', require('./auth'));
+
+/**
+ * 關注清單模組路由（v2.0 - 使用獨立的 Watchlist 模型）
+ */
+router.use('/watchlist', require('./watchlist'));
+
+/**
+ * AI 分析模組路由
+ */
+router.use('/ai', require('./ai-analysis'));
 
 // ==================== 使用者管理 API ====================
 
@@ -124,31 +172,35 @@ router.put('/users/profile', asyncErrorHandler(async (req, res) => {
 }));
 
 /**
- * 關注清單管理
+ * 關注清單管理 - 已遷移至 /api/watchlist
+ * 
+ * 舊的 /users/watchlist 路由已被廢棄，請使用新的 /api/watchlist 端點
  */
 router.get('/users/watchlist', asyncErrorHandler(async (req, res) => {
-  logger.info('取得關注清單請求', { userId: req.user?.id });
+  logger.warn('使用已廢棄的 /users/watchlist 端點', { userId: req.user?.id });
   
-  res.status(501).json({
+  res.status(410).json({
     status: 'error',
-    message: '關注清單查詢功能尚未實現',
-    code: 'NOT_IMPLEMENTED',
-    plannedImplementation: 'Task 5 - 市場追蹤功能',
+    message: '此端點已廢棄，請使用 /api/watchlist',
+    code: 'ENDPOINT_DEPRECATED',
+    redirectTo: '/api/watchlist',
+    deprecatedSince: '2025-01-28',
     timestamp: new Date().toISOString()
   });
 }));
 
 router.post('/users/watchlist', asyncErrorHandler(async (req, res) => {
-  logger.info('新增關注項目請求', { 
+  logger.warn('使用已廢棄的 /users/watchlist 端點', { 
     userId: req.user?.id, 
     symbol: req.body.symbol 
   });
   
-  res.status(501).json({
+  res.status(410).json({
     status: 'error',
-    message: '新增關注項目功能尚未實現',
-    code: 'NOT_IMPLEMENTED',
-    plannedImplementation: 'Task 5 - 市場追蹤功能',
+    message: '此端點已廢棄，請使用 POST /api/watchlist',
+    code: 'ENDPOINT_DEPRECATED',
+    redirectTo: '/api/watchlist',
+    deprecatedSince: '2025-01-28',
     timestamp: new Date().toISOString()
   });
 }));
@@ -218,36 +270,7 @@ router.delete('/notifications/rules/:id', asyncErrorHandler(async (req, res) => 
 }));
 
 // ==================== AI 分析 API ====================
-
-/**
- * AI 市場分析
- */
-router.post('/ai/analyze', asyncErrorHandler(async (req, res) => {
-  logger.info('AI 市場分析請求', { 
-    userId: req.user?.id,
-    symbols: req.body.symbols
-  });
-  
-  res.status(501).json({
-    status: 'error',
-    message: 'AI 市場分析功能尚未實現',
-    code: 'NOT_IMPLEMENTED',
-    plannedImplementation: 'Task 8 - AI 分析整合',
-    timestamp: new Date().toISOString()
-  });
-}));
-
-router.get('/ai/insights', asyncErrorHandler(async (req, res) => {
-  logger.info('取得 AI 洞察請求', { userId: req.user?.id });
-  
-  res.status(501).json({
-    status: 'error',
-    message: 'AI 洞察功能尚未實現',
-    code: 'NOT_IMPLEMENTED',
-    plannedImplementation: 'Task 8 - AI 分析整合',
-    timestamp: new Date().toISOString()
-  });
-}));
+// AI 分析功能已整合至 /ai-analysis 路由模組
 
 // ==================== 測試端點 ====================
 

@@ -513,4 +513,14 @@ class NewsService {
   }
 }
 
-module.exports = new NewsService();
+// 創建服務實例
+const newsService = new NewsService();
+
+// 獲取新聞服務實例的函數
+function getNewsService() {
+  return newsService;
+}
+
+// 導出
+module.exports = newsService;
+module.exports.getNewsService = getNewsService;

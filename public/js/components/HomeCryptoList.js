@@ -70,9 +70,9 @@ class HomeCryptoList {
    * 處理貨幣點擊事件
    */
   handleCoinClick(symbol) {
-    console.log(`🔍 首頁點擊貨幣: ${symbol}`);
-    // TODO: 導航到技術分析頁面或市場頁面
-    // window.location.hash = `#/analysis/${symbol}`;
+    console.log(`📊 首頁點擊貨幣: ${symbol}，導航到詳情頁面`);
+    // 導航到貨幣詳情頁面
+    window.location.hash = `#/currency/${symbol}`;
   }
 
   /**

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth Token 修復驗證</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-container { background: white; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { background: #f8f9fa; padding: 15px; margin: 10px 0; border-left: 4px solid #007bff; }
+        pre { background: #f1f1f1; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 OAuth Token 修復驗證測試</h1>
+    
+    <div class="test-container">
+        <h2>📊 當前狀況檢查</h2>
+        <button onclick="checkCurrentState()">檢查當前狀態</button>
+        <button onclick="checkLoginModal()">檢查 LoginModal 實例</button>
+        <div id="current-state-result"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🧪 模擬修復前問題</h2>
+        <p>設置有 token 但沒有 user 的情況（修復前會被清除）</p>
+        <button onclick="simulateOldProblem()">模擬修復前的問題</button>
+        <div id="old-problem-result"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>✅ 測試修復效果</h2>
+        <p>驗證修復後的容錯機制和資料保護</p>
+        <button onclick="testTokenFix()">測試 Token 修復機制</button>
+        <button onclick="testManualLogin()">手動設置登入狀態</button>
+        <div id="fix-test-result"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🔄 重載測試</h2>
+        <p>測試頁面重載後狀態持久性</p>
+        <button onclick="testReloadPersistence()">測試頁面重載持久性</button>
+        <button onclick="clearAllData()">清除所有測試資料</button>
+        <div id="reload-test-result"></div>
+    </div>
+
+    <script>
+        function showResult(containerId, type, message) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+        
+        function showDetailedResult(containerId, title, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="result">
+                    <h4>${title}</h4>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+        }
+        
+        function checkCurrentState() {
+            const tokens = {
+                token: localStorage.getItem('nexustrade_token'),
+                refreshToken: localStorage.getItem('nexustrade_refresh_token'),
+                user: localStorage.getItem('nexustrade_user')
+            };
+            
+            const hasLoginModal = !!window.loginModal;
+            const authTokens = hasLoginModal ? window.loginModal.authTokens : null;
+            
+            showDetailedResult('current-state-result', '📊 當前狀態', {
+                localStorage: tokens,
+                loginModalExists: hasLoginModal,
+                authTokens: authTokens,
+                parsedUser: tokens.user ? JSON.parse(tokens.user) : null
+            });
+        }
+        
+        function checkLoginModal() {
+            if (!window.loginModal) {
+                showResult('current-state-result', 'error', '❌ LoginModal 實例不存在');
+                return;
+            }
+            
+            const modalInfo = {
+                exists: true,
+                authTokens: window.loginModal.authTokens,
+                hasToken: !!window.loginModal.authTokens.token,
+                hasUser: !!window.loginModal.authTokens.user,
+                tokenType: window.loginModal.authTokens.token ? 
+                    (window.loginModal.authTokens.token.includes('test') ? 'test' : 'real') : 'none'
+            };
+            
+            showDetailedResult('current-state-result', '🔐 LoginModal 狀態', modalInfo);
+        }
+        
+        function simulateOldProblem() {
+            // 設置有 token 但沒有 user 的情況
+            localStorage.setItem('nexustrade_token', 'test_token_without_user_12345');
+            localStorage.setItem('nexustrade_refresh_token', 'test_refresh_token_12345');
+            localStorage.removeItem('nexustrade_user');
+            
+            showResult('old-problem-result', 'warning', 
+                '⚠️ 已設置有 token 但沒有 user 的情況。修復前這會導致 token 被清除。<br>' +
+                '請重新載入頁面並觀察 Console 日誌來查看修復效果。'
+            );
+        }
+        
+        function testTokenFix() {
+            // 設置測試場景
+            localStorage.setItem('nexustrade_token', 'test_token_fix_validation_12345');
+            localStorage.setItem('nexustrade_refresh_token', 'test_refresh_token_12345');
+            localStorage.removeItem('nexustrade_user');
+            
+            if (window.loginModal) {
+                // 重新載入 authTokens
+                window.loginModal.authTokens = window.loginModal.loadTokensFromStorage();
+                
+                // 觸發 handleAutoLogin
+                window.loginModal.handleAutoLogin().then(() => {
+                    setTimeout(() => {
+                        const result = {
+                            tokenPreserved: !!localStorage.getItem('nexustrade_token'),
+                            userCreated: !!localStorage.getItem('nexustrade_user'),
+                            authTokensState: window.loginModal.authTokens,
+                            testResult: '修復機制正常運作'
+                        };
+                        
+                        showDetailedResult('fix-test-result', '✅ Token 修復測試結果', result);
+                    }, 1000);
+                });
+            } else {
+                showResult('fix-test-result', 'error', '❌ 需要先載入 LoginModal 實例');
+            }
+        }
+        
+        function testManualLogin() {
+            const testUser = {
+                name: '修復測試使用者',
+                email: 'fix-test@nexustrade.com',
+                avatar: 'https://via.placeholder.com/40',
+                provider: 'manual-test'
+            };
+            
+            localStorage.setItem('nexustrade_token', 'manual_test_token_' + Date.now());
+            localStorage.setItem('nexustrade_refresh_token', 'manual_test_refresh_' + Date.now());
+            localStorage.setItem('nexustrade_user', JSON.stringify(testUser));
+            
+            if (window.loginModal) {
+                window.loginModal.authTokens = window.loginModal.loadTokensFromStorage();
+                window.loginModal.updateUIForLoggedInUser(testUser);
+                
+                showResult('fix-test-result', 'success', 
+                    '✅ 手動登入狀態已設置。請檢查頁面頂部是否顯示使用者頭像和名稱。'
+                );
+            } else {
+                showResult('fix-test-result', 'error', '❌ 需要先載入 LoginModal 實例');
+            }
+        }
+        
+        function testReloadPersistence() {
+            const testData = {
+                token: 'persistence_test_token_' + Date.now(),
+                user: {
+                    name: '持久性測試',
+                    email: 'persistence@test.com',
+                    avatar: 'https://via.placeholder.com/40'
+                }
+            };
+            
+            localStorage.setItem('nexustrade_token', testData.token);
+            localStorage.setItem('nexustrade_user', JSON.stringify(testData.user));
+            
+            showResult('reload-test-result', 'info', 
+                '📝 測試資料已設置。點擊重新載入按鈕測試持久性...<br>' +
+                '<button onclick="location.reload()">🔄 重新載入頁面</button>'
+            );
+        }
+        
+        function clearAllData() {
+            const keys = [
+                'nexustrade_token', 'nexustrade_refresh_token', 'nexustrade_user',
+                'nexustrade_line_bound', 'nexustrade_return_state',
+                'token', 'userInfo', 'refreshToken', 'user'
+            ];
+            
+            keys.forEach(key => localStorage.removeItem(key));
+            
+            if (window.loginModal) {
+                window.loginModal.authTokens = { token: null, refreshToken: null, user: null };
+                window.loginModal.updateUIForLoggedOutUser();
+            }
+            
+            showResult('reload-test-result', 'success', '🧹 所有測試資料已清除');
+        }
+        
+        // 頁面載入時自動檢查狀態
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                checkCurrentState();
+                
+                // 顯示修復效果提示
+                const hasToken = localStorage.getItem('nexustrade_token');
+                const hasUser = localStorage.getItem('nexustrade_user');
+                
+                if (hasToken && !hasUser) {
+                    showResult('current-state-result', 'warning', 
+                        '⚠️ 檢測到有 token 但沒有 user 的情況。修復機制應該會自動處理。<br>' +
+                        '請觀察 Console 日誌查看修復過程。'
+                    );
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

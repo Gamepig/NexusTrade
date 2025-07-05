@@ -434,6 +434,14 @@ class RouteBuilder {
   }
 
   /**
+   * 添加價格警報路由
+   */
+  priceAlerts(handler) {
+    this.router.route('/price-alerts', handler, { name: 'price-alerts' });
+    return this;
+  }
+
+  /**
    * 添加通知路由
    */
   notifications(handler) {
@@ -454,6 +462,14 @@ class RouteBuilder {
    */
   settings(handler) {
     this.router.route('/settings', handler, { name: 'settings' });
+    return this;
+  }
+
+  /**
+   * 添加單一貨幣詳情路由
+   */
+  currency(handler) {
+    this.router.route('/currency/:symbol', handler, { name: 'currency-detail' });
     return this;
   }
 
@@ -480,6 +496,14 @@ class RouteBuilder {
       return true;
     });
     
+    return this;
+  }
+
+  /**
+   * 添加自訂路由
+   */
+  add(path, handler, options = {}) {
+    this.router.route(path, handler, options);
     return this;
   }
 

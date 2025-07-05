@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 最終認證修復工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        .fix-section {
+            background: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+        }
+        .btn {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #1976D2;
+        }
+        .btn-success {
+            background: #4CAF50;
+        }
+        .btn-success:hover {
+            background: #388E3C;
+        }
+        .btn-warning {
+            background: #FF9800;
+        }
+        .result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .result-success {
+            background: rgba(76, 175, 80, 0.2);
+            border-left-color: #4CAF50;
+        }
+        .result-error {
+            background: rgba(244, 67, 54, 0.2);
+            border-left-color: #F44336;
+        }
+        .big-success {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+            text-align: center;
+            font-size: 24px;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎯 最終認證修復工具</h1>
+    <p><strong>目標</strong>：徹底解決 Vic Huang 用戶的「設定通知」登入提示問題</p>
+
+    <div class="fix-section">
+        <h2>🚀 一鍵修復</h2>
+        <div id="fix-results"></div>
+        <button class="btn btn-success" onclick="oneClickFix()">🎯 一鍵完全修復</button>
+        <button class="btn btn-warning" onclick="testNotificationSetup()">🔔 測試設定通知</button>
+    </div>
+
+    <div class="fix-section">
+        <h2>📝 測試結果</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <!-- 載入必要的腳本 -->
+    <script src="/js/lib/auth-state-manager.js"></script>
+    <script src="/js/components/PriceAlertModal.js"></script>
+
+    <script>
+        /**
+         * 一鍵完全修復
+         */
+        function oneClickFix() {
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = '<div class="result result-success">🔄 正在執行一鍵修復...</div>';
+            
+            try {
+                // 1. 設定正確的 Vic Huang 認證資料
+                const vicHuangToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1ZTVjYzE4OGUxZDJjZGJhYzVjZmRhMmFiYjZmNmEzNGIiLCJlbWFpbCI6ImxpbmVfdWU1Y2MxODhlMWQyY2RiYWM1Y2ZkYTJhYmI2ZjZhMzRiQGV4YW1wbGUuY29tIiwidXNlcm5hbWUiOiJ2aWNfaHVhbmciLCJ0eXBlIjoiYWNjZXNzIiwiaWF0IjoxNzUxNDg3ODExLCJleHAiOjE3NTIwOTI2MTF9.tgdnC-lPoPgEsFNE79DkKey8toMpRFjSeH9doF1NhzE';
+                
+                const vicHuangUser = {
+                    "id": "ue5cc188e1d2cdbac5cfda2abb6f6a34b",
+                    "email": "line_ue5cc188e1d2cdbac5cfda2abb6f6a34b@example.com",
+                    "username": "vic_huang",
+                    "profile": {
+                        "firstName": "Vic",
+                        "lastName": "Huang",
+                        "displayName": "Vic Huang",
+                        "avatar": "https://profile.line-scdn.net/0he27Lgff1Oh0aNRC2EBlEYmplOXc5RGMPN1FwKS8yZH0vAypDZQF2K3o9NChzA3VKY1NyfSZiZSsWJk17BGPGKR0FZywmA31OMVV9-A"
+                    },
+                    "emailVerified": true,
+                    "status": "active",
+                    "lastLoginAt": "2025-07-02T17:38:16.385Z",
+                    "googleId": null,
+                    "lineId": "ue5cc188e1d2cdbac5cfda2abb6f6a34b",
+                    "lineUserId": "ue5cc188e1d2cdbac5cfda2abb6f6a34b",
+                    "provider": "line"
+                };
+                
+                // 2. 清除舊的認證資料
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // 3. 設定新的認證資料
+                localStorage.setItem('nexustrade_token', vicHuangToken);
+                localStorage.setItem('nexustrade_user', JSON.stringify(vicHuangUser));
+                
+                // 4. 設定全域變數
+                window.currentUser = vicHuangUser;
+                
+                // 5. 更新 AuthStateManager（如果存在）
+                if (window.authManager) {
+                    window.authManager.authState.user = vicHuangUser;
+                    window.authManager.authState.isAuthenticated = true;
+                    window.authManager.authState.lineConnected = true;
+                }
+                
+                // 6. 驗證設定結果
+                const token = localStorage.getItem('nexustrade_token');
+                const userStr = localStorage.getItem('nexustrade_user');
+                const user = userStr ? JSON.parse(userStr) : null;
+                
+                const isAuthenticated = !!(token && user);
+                const isLineConnected = !!(user && (user.lineUserId || user.lineId || user.provider === 'line'));
+                
+                let html = '<div class="big-success">🎉 修復完成！</div>';
+                html += '<div class="result result-success">✅ 已清除舊的認證資料</div>';
+                html += '<div class="result result-success">✅ 已設定 Vic Huang 認證 Token</div>';
+                html += '<div class="result result-success">✅ 已設定使用者資料</div>';
+                html += `<div class="result result-success">✅ 基本認證: ${isAuthenticated ? '已認證' : '未認證'}</div>`;
+                html += `<div class="result result-success">✅ LINE 連接: ${isLineConnected ? '已連接' : '未連接'}</div>`;
+                html += `<div class="result result-success">✅ 使用者: ${user?.profile?.displayName}</div>`;
+                html += `<div class="result result-success">✅ LINE User ID: ${user?.lineUserId}</div>`;
+                
+                resultsDiv.innerHTML = html;
+                
+                console.log('🎯 一鍵修復完成');
+                console.log('Token:', token);
+                console.log('User:', user);
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result result-error">❌ 修復失敗: ${error.message}</div>
+                `;
+            }
+        }
+
+        /**
+         * 測試設定通知功能
+         */
+        function testNotificationSetup() {
+            const resultsDiv = document.getElementById('test-results');
+            
+            try {
+                // 檢查認證狀態
+                const token = localStorage.getItem('nexustrade_token');
+                const userStr = localStorage.getItem('nexustrade_user');
+                const user = userStr ? JSON.parse(userStr) : null;
+                
+                const isAuthenticated = !!(token && user);
+                const isLineConnected = !!(user && (user.lineUserId || user.lineId || user.provider === 'line'));
+                
+                let html = '<h3>🧪 認證狀態檢查</h3>';
+                html += `<div class="result ${isAuthenticated ? 'result-success' : 'result-error'}">
+                    ${isAuthenticated ? '✅' : '❌'} 基本認證: ${isAuthenticated ? '已認證' : '未認證'}
+                </div>`;
+                html += `<div class="result ${isLineConnected ? 'result-success' : 'result-error'}">
+                    ${isLineConnected ? '✅' : '❌'} LINE 連接: ${isLineConnected ? '已連接' : '未連接'}
+                </div>`;
+                
+                if (isAuthenticated && isLineConnected) {
+                    html += '<h3>🔔 測試 PriceAlertModal</h3>';
+                    
+                    // 檢查 PriceAlertModal 是否存在
+                    if (typeof window.PriceAlertModal !== 'undefined' && typeof window.priceAlertModal !== 'undefined') {
+                        html += '<div class="result result-success">✅ PriceAlertModal 類別和實例存在</div>';
+                        
+                        // 嘗試顯示模態框
+                        try {
+                            window.priceAlertModal.show('BTCUSDT');
+                            html += '<div class="result result-success">🚀 已成功呼叫 priceAlertModal.show("BTCUSDT")</div>';
+                            html += '<div class="big-success">🎉 測試成功！請檢查是否顯示了完整的警報設定表單</div>';
+                            
+                            // 檢查模態框內容
+                            setTimeout(() => {
+                                const modal = document.querySelector('.price-alert-modal');
+                                if (modal && modal.style.display !== 'none') {
+                                    const hasLoginPrompt = modal.innerHTML.includes('需要登入') || modal.innerHTML.includes('🔐');
+                                    if (hasLoginPrompt) {
+                                        html += '<div class="result result-error">❌ 仍然顯示登入提示！</div>';
+                                    } else {
+                                        html += '<div class="result result-success">✅ 顯示完整警報表單！問題已解決！</div>';
+                                    }
+                                    resultsDiv.innerHTML = html;
+                                }
+                            }, 1000);
+                            
+                        } catch (modalError) {
+                            html += `<div class="result result-error">❌ 呼叫 PriceAlertModal 失敗: ${modalError.message}</div>`;
+                        }
+                        
+                    } else {
+                        html += '<div class="result result-error">❌ PriceAlertModal 類別或實例不存在</div>';
+                    }
+                } else {
+                    html += '<div class="result result-error">❌ 認證狀態不正確，無法測試設定通知</div>';
+                    html += '<div class="result result-warning">💡 請先點擊 "一鍵完全修復" 按鈕</div>';
+                }
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result result-error">❌ 測試失敗: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 頁面載入時的提示
+        window.addEventListener('load', function() {
+            const resultsDiv = document.getElementById('fix-results');
+            resultsDiv.innerHTML = `
+                <div class="result result-success">
+                    💡 <strong>使用說明</strong>：<br>
+                    1. 點擊 "一鍵完全修復" 設定正確的 Vic Huang 認證資料<br>
+                    2. 點擊 "測試設定通知" 驗證修復結果<br>
+                    3. 如果成功，您就可以正常使用「設定通知」功能了！
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>

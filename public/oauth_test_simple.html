@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OAuth 簡單測試</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 OAuth 登入狀態測試</h1>
+    
+    <div class="section">
+        <h3>測試步驟</h3>
+        <button onclick="simulateSuccessfulOAuth()">1. 模擬成功 OAuth</button>
+        <button onclick="checkLocalStorage()">2. 檢查 localStorage</button>
+        <button onclick="clearAll()">3. 清除所有狀態</button>
+    </div>
+    
+    <div class="section">
+        <h3>測試結果</h3>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            results.appendChild(div);
+            console.log(`[${type}] ${message}`);
+        }
+
+        function simulateSuccessfulOAuth() {
+            log('🎭 模擬成功的 OAuth 回調數據...', 'info');
+            
+            // 模擬 OAuth 成功後的數據
+            const tokenData = {
+                token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0LXVzZXItaWQiLCJuYW1lIjoiVGVzdCBVc2VyIiwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjE2NDA5OTUyMDB9.test_signature',
+                refreshToken: 'test_refresh_token_12345'
+            };
+            
+            const userData = {
+                id: 'test-user-id',
+                name: 'Test User',
+                email: 'test@example.com',
+                avatar: 'https://via.placeholder.com/40',
+                provider: 'google'
+            };
+            
+            try {
+                // 保存到 localStorage
+                localStorage.setItem('nexustrade_token', tokenData.token);
+                localStorage.setItem('nexustrade_refresh_token', tokenData.refreshToken);
+                localStorage.setItem('nexustrade_user', JSON.stringify(userData));
+                
+                log('✅ 成功保存 OAuth 數據到 localStorage', 'success');
+                log(`Token: ${tokenData.token.substring(0, 30)}...`, 'info');
+                log(`User: ${userData.name} (${userData.email})`, 'info');
+                
+                // 觸發頁面刷新來測試持久性
+                setTimeout(() => {
+                    log('🔄 測試狀態持久性，準備重新載入頁面...', 'info');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                }, 1000);
+                
+            } catch (error) {
+                log(`❌ 保存過程中發生錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        function checkLocalStorage() {
+            log('🔍 檢查當前 localStorage 狀態...', 'info');
+            
+            const token = localStorage.getItem('nexustrade_token');
+            const refreshToken = localStorage.getItem('nexustrade_refresh_token');
+            const user = localStorage.getItem('nexustrade_user');
+            
+            if (token) {
+                log(`✅ Token 存在: ${token.substring(0, 30)}...`, 'success');
+            } else {
+                log('❌ Token 不存在', 'error');
+            }
+            
+            if (refreshToken) {
+                log(`✅ Refresh Token 存在: ${refreshToken.substring(0, 20)}...`, 'success');
+            } else {
+                log('❌ Refresh Token 不存在', 'error');
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    log(`✅ 使用者資料存在: ${userData.name} (${userData.email})`, 'success');
+                } catch (e) {
+                    log(`❌ 使用者資料格式錯誤: ${e.message}`, 'error');
+                }
+            } else {
+                log('❌ 使用者資料不存在', 'error');
+            }
+        }
+
+        function clearAll() {
+            log('🧹 清除所有認證狀態...', 'info');
+            localStorage.clear();
+            document.getElementById('results').innerHTML = '';
+            log('✅ 所有狀態已清除', 'success');
+        }
+
+        // 頁面載入時自動檢查狀態
+        window.addEventListener('load', function() {
+            log('📄 頁面載入完成，檢查當前狀態...', 'info');
+            checkLocalStorage();
+        });
+    </script>
+</body>
+</html>

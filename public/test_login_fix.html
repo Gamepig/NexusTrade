@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入狀態修復測試 - NexusTrade</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .status { 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 4px; 
+            font-weight: bold; 
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover { background: #0056b3; }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        
+        /* 模擬主頁面 header */
+        .header-actions {
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        #login-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .user-profile-btn {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+        
+        .user-name {
+            margin-right: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 登入狀態修復測試</h1>
+    
+    <div class="status info">
+        <strong>修復內容：</strong>
+        <ul>
+            <li>修復初始化時序問題 (延遲到 1000ms)</li>
+            <li>移除重複的狀態檢查調用</li>
+            <li>增加 DOM 準備就緒檢查</li>
+            <li>增加 UI 元素存在檢查和重試機制</li>
+        </ul>
+    </div>
+    
+    <!-- 模擬主頁面 header -->
+    <div class="header-actions">
+        <button id="login-btn">登入</button>
+    </div>
+    
+    <div class="status warning">
+        <strong>測試步驟：</strong><br>
+        1. 點擊「設置測試登入狀態」模擬登入成功<br>
+        2. 重新載入頁面<br>
+        3. 觀察登入狀態是否正確保持
+    </div>
+    
+    <button class="button" onclick="setTestLoginState()">設置測試登入狀態</button>
+    <button class="button" onclick="clearLoginState()">清除登入狀態</button>
+    <button class="button" onclick="checkCurrentState()">檢查當前狀態</button>
+    <button class="button" onclick="location.reload()">重新載入頁面</button>
+    
+    <div id="test-result" class="result">點擊上方按鈕開始測試...</div>
+
+    <!-- 載入必要腳本 -->
+    <script src="/js/lib/api.js"></script>
+    <script src="/js/lib/dom.js"></script>
+    <script src="/js/lib/router.js"></script>
+    <script src="/js/lib/auth-state-manager.js"></script>
+    <script src="/js/state/store.js"></script>
+    <script src="/js/components/Notification.js"></script>
+    <script src="/js/components/LoginModal.js"></script>
+
+    <script>
+        function log(message) {
+            const result = document.getElementById('test-result');
+            const timestamp = new Date().toLocaleTimeString();
+            result.textContent += `[${timestamp}] ${message}\n`;
+            result.scrollTop = result.scrollHeight;
+        }
+
+        // 設置測試登入狀態
+        function setTestLoginState() {
+            log('設置測試登入狀態...');
+            
+            const testToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlRlc3QgVXNlciIsImV4cCI6OTk5OTk5OTk5OX0.test';
+            const testUser = {
+                id: 'test123',
+                name: 'Test User',
+                email: 'test@example.com',
+                profile: {
+                    displayName: 'Test User',
+                    picture: 'https://via.placeholder.com/40'
+                }
+            };
+            
+            localStorage.setItem('nexustrade_token', testToken);
+            localStorage.setItem('nexustrade_user', JSON.stringify(testUser));
+            
+            log('✅ 測試登入狀態已設置');
+            log('Token: ' + testToken.substring(0, 30) + '...');
+            log('User: ' + testUser.name);
+            
+            // 手動觸發狀態更新
+            if (window.loginModal) {
+                log('觸發手動狀態更新...');
+                window.loginModal.updateUIForLoggedInUser(testUser);
+            }
+        }
+
+        // 清除登入狀態
+        function clearLoginState() {
+            log('清除登入狀態...');
+            
+            localStorage.removeItem('nexustrade_token');
+            localStorage.removeItem('nexustrade_user');
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            
+            log('✅ 登入狀態已清除');
+            
+            // 手動觸發狀態更新
+            if (window.loginModal) {
+                log('觸發手動狀態更新...');
+                window.loginModal.updateUIForLoggedOutUser();
+            }
+        }
+
+        // 檢查當前狀態
+        function checkCurrentState() {
+            log('=== 檢查當前狀態 ===');
+            
+            // 檢查 localStorage
+            const token = localStorage.getItem('nexustrade_token');
+            const user = localStorage.getItem('nexustrade_user');
+            
+            log('nexustrade_token: ' + (token ? '存在' : '不存在'));
+            log('nexustrade_user: ' + (user ? '存在' : '不存在'));
+            
+            // 檢查 DOM
+            const loginBtn = document.getElementById('login-btn');
+            const userMenu = document.querySelector('.user-menu');
+            
+            log('登入按鈕: ' + (loginBtn ? `存在 (顯示: ${loginBtn.style.display || 'default'})` : '不存在'));
+            log('使用者選單: ' + (userMenu ? '存在' : '不存在'));
+            
+            // 檢查 LoginModal 實例
+            log('LoginModal 實例: ' + (window.loginModal ? '存在' : '不存在'));
+            
+            if (window.loginModal) {
+                log('觸發 checkAndUpdateUIState...');
+                window.loginModal.checkAndUpdateUIState().then(() => {
+                    log('✅ checkAndUpdateUIState 完成');
+                });
+            }
+        }
+
+        // 頁面載入完成後初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🔧 測試頁面已載入');
+            
+            // 延遲初始化 LoginModal，模擬主應用的行為
+            setTimeout(() => {
+                if (typeof LoginModal !== 'undefined') {
+                    window.loginModal = new LoginModal();
+                    log('✅ LoginModal 已初始化');
+                    
+                    // 延遲檢查狀態
+                    setTimeout(() => {
+                        checkCurrentState();
+                    }, 1500);
+                } else {
+                    log('❌ LoginModal 類別未載入');
+                }
+            }, 500);
+        });
+
+        // 監聽錯誤
+        window.addEventListener('error', function(event) {
+            log('❌ 錯誤: ' + event.error?.message || event.message);
+        });
+    </script>
+</body>
+</html>
