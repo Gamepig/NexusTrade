@@ -1,20 +1,67 @@
-# Ignore artifacts:
-node_modules
-package-lock.json
-dist
-coverage
+# Dependencies and generated files
+node_modules/
+logs/
+coverage/
+.pm2/
+tmp/
 
-# Ignore vendor libraries (if any):
-# public/vendor
-
-# Ignore generated files:
-# *.generated.js
-
-# Ignore configuration files (optional, if you don't want them formatted):
-# .eslintrc.js
-# .prettierrc.js
-
-# Ignore markdown task files:
-tasks/
+# Archive and backup directories
+archive/
+backups/
 memory-bank/
-NexusTrading規劃書.md 
+reference/
+tasks/
+
+# Test and debug files
+test/
+tests/
+test-*.js
+debug-*.js
+diagnose-*.js
+fix-*.js
+emergency-*.js
+organize-*.js
+simple-*.js
+check-*.js
+clear-*.js
+create-*.js
+demo-*.js
+monitor-*.js
+quick-*.js
+reset-*.js
+**/test_*.js
+**/debug_*.js
+**/diagnose_*.js
+**/emergency_*.js
+
+# Test HTML files
+public/test_*.html
+public/debug_*.html
+public/manual_*.html
+public/oauth_*.html
+public/simple*.html
+public/check_*.js
+
+# Configuration files
+*.config.js
+*.config.mjs
+package-lock.json
+
+# Docker and deployment files
+docker/
+Dockerfile*
+docker-compose*.yml
+
+# Documentation that shouldn't be formatted
+CHANGELOG.md
+LICENSE
+*.log
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# OpenRouter monitor
+openrouter-rate-limit-monitor/

@@ -120,8 +120,6 @@ NexusTrading規劃書.md
 # Development and Configuration Directories
 .claude/
 .cursor/
-.git/
-.github/
 archive/
 backups/
 coverage/

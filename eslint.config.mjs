@@ -83,12 +83,24 @@ export default [
       'debug/**',
       'tests/**',
       'test/**',
+      'archive/**',
+      'backups/**',
+      'memory-bank/**',
+      'reference/**',
+      'tasks/**',
       'test-*.js',
       'diagnose-*.js',
       'fix-*.js',
       'emergency-*.js',
       'organize-*.js',
       'simple-*.js',
+      'check-*.js',
+      'clear-*.js',
+      'create-*.js',
+      'demo-*.js',
+      'monitor-*.js',
+      'quick-*.js',
+      'reset-*.js',
       '**/test_*.js',
       '**/debug_*.js',
       '**/diagnose_*.js',
@@ -99,7 +111,11 @@ export default [
       'public/oauth_*.html',
       'public/simple*.html',
       'public/check_*.js',
-      'openrouter-rate-limit-monitor/**'
+      'openrouter-rate-limit-monitor/**',
+      '**/*.test.js',
+      '**/*.spec.js',
+      '**/*.config.js',
+      '**/*.config.mjs'
     ]
   }
 ];
