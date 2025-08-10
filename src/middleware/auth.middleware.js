@@ -5,8 +5,23 @@
  */
 
 const jwt = require('jsonwebtoken');
-// 使用正式的 User 模型
-const User = require('../models/User.model');
+// 🔧 開發模式相容性修復：支援 MockUser 和正式 User 模型
+let User;
+try {
+  // 嘗試載入 MockUser 系統（與認證路由保持一致）
+  const { MockUser } = require('../controllers/auth.controller.mock');
+  if (MockUser) {
+    User = MockUser;
+    console.log('✅ 認證中介軟體：使用 MockUser 系統');
+  } else {
+    throw new Error('MockUser 不可用');
+  }
+} catch (error) {
+  // 如果 MockUser 不可用，使用正式 User 模型
+  User = require('../models/User.model');
+  console.log('✅ 認證中介軟體：使用正式 User 模型，原因:', error.message);
+}
+
 const { ApiErrorFactory, BusinessErrorFactory } = require('../utils/ApiError');
 const logger = require('../utils/logger');
 
